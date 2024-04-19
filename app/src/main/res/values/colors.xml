@@ -2,4 +2,19 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="white_80_percent">#CCFFFFFF</color>
+    <color name="black_80_percent">#CC000000</color>
+    <color name="green_80_percent">#CC4CAF50</color>
+    <color name="red_80_percent">#CCD12D2D</color>
+    <color name="gray_80_percent">#CC818181</color>
+    <color name="yellow_80_percent">#CCFFEB3B</color>
+    <color name="blue_80_percent">#CC3F51B5</color>
+    <color name="white_30_percent">#4DFFFFFF</color>
+    <color name="black_30_percent">#4D000000</color>
+    <color name="status_red">#F02929</color>
+    <color name="status_turquesa">#009688</color>
+    <color name="status_orange">#FF9800</color>
+    <color name="status_green">#269F2B</color>
+    <color name="status_blue">#0A79D1</color>
+    <color name="transparent">#00000000</color>
 </resources>
