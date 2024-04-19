@@ -49,4 +49,19 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
+// Para cargar gif
+    implementation("pl.droidsonroids.gif:android-gif-drawable:1.2.19")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.2")
+
+//    // Joystick
+//    implementation("com.github.controlwear:virtual-joystick-android:")
+
+    // Plotter
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+
+    // DataStore
+    // implementation("androidx.datastore:datastore-core:1.0.0")
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
 }
