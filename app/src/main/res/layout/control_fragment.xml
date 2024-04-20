@@ -7,17 +7,17 @@
     android:background="@color/transparent"
     tools:context=".ui.controlFragment.ControlFragment">
 
-<!--    <io.github.controlwear.virtual.joystick.android.JoystickView-->
-<!--        android:id="@+id/joystick_right"-->
-<!--        android:layout_width="150dp"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:layout_alignParentBottom="true"-->
-<!--        android:layout_margin="32dp"-->
-<!--        app:JV_buttonSizeRatio="40%"-->
-<!--        app:JV_backgroundSizeRatio="60%"-->
-<!--        app:JV_buttonImage="@mipmap/ic_analog_joystick"-->
-<!--        app:layout_constraintBottom_toBottomOf="parent"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        app:JV_fixedCenter="false"/>-->
+    <io.github.controlwear.virtual.joystick.android.JoystickView
+        android:id="@+id/joystick_right"
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_margin="32dp"
+        app:JV_buttonSizeRatio="40%"
+        app:JV_backgroundSizeRatio="60%"
+        app:JV_buttonImage="@mipmap/ic_analog_foreground"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:JV_fixedCenter="false"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

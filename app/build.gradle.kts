@@ -12,7 +12,7 @@ android {
         minSdk = 26
         targetSdk = 34
         versionCode = 1
-        versionName = "0.0.1"
+        versionName = "0.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -50,18 +50,17 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 
-// Para cargar gif
+    // Para cargar gif
     implementation("pl.droidsonroids.gif:android-gif-drawable:1.2.19")
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.2")
 
-//    // Joystick
-//    implementation("com.github.controlwear:virtual-joystick-android:")
+    // Joystick
+    implementation("io.github.controlwear:virtualjoystick:1.10.1")
 
     // Plotter
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 
     // DataStore
-    // implementation("androidx.datastore:datastore-core:1.0.0")
     implementation("androidx.datastore:datastore-preferences:1.0.0")
 }
