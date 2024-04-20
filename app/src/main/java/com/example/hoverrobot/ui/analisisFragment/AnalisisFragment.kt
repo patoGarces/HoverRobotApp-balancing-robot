@@ -8,7 +8,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import com.example.hoverrobot.Models.comms.MainBoardResponse
+import com.example.hoverrobot.data.models.comms.MainBoardResponse
 import com.example.hoverrobot.R
 import com.example.hoverrobot.databinding.AnalisisFragmentBinding
 import com.github.mikephil.charting.charts.LineChart
@@ -107,30 +107,30 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {//},OnChartGe
         }
 
         binding.btnGenerateDataset.setOnClickListener {
-            for (i in 0..100){
-                val randomData = MainBoardResponse(
-                    Math.random().toInt().toShort(),
-                    Math.random().toInt().toShort(),
-                    Math.random().toInt().toShort(),
-                    Math.random().toInt().toShort(),
-                    Math.random().toInt().toShort(),
-                    Math.random().toInt().toShort(),
-                    Math.random().toInt().toShort(),
-                    Math.random().toInt().toShort(),
-                    ((Math.random() -0.5)* 180).toFloat(),
-                    ((Math.random() -0.5)* 180).toFloat(),
-                    ((Math.random() -0.5)* 180).toFloat(),
-                    0f,
-                    40,
-                    Math.random().toInt().toShort(),
-                    Math.random().toInt().toShort(),
-                    Math.random().toInt().toShort(),
-                    Math.random().toInt().toShort(),
-                    Math.random().toInt().toShort(),
-                    Math.random().toInt().toShort(),
-                )
-                newAngle(randomData)
-            }
+//            for (i in 0..100){        // TODO: acomodar cambios en dataClass MainBoardResponse
+//                val randomData = MainBoardResponse(
+//                    Math.random().toInt().toShort(),
+//                    Math.random().toInt().toShort(),
+//                    Math.random().toInt().toShort(),
+//                    Math.random().toInt().toShort(),
+//                    Math.random().toInt().toShort(),
+//                    Math.random().toInt().toShort(),
+//                    Math.random().toInt().toShort(),
+//                    Math.random().toInt().toShort(),
+//                    ((Math.random() -0.5)* 180).toFloat(),
+//                    ((Math.random() -0.5)* 180).toFloat(),
+//                    ((Math.random() -0.5)* 180).toFloat(),
+//                    0f,
+//                    40,
+//                    Math.random().toInt().toShort(),
+//                    Math.random().toInt().toShort(),
+//                    Math.random().toInt().toShort(),
+//                    Math.random().toInt().toShort(),
+//                    Math.random().toInt().toShort(),
+//                    Math.random().toInt().toShort(),
+//                )
+//                newAngle(randomData)
+//            }
         }
     }
 

@@ -20,13 +20,13 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.example.hoverrobot.Models.comms.Battery
-import com.example.hoverrobot.Models.comms.MainBoardResponse
-import com.example.hoverrobot.Models.comms.PidSettings
-import com.example.hoverrobot.bluetooth.BluetoothInterface
+import com.example.hoverrobot.data.models.comms.MainBoardResponse
+import com.example.hoverrobot.data.models.comms.PidSettings
+import com.example.hoverrobot.data.models.BluetoothInterface
 import com.example.hoverrobot.bluetooth.BluetoothManager
 import com.example.hoverrobot.bluetooth.StatusBtEnable
-import com.example.hoverrobot.bluetooth.StatusEnumBT
-import com.example.hoverrobot.bluetooth.StatusEnumRobot
+import com.example.hoverrobot.data.utils.StatusEnumBT
+import com.example.hoverrobot.data.utils.StatusEnumRobot
 import com.example.hoverrobot.databinding.ActivityMainBinding
 import com.example.hoverrobot.ui.analisisFragment.AnalisisFragment
 import com.example.hoverrobot.ui.analisisFragment.AnalisisViewModel
@@ -113,7 +113,7 @@ class MainActivity : AppCompatActivity(), BluetoothInterface {
         settingsFragmentViewModel.pidSettingToRobot.observe(this) {
             it?.let {
                 if (getStatusBT() == StatusEnumBT.STATUS_CONNECTED) {
-//                    bluetoothManager.sendPidParam(it)
+                    bluetoothManager.sendPidParam(it)
                 } else {
                     Log.d("activity", "No se puede enviar configuración")
                     Toast.makeText(this, "Debe conectarse al bluetooth!", Toast.LENGTH_LONG).show()
@@ -123,7 +123,7 @@ class MainActivity : AppCompatActivity(), BluetoothInterface {
 
         bottomSheetDevicesViewModel.deviceSelected.observe(this) {
             it?.let {
-//                bluetoothManager.connectDevice(it)
+                bluetoothManager.connectDevice(it)
             }
         }
 
@@ -134,7 +134,6 @@ class MainActivity : AppCompatActivity(), BluetoothInterface {
                 when (it) {
                     StatusEnumBT.STATUS_INIT,
                     StatusEnumBT.STATUS_DISCONNECT -> {
-
                         showDevicesToConnect()
                     }
 
@@ -147,8 +146,8 @@ class MainActivity : AppCompatActivity(), BluetoothInterface {
                         Log.d("connectionStatus", "STATUS_ERROR")
                     }
 
-                    StatusEnumBT.STATUS_DISCOVERING -> TODO()
-                    StatusEnumBT.STATUS_CONNECTING -> TODO()
+                    StatusEnumBT.STATUS_DISCOVERING,
+                    StatusEnumBT.STATUS_CONNECTING -> {} // TODO()
                 }
             }
         }
@@ -162,7 +161,7 @@ class MainActivity : AppCompatActivity(), BluetoothInterface {
 
         controlViewModel.controlAxis.observe(this) {
             it?.let {
-//                bluetoothManager.sendJoystickUpdate(it)
+                bluetoothManager.sendJoystickUpdate(it)
             }
         }
     }
@@ -260,11 +259,19 @@ class MainActivity : AppCompatActivity(), BluetoothInterface {
             buffer.float,
             buffer.float,
             buffer.float,
+
             buffer.float,
-            buffer.short,
-            buffer.short,
-            buffer.short,
-            buffer.short,
+            buffer.float,
+            buffer.float,
+            buffer.float,
+            buffer.float,
+
+
+//            buffer.float,
+//            buffer.short,
+//            buffer.short,
+//            buffer.short,
+//            buffer.short,
             buffer.short,
             buffer.short,
             buffer.short
@@ -293,11 +300,11 @@ class MainActivity : AppCompatActivity(), BluetoothInterface {
             analisisViewModel.addNewPointData(newMainBoardResponse)
 
             val newPidSettings = PidSettings(
-                newMainBoardResponse.kp.toFloat(),
-                newMainBoardResponse.ki.toFloat(),
-                newMainBoardResponse.kd.toFloat(),
-                newMainBoardResponse.centerAngle.toFloat(),
-                newMainBoardResponse.safetyLimits.toFloat()
+                newMainBoardResponse.kp,
+                newMainBoardResponse.ki,
+                newMainBoardResponse.kd,
+                newMainBoardResponse.centerAngle,
+                newMainBoardResponse.safetyLimits
             )
 
             settingsFragmentViewModel.setPidTunningfromRobot(newPidSettings)

@@ -10,7 +10,7 @@ import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
-import com.example.hoverrobot.Models.comms.PidSettings
+import com.example.hoverrobot.data.models.comms.PidSettings
 import com.example.hoverrobot.R
 import com.example.hoverrobot.dataStore
 import com.example.hoverrobot.databinding.SettingsFragmentBinding
@@ -49,14 +49,14 @@ class SettingsFragment : Fragment() {
 
         setupListener()
         setupObserver()
-        getParametersFromStore()
+//        getParametersFromStore()
     }
 
     private fun setupListener(){
 
         binding.sbPidP.addOnChangeListener { rangeSlider, progressP, fromUser ->
             kpValue = progressP
-            binding.tvValueP.text = getString(R.string.value_slider_format).format((kpValue/100))
+            binding.tvValueP.text = getString(R.string.value_slider_format).format((kpValue))
         }
 
         binding.sbPidP.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
@@ -68,7 +68,7 @@ class SettingsFragment : Fragment() {
 
         binding.sbPidI.addOnChangeListener { rangeSlider, progressI, fromUser ->
             kiValue = progressI
-            binding.tvValueI.text = getString(R.string.value_slider_format).format((kiValue/100))
+            binding.tvValueI.text = getString(R.string.value_slider_format).format((kiValue))
         }
 
         binding.sbPidI.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
@@ -80,7 +80,7 @@ class SettingsFragment : Fragment() {
 
         binding.sbPidD.addOnChangeListener { rangeSlider, progressD, fromUser ->
             kdValue = progressD
-            binding.tvValueD.text = getString(R.string.value_slider_format).format((kdValue/100))
+            binding.tvValueD.text = getString(R.string.value_slider_format).format((kdValue))
         }
 
         binding.sbPidD.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
@@ -126,14 +126,14 @@ class SettingsFragment : Fragment() {
     }
 
     private fun setupObserver(){
-        settingsFragmentViewModel.pidSettingFromRobot.observe(viewLifecycleOwner){
-            it?.let{
-                if(it != lastPidSettings)
-                {
-                    binding.sbPidP.value = it.kp
-                    binding.sbPidI.value = it.ki
-                    binding.sbPidD.value = it.kd
-                    binding.sbCenterAngle.value = it.centerAngle
+        settingsFragmentViewModel.pidSettingFromRobot.observe(viewLifecycleOwner) {
+            it?.let {
+                if (it != lastPidSettings) {
+                    saveParam(binding.sbPidP,it.kp)
+                    saveParam(binding.sbPidI,it.ki)
+                    saveParam(binding.sbPidD,it.kd)
+                    saveParam(binding.sbCenterAngle,it.centerAngle)
+                    saveParam(binding.sbSafetyLimits,it.safetyLimits)
 
                     lastPidSettings = settingsFragmentViewModel.pidSettingFromRobot.value
                 }
@@ -153,73 +153,40 @@ class SettingsFragment : Fragment() {
         }
     }
 
-    private fun getParametersFromStore() {
-        lifecycleScope.launch(Dispatchers.IO) {
-            val paramP = context?.dataStore?.data
-                ?.map { preferences ->
-                    preferences[floatPreferencesKey(KEY_PID_PARAM_P)]
-                }?.first()
-            val paramI = context?.dataStore?.data
-                ?.map { preferences ->
-                    preferences[floatPreferencesKey(KEY_PID_PARAM_I)]
-                }?.first()
-            val paramD = context?.dataStore?.data
-                ?.map { preferences ->
-                    preferences[floatPreferencesKey(KEY_PID_PARAM_D)]
-                }?.first()
-            val paramCenter = context?.dataStore?.data
-                ?.map { preferences ->
-                    preferences[floatPreferencesKey(KEY_PID_PARAM_CENTER)]
-                }?.first()
-            val safetyLimits = context?.dataStore?.data
-                ?.map { preferences ->
-                    preferences[floatPreferencesKey(KEY_PID_PARAM_SAFETY_LIM)]
-                }?.first()
-
-
-            paramP?.let {
-                if( it >= 0 && it <= binding.sbPidP.valueTo) {
-                    binding.sbPidP.value = it
-                }
-                else{
-                    binding.sbPidP.value = 0.0F
-                }
-            }
-            paramI?.let {
-                if( it >= 0 && it <= binding.sbPidI.valueTo) {
-                    binding.sbPidI.value = it
-                }
-                else{
-                    binding.sbPidI.value = 0.0F
-                }
-            }
-            paramD?.let {
-                if( it >= 0 && it <= binding.sbPidD.valueTo) {
-                    binding.sbPidD.value = it
-                }
-                else{
-                    binding.sbPidD.value = 0.0F
-                }
-            }
-            paramCenter?.let {
-                if( it >= binding.sbCenterAngle.valueFrom && it <= binding.sbCenterAngle.valueTo) {
-                    binding.sbCenterAngle.value = it
-                }
-                else{
-                    binding.sbCenterAngle.value = binding.sbCenterAngle.valueFrom
-                }
-            }
-            safetyLimits?.let {
-                if( it >= binding.sbSafetyLimits.valueFrom && it <= binding.sbSafetyLimits.valueTo) {
-                    binding.sbSafetyLimits.value = it
-                }
-                else{
-                    binding.sbSafetyLimits.value = binding.sbSafetyLimits.valueFrom
-                }
-            }
+    private fun saveParam(slider: Slider, value: Float) {
+        with (slider) {
+            this.value = if( value in valueFrom..valueTo) { value } else{ valueFrom }
         }
     }
 
+    private fun getParametersFromStore() {
+        lifecycleScope.launch(Dispatchers.IO) {
+
+            with(context?.dataStore?.data) {
+                val paramP = this?.map { preferences ->
+                        preferences[floatPreferencesKey(KEY_PID_PARAM_P)]
+                    }?.first()
+                val paramI = this?.map { preferences ->
+                        preferences[floatPreferencesKey(KEY_PID_PARAM_I)]
+                    }?.first()
+                val paramD = this?.map { preferences ->
+                        preferences[floatPreferencesKey(KEY_PID_PARAM_D)]
+                    }?.first()
+                val paramCenter = this?.map { preferences ->
+                        preferences[floatPreferencesKey(KEY_PID_PARAM_CENTER)]
+                    }?.first()
+                val safetyLimits = this?.map { preferences ->
+                        preferences[floatPreferencesKey(KEY_PID_PARAM_SAFETY_LIM)]
+                    }?.first()
+
+                paramP?.let { saveParam(binding.sbPidP,it) }
+                paramI?.let { saveParam(binding.sbPidI,it) }
+                paramD?.let { saveParam(binding.sbPidD,it) }
+                paramCenter?.let { saveParam(binding.sbCenterAngle,it) }
+                safetyLimits?.let { saveParam(binding.sbSafetyLimits,it) }
+            }
+        }
+    }
 
     companion object{
         private const val KEY_PID_PARAM_P = "KEY_PID_P"

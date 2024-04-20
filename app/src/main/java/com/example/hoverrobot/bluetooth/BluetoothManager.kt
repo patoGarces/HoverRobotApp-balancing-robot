@@ -13,8 +13,10 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.util.Log
 import androidx.core.app.ActivityCompat
-import com.example.hoverrobot.Models.comms.AxisControl
-import com.example.hoverrobot.Models.comms.PidSettings
+import com.example.hoverrobot.data.models.comms.AxisControl
+import com.example.hoverrobot.data.models.comms.PidSettings
+import com.example.hoverrobot.data.models.BluetoothInterface
+import com.example.hoverrobot.data.utils.StatusEnumBT
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.io.IOException
@@ -161,7 +163,7 @@ class BluetoothManager(private val context : Context, private val interfaceBT: B
         }
     }
 
-    fun sendJoystickUpdate( axisControl : AxisControl ){
+    fun sendJoystickUpdate( axisControl : AxisControl){
         val paramList = listOf(HEADER_PACKET,HEADER_TX_KEY_CONTROL,axisControl.axisX,axisControl.axisY)
         val buffer = ByteBuffer.allocate((paramList.size+1) * 4)                                        // Float ocupa 4 bytes, int igual, agrego 1 para el checksum
 
@@ -177,7 +179,7 @@ class BluetoothManager(private val context : Context, private val interfaceBT: B
         outputStreamBt.write(buffer.array())
     }
 
-    fun sendPidParam( pidSettings : PidSettings ){      // TODO: enviar pidSettings en float
+    fun sendPidParam( pidSettings : PidSettings){      // TODO: enviar pidSettings en float
 
         val paramList = listOf(HEADER_PACKET,HEADER_TX_KEY_SETTINGS,pidSettings.kp.toInt(),pidSettings.ki.toInt(),pidSettings.kd.toInt(),pidSettings.centerAngle.toInt(),pidSettings.safetyLimits.toInt())
         val buffer = ByteBuffer.allocate((paramList.size+1) * 4)                                        // Float ocupa 4 bytes, int igual, agrego 1 para el checksum

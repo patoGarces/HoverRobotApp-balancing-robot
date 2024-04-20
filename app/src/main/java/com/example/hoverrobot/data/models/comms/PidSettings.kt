@@ -1,4 +1,4 @@
-package com.example.hoverrobot.Models.comms
+package com.example.hoverrobot.data.models.comms
 
 @kotlinx.serialization.Serializable
 data class PidSettings(
