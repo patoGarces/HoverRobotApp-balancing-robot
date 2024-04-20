@@ -44,7 +44,7 @@ class BottomSheetDevicesFragment : BottomSheetDialogFragment() {
         bottomSheetBehavior.expandedOffset = 20
         bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
         bottomSheetBehavior.maxWidth = 800
-        bottomSheetBehavior.peekHeight= 100                                                         // tamaño cuando esta collapsado
+        bottomSheetBehavior.peekHeight= 120                                                         // tamaño cuando esta collapsado
 
         setupObservers()
         setupListener()

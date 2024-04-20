@@ -1,8 +1,10 @@
 package com.example.hoverrobot
 
 import android.Manifest
+import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
@@ -22,6 +24,7 @@ import com.example.hoverrobot.Models.comms.MainBoardResponse
 import com.example.hoverrobot.Models.comms.PidSettings
 import com.example.hoverrobot.bluetooth.BluetoothInterface
 import com.example.hoverrobot.bluetooth.BluetoothManager
+import com.example.hoverrobot.bluetooth.StatusBtEnable
 import com.example.hoverrobot.bluetooth.StatusEnumBT
 import com.example.hoverrobot.bluetooth.StatusEnumRobot
 import com.example.hoverrobot.databinding.ActivityMainBinding
@@ -186,7 +189,7 @@ class MainActivity : AppCompatActivity(), BluetoothInterface {
         val requestEnableBt =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
                 if (result.resultCode == RESULT_OK) {
-//                    bluetoothManager.startDiscoverBT()
+                    bluetoothManager.startDiscoverBT()
                 } else {
                     Log.d("bluetooth", "El user rechazo el encendido del bluetooth")
                 }
@@ -201,22 +204,22 @@ class MainActivity : AppCompatActivity(), BluetoothInterface {
                     }
                 }
 
-//                if (btPermissions) {
+                if (btPermissions) {
 
-//                    if (bluetoothManager.isBluetoothEnabled() == StatusBtEnable.BLUETOOTH_OFF) {
+                    if (bluetoothManager.isBluetoothEnabled() == StatusBtEnable.BLUETOOTH_OFF) {
 
-//                        val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-//                        requestEnableBt.launch(enableBtIntent)
-//                    } else if (bluetoothManager.isBluetoothEnabled() == StatusBtEnable.BLUETOOTH_ON) {
-//
-//
-//                        Log.d("bluetooth", "ya esta encendido")
-//                        bluetoothManager.startDiscoverBT()
-//                    }
-//                } else {
-//                    Toast.makeText(this, "ERROR PERMISOS BLUETOOTH", Toast.LENGTH_LONG).show()
-//                    Log.d("bluetooth", "NO SE OBTUVIERON LOS PERMISOS NECESARIOS")
-//                }
+                        val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+                        requestEnableBt.launch(enableBtIntent)
+                    } else if (bluetoothManager.isBluetoothEnabled() == StatusBtEnable.BLUETOOTH_ON) {
+
+
+                        Log.d("bluetooth", "ya esta encendido")
+                        bluetoothManager.startDiscoverBT()
+                    }
+                } else {
+                    Toast.makeText(this, "ERROR PERMISOS BLUETOOTH", Toast.LENGTH_LONG).show()
+                    Log.d("bluetooth", "NO SE OBTUVIERON LOS PERMISOS NECESARIOS")
+                }
             }
 
         requestMultiplesPermissions.launch(
@@ -322,7 +325,7 @@ class MainActivity : AppCompatActivity(), BluetoothInterface {
     }
 
     fun retryDiscover() {
-//        bluetoothManager.startDiscoverBT()
+        bluetoothManager.startDiscoverBT()
     }
 
     private fun hideSystemBars() {
