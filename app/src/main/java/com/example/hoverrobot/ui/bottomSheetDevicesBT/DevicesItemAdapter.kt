@@ -1,8 +1,12 @@
 package com.example.hoverrobot.ui.bottomSheetDevicesBT
 
+import android.Manifest
 import android.bluetooth.BluetoothDevice
+import android.content.pm.PackageManager
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.app.ActivityCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.example.hoverrobot.R
 
@@ -16,11 +20,11 @@ class DevicesItemAdapter(private val devicesItem : List<BluetoothDevice>, privat
 
     override fun onBindViewHolder(holder: DevicesItemViewHolder, position: Int) {
         val item = devicesItem[position]
+        Log.d("DeviceBT","mac: ${item}")
         holder.render(item,onClickListener)
     }
 
     override fun getItemCount(): Int {
         return devicesItem.size
     }
-
 }
