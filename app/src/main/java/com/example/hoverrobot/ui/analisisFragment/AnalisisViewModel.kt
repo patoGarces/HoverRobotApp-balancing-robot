@@ -3,7 +3,7 @@ package com.example.hoverrobot.ui.analisisFragment
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.hoverrobot.Models.comms.MainBoardResponse
+import com.example.hoverrobot.data.models.comms.MainBoardResponse
 
 class AnalisisViewModel : ViewModel() {
 

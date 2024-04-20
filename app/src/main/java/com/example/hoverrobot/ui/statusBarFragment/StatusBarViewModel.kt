@@ -4,8 +4,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.hoverrobot.Models.comms.Battery
-import com.example.hoverrobot.bluetooth.StatusEnumBT
-import com.example.hoverrobot.bluetooth.StatusEnumRobot
+import com.example.hoverrobot.data.utils.StatusEnumBT
+import com.example.hoverrobot.data.utils.StatusEnumRobot
 
 class StatusBarViewModel: ViewModel() {
 
@@ -41,7 +41,7 @@ class StatusBarViewModel: ViewModel() {
         _battery.postValue( newStatus )
     }
 
-    fun setConnectionStatus( status : StatusEnumBT ){
+    fun setConnectionStatus( status : StatusEnumBT){
         _connectionStatus.postValue(status)
     }
 

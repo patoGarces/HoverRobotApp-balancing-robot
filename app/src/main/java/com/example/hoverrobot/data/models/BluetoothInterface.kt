@@ -1,6 +1,7 @@
-package com.example.hoverrobot.bluetooth
+package com.example.hoverrobot.data.models
 
 import android.bluetooth.BluetoothDevice
+import com.example.hoverrobot.data.utils.StatusEnumBT
 import java.nio.ByteBuffer
 
 interface BluetoothInterface {

@@ -1,4 +1,4 @@
-package com.example.hoverrobot.Models.comms
+package com.example.hoverrobot.data.models.comms
 
 import kotlinx.serialization.Serializable
 
@@ -15,11 +15,11 @@ data class MainBoardResponse(
     val pitchAngle: Float,
     val rollAngle: Float,
     val yawAngle: Float,
+    val kp: Float,
+    val ki: Float,
+    val kd: Float,
     val centerAngle: Float,
-    val safetyLimits: Short,
-    val kp: Short,
-    val ki: Short,
-    val kd: Short,
+    val safetyLimits: Float,
     val ordenCode: Short,
     val statusCode: Short,
     val checksum: Short

@@ -13,7 +13,7 @@ import com.example.hoverrobot.MainActivity
 import com.example.hoverrobot.R
 import com.example.hoverrobot.ToolBox
 import com.example.hoverrobot.databinding.StatusBarFragmentBinding
-import com.example.hoverrobot.bluetooth.StatusMapperBT
+import com.example.hoverrobot.data.utils.StatusMapperBT
 import java.io.IOException
 
 
@@ -48,13 +48,15 @@ class StatusBarFragment : Fragment() {
         statusBarViewModel.connectionStatus.observe(viewLifecycleOwner){
             it?.let {
                 binding.btnStatus.text = StatusMapperBT.mapStatusTostring(it,statusBarViewModel.statusRobot.value)
-                ToolBox.changeStrokeColor(requireContext(),binding.btnStatus,StatusMapperBT.mapStatusToColor(it,statusBarViewModel.statusRobot.value),3)
+                ToolBox.changeStrokeColor(requireContext(),binding.btnStatus,
+                    StatusMapperBT.mapStatusToColor(it,statusBarViewModel.statusRobot.value),3)
             }
         }
 
         statusBarViewModel.statusRobot.observe(viewLifecycleOwner){
             binding.btnStatus.text = StatusMapperBT.mapStatusTostring(statusBarViewModel.connectionStatus.value!!,it)
-            ToolBox.changeStrokeColor(requireContext(),binding.btnStatus,StatusMapperBT.mapStatusToColor(statusBarViewModel.connectionStatus.value!!,it),3)
+            ToolBox.changeStrokeColor(requireContext(),binding.btnStatus,
+                StatusMapperBT.mapStatusToColor(statusBarViewModel.connectionStatus.value!!,it),3)
         }
 
         statusBarViewModel.battery.observe(viewLifecycleOwner) {
@@ -62,7 +64,7 @@ class StatusBarFragment : Fragment() {
             it?.let{
                 with(binding.ibBatteryStatus) {
 
-                    if (it.batLevel > 100 && it.batLevel < 200) {
+                    if (it.batLevel in 101..199) {
                         setImageResource(R.drawable.ic_battery_charging)
                         binding.tvBatteryPercent.text = String.format(getString(R.string.placehoder_battery),(it.batLevel-100).toString())
                     }

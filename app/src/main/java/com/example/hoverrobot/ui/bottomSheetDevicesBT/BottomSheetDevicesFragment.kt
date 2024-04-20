@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.hoverrobot.MainActivity
 import com.example.hoverrobot.MainActivity.Companion.SKIP_BLUETOOTH
 import com.example.hoverrobot.ui.statusBarFragment.StatusBarViewModel
-import com.example.hoverrobot.bluetooth.StatusEnumBT
+import com.example.hoverrobot.data.utils.StatusEnumBT
 import com.example.hoverrobot.databinding.BottomSheetDevicesFragmentBinding
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment

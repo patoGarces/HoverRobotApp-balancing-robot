@@ -10,7 +10,7 @@ import androidx.navigation.Navigation
 import com.example.hoverrobot.R
 import com.example.hoverrobot.ToolBox
 import com.example.hoverrobot.ui.statusBarFragment.StatusBarViewModel
-import com.example.hoverrobot.bluetooth.StatusMapperBT
+import com.example.hoverrobot.data.utils.StatusMapperBT
 import com.example.hoverrobot.databinding.StatusDataFragmentBinding
 
 class StatusDataFragment : Fragment() {

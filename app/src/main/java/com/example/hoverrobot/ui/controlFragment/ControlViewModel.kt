@@ -3,7 +3,7 @@ package com.example.hoverrobot.ui.controlFragment
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.hoverrobot.Models.comms.AxisControl
+import com.example.hoverrobot.data.models.comms.AxisControl
 
 class ControlViewModel : ViewModel() {
 

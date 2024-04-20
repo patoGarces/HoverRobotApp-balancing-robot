@@ -3,7 +3,7 @@ package com.example.hoverrobot.ui.settingsFragment
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.hoverrobot.Models.comms.PidSettings
+import com.example.hoverrobot.data.models.comms.PidSettings
 
 class SettingsFragmentViewModel: ViewModel(){
 
