@@ -20,6 +20,7 @@ data class MainBoardResponse(
     val kd: Float,
     val centerAngle: Float,
     val safetyLimits: Float,
+    val setPoint: Float,
     val ordenCode: Short,
     val statusCode: Short,
     val checksum: Short

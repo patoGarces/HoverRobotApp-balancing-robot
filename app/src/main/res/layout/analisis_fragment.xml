@@ -154,33 +154,36 @@
                                     android:id="@+id/rg_size_samples"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:checkedButton="@id/rb_samples_10"
+                                    android:checkedButton="@id/rb_samples_5s"
                                     app:layout_constraintTop_toBottomOf="@id/frame_size_title"
                                     app:layout_constraintStart_toStartOf="parent"
                                     app:layout_constraintEnd_toEndOf="parent"
                                     >
 
                                         <RadioButton
-                                            android:id="@+id/rb_samples_10"
+                                            android:id="@+id/rb_samples_5s"
                                             android:layout_width="match_parent"
                                             android:layout_height="wrap_content"
+                                            android:checked="false"
                                             android:buttonTint="@color/red_80_percent"
-                                            android:text="@string/size_10_samples" />
+                                            android:text="@string/window_size_5s" />
 
                                         <RadioButton
-                                            android:id="@+id/rb_samples_100"
+                                            android:id="@+id/rb_samples_15s"
                                             android:layout_width="match_parent"
                                             android:layout_height="wrap_content"
+                                            android:checked="true"
                                             android:buttonTint="@color/red_80_percent"
-                                            android:text="@string/size_100_samples"
+                                            android:text="@string/window_size_15s"
                                             />
 
                                         <RadioButton
-                                            android:id="@+id/rb_samples_1000"
+                                            android:id="@+id/rb_samples_30s"
                                             android:layout_width="match_parent"
                                             android:layout_height="wrap_content"
+                                            android:checked="false"
                                             android:buttonTint="@color/red_80_percent"
-                                            android:text="@string/size_1000_samples"
+                                            android:text="@string/window_size_30s"
                                             />
                                 </RadioGroup>
 
