@@ -56,9 +56,9 @@
     <string name="frame_size_title">Frame size</string>
 
     <!--    RadioGroup frame size-->
-    <string name="size_10_samples">10 Muestras</string>
-    <string name="size_100_samples">100 Muestras</string>
-    <string name="size_1000_samples">1000 Muestras</string>
+    <string name="window_size_5s">5 segundos</string>
+    <string name="window_size_15s">15 segundos</string>
+    <string name="window_size_30s">30 segundos</string>
 
     <!--    RadioGroup dataset select-->
     <string name="dataset_imu_data">IMU Data</string>

@@ -259,19 +259,12 @@ class MainActivity : AppCompatActivity(), BluetoothInterface {
             buffer.float,
             buffer.float,
             buffer.float,
-
             buffer.float,
             buffer.float,
             buffer.float,
             buffer.float,
             buffer.float,
-
-
-//            buffer.float,
-//            buffer.short,
-//            buffer.short,
-//            buffer.short,
-//            buffer.short,
+            buffer.float,
             buffer.short,
             buffer.short,
             buffer.short

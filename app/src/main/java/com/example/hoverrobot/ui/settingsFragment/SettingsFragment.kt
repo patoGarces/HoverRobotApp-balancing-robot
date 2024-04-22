@@ -30,11 +30,11 @@ class SettingsFragment : Fragment() {
 
     val settingsFragmentViewModel : SettingsFragmentViewModel by viewModels(ownerProducer = { requireActivity() })
 
-    var kpValue: Float = 0f
-    var kiValue: Float = 0f
-    var kdValue: Float = 0f
-    var centerValue: Float = 0f
-    var safetyLimitsValue: Float = 0f
+    private var kpValue: Float = 0f
+    private var kiValue: Float = 0f
+    private var kdValue: Float = 0f
+    private var centerValue: Float = 0f
+    private var safetyLimitsValue: Float = 0f
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -49,12 +49,12 @@ class SettingsFragment : Fragment() {
 
         setupListener()
         setupObserver()
-//        getParametersFromStore()
+        getParametersFromStore()
     }
 
     private fun setupListener(){
 
-        binding.sbPidP.addOnChangeListener { rangeSlider, progressP, fromUser ->
+        binding.sbPidP.addOnChangeListener { _, progressP, _ ->
             kpValue = progressP
             binding.tvValueP.text = getString(R.string.value_slider_format).format((kpValue))
         }
@@ -66,7 +66,7 @@ class SettingsFragment : Fragment() {
             }
         })
 
-        binding.sbPidI.addOnChangeListener { rangeSlider, progressI, fromUser ->
+        binding.sbPidI.addOnChangeListener { _, progressI, _ ->
             kiValue = progressI
             binding.tvValueI.text = getString(R.string.value_slider_format).format((kiValue))
         }
@@ -78,7 +78,7 @@ class SettingsFragment : Fragment() {
             }
         })
 
-        binding.sbPidD.addOnChangeListener { rangeSlider, progressD, fromUser ->
+        binding.sbPidD.addOnChangeListener { _, progressD, _ ->
             kdValue = progressD
             binding.tvValueD.text = getString(R.string.value_slider_format).format((kdValue))
         }
@@ -90,7 +90,7 @@ class SettingsFragment : Fragment() {
             }
         })
 
-        binding.sbCenterAngle.addOnChangeListener { rangeSlider, progressCenter, fromUser ->
+        binding.sbCenterAngle.addOnChangeListener { _, progressCenter, _ ->
             centerValue = progressCenter
             binding.tvValueCenter.text = centerValue.toString()
         }
@@ -102,7 +102,7 @@ class SettingsFragment : Fragment() {
             }
         })
 
-        binding.sbSafetyLimits.addOnChangeListener { rangeSlider, progressSafetyLimits, fromUser ->
+        binding.sbSafetyLimits.addOnChangeListener { _, progressSafetyLimits, _ ->
             safetyLimitsValue = progressSafetyLimits
             binding.tvValueLimits.text = safetyLimitsValue.toString()
         }
@@ -129,12 +129,11 @@ class SettingsFragment : Fragment() {
         settingsFragmentViewModel.pidSettingFromRobot.observe(viewLifecycleOwner) {
             it?.let {
                 if (it != lastPidSettings) {
-                    saveParam(binding.sbPidP,it.kp)
-                    saveParam(binding.sbPidI,it.ki)
-                    saveParam(binding.sbPidD,it.kd)
-                    saveParam(binding.sbCenterAngle,it.centerAngle)
-                    saveParam(binding.sbSafetyLimits,it.safetyLimits)
-
+                    binding.sbPidP.saveParam(it.kp)
+                    binding.sbPidI.saveParam(it.ki)
+                    binding.sbPidD.saveParam(it.kd)
+                    binding.sbCenterAngle.saveParam(it.centerAngle)
+                    binding.sbSafetyLimits.saveParam(it.safetyLimits)
                     lastPidSettings = settingsFragmentViewModel.pidSettingFromRobot.value
                 }
             }
@@ -153,46 +152,31 @@ class SettingsFragment : Fragment() {
         }
     }
 
-    private fun saveParam(slider: Slider, value: Float) {
-        with (slider) {
-            this.value = if( value in valueFrom..valueTo) { value } else{ valueFrom }
-        }
-    }
-
     private fun getParametersFromStore() {
         lifecycleScope.launch(Dispatchers.IO) {
-
             with(context?.dataStore?.data) {
-                val paramP = this?.map { preferences ->
-                        preferences[floatPreferencesKey(KEY_PID_PARAM_P)]
-                    }?.first()
-                val paramI = this?.map { preferences ->
-                        preferences[floatPreferencesKey(KEY_PID_PARAM_I)]
-                    }?.first()
-                val paramD = this?.map { preferences ->
-                        preferences[floatPreferencesKey(KEY_PID_PARAM_D)]
-                    }?.first()
-                val paramCenter = this?.map { preferences ->
-                        preferences[floatPreferencesKey(KEY_PID_PARAM_CENTER)]
-                    }?.first()
-                val safetyLimits = this?.map { preferences ->
-                        preferences[floatPreferencesKey(KEY_PID_PARAM_SAFETY_LIM)]
-                    }?.first()
+                val paramP = this?.map { it[floatPreferencesKey(KEY_PID_PARAM_P)] }?.first()
+                val paramI = this?.map { it[floatPreferencesKey(KEY_PID_PARAM_I)] }?.first()
+                val paramD = this?.map { it[floatPreferencesKey(KEY_PID_PARAM_D)] }?.first()
+                val paramCenter = this?.map { it[floatPreferencesKey(KEY_PID_PARAM_CENTER)] }?.first()
+                val safetyLimits = this?.map { it[floatPreferencesKey(KEY_PID_PARAM_SAFETY_LIM)] }?.first()
 
-                paramP?.let { saveParam(binding.sbPidP,it) }
-                paramI?.let { saveParam(binding.sbPidI,it) }
-                paramD?.let { saveParam(binding.sbPidD,it) }
-                paramCenter?.let { saveParam(binding.sbCenterAngle,it) }
-                safetyLimits?.let { saveParam(binding.sbSafetyLimits,it) }
+                paramP?.let { binding.sbPidP.saveParam(it) }
+                paramI?.let { binding.sbPidI.saveParam(it) }
+                paramD?.let { binding.sbPidD.saveParam(it) }
+                paramCenter?.let { binding.sbCenterAngle.saveParam(it) }
+                safetyLimits?.let { binding.sbSafetyLimits.saveParam(it) }
             }
         }
     }
 
-    companion object{
-        private const val KEY_PID_PARAM_P = "KEY_PID_P"
-        private const val KEY_PID_PARAM_I = "KEY_PID_I"
-        private const val KEY_PID_PARAM_D = "KEY_PID_D"
-        private const val KEY_PID_PARAM_CENTER = "KEY_PID_CENTER"
-        private const val KEY_PID_PARAM_SAFETY_LIM = "KEY_PID_SAFETY"
+    private fun Slider.saveParam(value: Float) {
+        this.value = if( value in valueFrom..valueTo) { value } else{ valueFrom }
     }
 }
+
+private const val KEY_PID_PARAM_P = "KEY_PID_P"
+private const val KEY_PID_PARAM_I = "KEY_PID_I"
+private const val KEY_PID_PARAM_D = "KEY_PID_D"
+private const val KEY_PID_PARAM_CENTER = "KEY_PID_CENTER"
+private const val KEY_PID_PARAM_SAFETY_LIM = "KEY_PID_SAFETY"

@@ -29,7 +29,7 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {//},OnChartGe
     private val binding get() = _binding
 
     private var initTimeStamp : Long = 0
-    private var frameSize = 10
+    private var frameSize = (15.00 / FRAME_PERIOD).toInt()
     private var viewDataset : DatasetView = DatasetView.DATASET_IMU
 
     private lateinit var chart : LineChart
@@ -83,17 +83,15 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {//},OnChartGe
     private fun setupListener(){
 
         binding.switchAutoscale.setOnCheckedChangeListener { _, isChecked ->
-            Toast.makeText(requireContext(),"Autoescale: $isChecked", Toast.LENGTH_LONG).show()
-
             setAutoScale(isChecked)
         }
 
         binding.rgSizeSamples.setOnCheckedChangeListener { _, checkedId ->
             frameSize = when (checkedId) {
-                R.id.rb_samples_10 -> 10
-                R.id.rb_samples_100 -> 100
-                R.id.rb_samples_1000 -> 1000
-                else -> 10
+                R.id.rb_samples_5s -> (5.00 / FRAME_PERIOD).toInt()
+                R.id.rb_samples_15s -> (15.00 / FRAME_PERIOD).toInt()
+                R.id.rb_samples_30s -> (30.00 / FRAME_PERIOD).toInt()
+                else -> (15.00 / FRAME_PERIOD).toInt()
             }
         }
 
@@ -337,6 +335,7 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {//},OnChartGe
     }
 }
 
+private const val FRAME_PERIOD = 0.05 // frecuencia de muestras en segundos
 
 enum class DatasetView{
     DATASET_IMU,
