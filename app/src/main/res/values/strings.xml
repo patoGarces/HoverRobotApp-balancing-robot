@@ -54,24 +54,21 @@
     <string name="dataset_title">Datasets</string>
     <string name="config_title">Configuracion</string>
     <string name="frame_size_title">Frame size</string>
-
     <!--    RadioGroup frame size-->
     <string name="window_size_5s">5 segundos</string>
     <string name="window_size_15s">15 segundos</string>
     <string name="window_size_30s">30 segundos</string>
-
     <!--    RadioGroup dataset select-->
     <string name="dataset_imu_data">IMU Data</string>
     <string name="dataset_motor_output">Motor Control Data</string>
     <string name="dataset_pid">Pid attitude</string>
-
     <!--    general config -->
     <string name="general_config_title">General</string>
     <string name="switch_text_title">Autoscale</string>
     <string name="btn_random_title">Random dataset</string>
-
-    <string name="btn_save_text">Save</string>
-    <string name="btn_get_text">Get</string>
+    <string name="btn_clear_title">Clear data</string>
+    <string name="btn_play_title">Play</string>
+    <string name="btn_pause_title">Pause</string>
 
 
 

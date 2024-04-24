@@ -107,7 +107,7 @@ class SettingsFragment : Fragment() {
             binding.tvValueLimits.text = safetyLimitsValue.toString()
         }
 
-        binding.sbCenterAngle.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
+        binding.sbSafetyLimits.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
             override fun onStartTrackingTouch(slider: Slider) { }
             override fun onStopTrackingTouch(slider: Slider) {
                 settingsFragmentViewModel.setPidTunningToRobot(PidSettings(kpValue,kiValue,kdValue,centerValue,safetyLimitsValue))

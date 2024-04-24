@@ -26,25 +26,25 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.*
 
-class BluetoothManager(private val context : Context, private val interfaceBT: BluetoothInterface) {
+class BluetoothManager(private val context: Context, private val interfaceBT: BluetoothInterface) {
 
-    private var bluetoothAdapter : BluetoothAdapter = getDefaultAdapter()
+    private var bluetoothAdapter: BluetoothAdapter = getDefaultAdapter()
     private var discoverDevicesBT = arrayListOf<BluetoothDevice>()
 
     private lateinit var bluetoothSocket: BluetoothSocket
 
-    private lateinit var outputStreamBt : OutputStream
-    private lateinit var inputStreamBt : InputStream
+    private lateinit var outputStreamBt: OutputStream
+    private lateinit var inputStreamBt: InputStream
     private val TAG = "bluetoothManager"
 
-    init{
+    init {
         interfaceBT.setStatusBT(StatusEnumBT.STATUS_INIT)
     }
 
-    fun isBluetoothEnabled() : StatusBtEnable{
-        return if(bluetoothAdapter.isEnabled){
+    fun isBluetoothEnabled(): StatusBtEnable {
+        return if (bluetoothAdapter.isEnabled) {
             StatusBtEnable.BLUETOOTH_ON
-        } else{
+        } else {
             StatusBtEnable.BLUETOOTH_OFF
         }
     }
@@ -71,22 +71,23 @@ class BluetoothManager(private val context : Context, private val interfaceBT: B
         interfaceBT.setStatusBT(StatusEnumBT.STATUS_DISCOVERING)
 
         val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
-        (context as Activity).registerReceiver(receiver,filter)
+        (context as Activity).registerReceiver(receiver, filter)
 
         val filter2 = IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_STARTED)
-        (context as Activity).registerReceiver(receiver,filter2)
+        (context as Activity).registerReceiver(receiver, filter2)
 
         val filter3 = IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
-        (context as Activity).registerReceiver(receiver,filter3)
+        (context as Activity).registerReceiver(receiver, filter3)
     }
 
-    private val receiver = object : BroadcastReceiver(){
+    private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
 
-            when( intent.action ){
+            when (intent.action) {
 
-                BluetoothDevice.ACTION_FOUND ->{
-                    val device : BluetoothDevice? = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
+                BluetoothDevice.ACTION_FOUND -> {
+                    val device: BluetoothDevice? =
+                        intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
 
                     device?.let {
                         addDeviceAvailable(device)
@@ -95,7 +96,7 @@ class BluetoothManager(private val context : Context, private val interfaceBT: B
 
                 BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
                     interfaceBT.stopDiscover()
-                    if(interfaceBT.getStatusBT() != StatusEnumBT.STATUS_CONNECTING) {
+                    if (interfaceBT.getStatusBT() != StatusEnumBT.STATUS_CONNECTING) {
                         interfaceBT.setStatusBT(StatusEnumBT.STATUS_DISCONNECT)
                     }
                 }
@@ -117,8 +118,8 @@ class BluetoothManager(private val context : Context, private val interfaceBT: B
         }
     }
 
-    private fun addDeviceAvailable(device : BluetoothDevice){
-        if(!discoverDevicesBT.contains(device)) {
+    private fun addDeviceAvailable(device: BluetoothDevice) {
+        if (!discoverDevicesBT.contains(device)) {
             discoverDevicesBT.add(device)
 
             Log.d(TAG, "Nuevo dispositivo detectado: $discoverDevicesBT")
@@ -126,11 +127,11 @@ class BluetoothManager(private val context : Context, private val interfaceBT: B
         interfaceBT.getDevicesBT(discoverDevicesBT)
     }
 
-    fun connectDevice( device : BluetoothDevice){
+    fun connectDevice(device: BluetoothDevice) {
 
-        Log.d(TAG,"Intentando conectar con ${device.name}")
-        if(StatusEnumBT.STATUS_CONNECTING == interfaceBT.getStatusBT()){
-            Log.d(TAG,"ABORTADO: ESTAS INTENTANDO CONECTARTE DURANTE UN INTENTO DE CONEXION")
+        Log.d(TAG, "Intentando conectar con ${device.name}")
+        if (StatusEnumBT.STATUS_CONNECTING == interfaceBT.getStatusBT()) {
+            Log.d(TAG, "ABORTADO: ESTAS INTENTANDO CONECTARTE DURANTE UN INTENTO DE CONEXION")
             return
         }
         bluetoothAdapter.cancelDiscovery()
@@ -143,29 +144,30 @@ class BluetoothManager(private val context : Context, private val interfaceBT: B
                 interfaceBT.setStatusBT(StatusEnumBT.STATUS_CONNECTED)
                 Log.d("connectResponse", "conexion exitosa")
                 initStreams()
-            }
-            catch (e : IOException){
+            } catch (e: IOException) {
                 interfaceBT.setStatusBT(StatusEnumBT.STATUS_DISCONNECT)
-                Log.d(TAG,"Error en intento de conexion")
+                Log.d(TAG, "Error en intento de conexion")
             }
         }
     }
 
-    private fun initStreams(){
+    private fun initStreams() {
 
-        try{
-            outputStreamBt =  bluetoothSocket.outputStream
+        try {
+            outputStreamBt = bluetoothSocket.outputStream
             inputStreamBt = bluetoothSocket.inputStream
             receiverListener()
-        }catch (e : IOException){
+        } catch (e: IOException) {
             interfaceBT.setStatusBT(StatusEnumBT.STATUS_DISCONNECT)
-            Log.e(TAG,"Error al obtener el outputStream",e)
+            Log.e(TAG, "Error al obtener el outputStream", e)
         }
     }
 
-    fun sendJoystickUpdate( axisControl : AxisControl){
-        val paramList = listOf(HEADER_PACKET,HEADER_TX_KEY_CONTROL,axisControl.axisX,axisControl.axisY)
-        val buffer = ByteBuffer.allocate((paramList.size+1) * 4)                                        // Float ocupa 4 bytes, int igual, agrego 1 para el checksum
+    fun sendJoystickUpdate(axisControl: AxisControl) {
+        val paramList =
+            listOf(HEADER_PACKET, HEADER_TX_KEY_CONTROL, axisControl.axisX, axisControl.axisY)
+        val buffer =
+            ByteBuffer.allocate((paramList.size + 1) * 4)                                        // Float ocupa 4 bytes, int igual, agrego 1 para el checksum
 
         buffer.order(ByteOrder.LITTLE_ENDIAN)
 
@@ -173,16 +175,26 @@ class BluetoothManager(private val context : Context, private val interfaceBT: B
             buffer.putInt(intValue)
         }
 
-        val checksum =  HEADER_PACKET xor HEADER_TX_KEY_CONTROL xor axisControl.axisX xor axisControl.axisY
+        val checksum =
+            HEADER_PACKET xor HEADER_TX_KEY_CONTROL xor axisControl.axisX xor axisControl.axisY
         buffer.putInt(checksum)
 
         outputStreamBt.write(buffer.array())
     }
 
-    fun sendPidParam( pidSettings : PidSettings){      // TODO: enviar pidSettings en float
+    fun sendPidParam(pidSettings: PidSettings) {
 
-        val paramList = listOf(HEADER_PACKET,HEADER_TX_KEY_SETTINGS,pidSettings.kp.toInt(),pidSettings.ki.toInt(),pidSettings.kd.toInt(),pidSettings.centerAngle.toInt(),pidSettings.safetyLimits.toInt())
-        val buffer = ByteBuffer.allocate((paramList.size+1) * 4)                                        // Float ocupa 4 bytes, int igual, agrego 1 para el checksum
+        val paramList = listOf(
+            HEADER_PACKET,
+            HEADER_TX_KEY_SETTINGS,
+            (pidSettings.kp * 10).toInt(),
+            (pidSettings.ki * 10).toInt(),
+            (pidSettings.kd * 10).toInt(),
+            (pidSettings.centerAngle * 10).toInt(),
+            (pidSettings.safetyLimits * 10).toInt()
+        )
+        val buffer =
+            ByteBuffer.allocate((paramList.size + 1) * 4)                                        // Float ocupa 4 bytes, int igual, agrego 1 para el checksum
 
         buffer.order(ByteOrder.LITTLE_ENDIAN)
 
@@ -190,14 +202,22 @@ class BluetoothManager(private val context : Context, private val interfaceBT: B
             buffer.putInt(intValue)
         }
 
-        val checksum =  HEADER_PACKET xor HEADER_TX_KEY_SETTINGS xor pidSettings.kp.toInt() xor pidSettings.ki.toInt() xor pidSettings.kd.toInt() xor pidSettings.centerAngle.toInt() xor pidSettings.safetyLimits.toInt()
+        val checksum = (
+                HEADER_PACKET xor
+                        HEADER_TX_KEY_SETTINGS xor
+                        (pidSettings.kp * 10).toInt() xor
+                        (pidSettings.ki * 10).toInt() xor
+                        (pidSettings.kd * 10).toInt() xor
+                        (pidSettings.centerAngle * 10).toInt() xor
+                        (pidSettings.safetyLimits * 10).toInt()
+                )
 
         buffer.putInt(checksum)
 
         outputStreamBt.write(buffer.array())
     }
 
-    private fun receiverListener(){
+    private fun receiverListener() {
 
         try {
             val bufferSize = 100
@@ -213,33 +233,35 @@ class BluetoothManager(private val context : Context, private val interfaceBT: B
                     interfaceBT.newMessageReceive(byteBuffer)
                 }
             } while (bytesRead >= 0)
-        }
-        catch (e: IOException){
+        } catch (e: IOException) {
             interfaceBT.setStatusBT(StatusEnumBT.STATUS_DISCONNECT)
-            Log.e(TAG,"Error inputStream",e)
+            Log.e(TAG, "Error inputStream", e)
         }
     }
 
-    fun destroy(){
-        try{
+    fun destroy() {
+        try {
             bluetoothSocket.close()
-        }catch (e : IOException){
-            Log.e(TAG,"Error cerrando el socket bluetooth",e)
+        } catch (e: IOException) {
+            Log.e(TAG, "Error cerrando el socket bluetooth", e)
         }
     }
 
-    companion object{
+    companion object {
         private val SPP_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
 
         const val HEADER_PACKET = 0xABC0
-        const val HEADER_RX_KEY_STATUS = 0xAB01           // key que indica que el paquete recibido es un status
-        const val HEADER_TX_KEY_CONTROL = 0xAB02          // key que indica qe el paquete a enviar es de control
-        const val HEADER_TX_KEY_SETTINGS = 0xAB03         // key que indica qe el paquete a enviar es de configuracion
+        const val HEADER_RX_KEY_STATUS =
+            0xAB01           // key que indica que el paquete recibido es un status
+        const val HEADER_TX_KEY_CONTROL =
+            0xAB02          // key que indica qe el paquete a enviar es de control
+        const val HEADER_TX_KEY_SETTINGS =
+            0xAB03         // key que indica qe el paquete a enviar es de configuracion
 
     }
 }
 
-enum class StatusBtEnable{
+enum class StatusBtEnable {
     BLUETOOTH_ON,
     BLUETOOTH_OFF,
 }
