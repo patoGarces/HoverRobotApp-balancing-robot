@@ -54,6 +54,11 @@
     <string name="dataset_title">Datasets</string>
     <string name="config_title">Configuracion</string>
     <string name="frame_size_title">Frame size</string>
+    <string name="placeholder_kp">Kp: %s</string>
+    <string name="placeholder_ki">Ki: %s</string>
+    <string name="placeholder_kd">Kd: %s</string>
+    <string name="placeholder_center">Center: %s</string>
+
     <!--    RadioGroup frame size-->
     <string name="window_size_5s">5 segundos</string>
     <string name="window_size_15s">15 segundos</string>
