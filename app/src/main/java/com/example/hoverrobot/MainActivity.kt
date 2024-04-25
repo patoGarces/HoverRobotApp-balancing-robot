@@ -1,12 +1,10 @@
 package com.example.hoverrobot
 
 import android.Manifest
-import android.app.Application
 import android.bluetooth.BluetoothAdapter
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.util.AttributeSet
 import android.util.Log
 import android.view.View
 import android.view.WindowManager
@@ -66,13 +64,8 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-//        commsRepository = CommsRepository(this)
-
-        commsRepository.helloWorld()
         getPermissions()
-
 //        webViewSetup()
-
         setupObservers()
         setupViewPagerAndTabLayout()
     }
@@ -204,8 +197,6 @@ class MainActivity : AppCompatActivity() {
                     statusDataViewModel.setImuTemp(newStatus.tempUcMain.toFloat() / 10)
 
                     statusDataViewModel.setGralStatus(newStatus.statusCode)
-
-                    analisisViewModel.addNewPointData(newStatus)
 
                     val newPidSettings = PidSettings(
                         newStatus.kp,
