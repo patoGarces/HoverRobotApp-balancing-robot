@@ -4,7 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.hoverrobot.Models.comms.Battery
-import com.example.hoverrobot.data.utils.StatusEnumBT
+import com.example.hoverrobot.data.utils.ConnectionStatus
 import com.example.hoverrobot.data.utils.StatusEnumRobot
 
 class StatusBarViewModel: ViewModel() {
@@ -18,8 +18,8 @@ class StatusBarViewModel: ViewModel() {
     private var _tempImu = MutableLiveData<Float>()
     val tempImu : LiveData<Float> = _tempImu
 
-    private var _connectionStatus = MutableLiveData<StatusEnumBT>()
-    val connectionStatus : LiveData<StatusEnumBT> = _connectionStatus
+    private var _connectionStatus = MutableLiveData<ConnectionStatus>()
+    val connectionStatus : LiveData<ConnectionStatus> = _connectionStatus
 
     private var _showDialogDevices = MutableLiveData<Boolean?>()
     val showDialogDevices : LiveData<Boolean?> get() = _showDialogDevices
@@ -32,7 +32,7 @@ class StatusBarViewModel: ViewModel() {
         _battery.postValue(Battery(0,0F,0F))
         _fpsStatus.postValue(0.0F)
         _tempImu.postValue(0F)
-        _connectionStatus.postValue(StatusEnumBT.STATUS_INIT)
+        _connectionStatus.postValue(ConnectionStatus.INIT)
         _statusRobot.postValue(null)
     }
 
@@ -41,7 +41,7 @@ class StatusBarViewModel: ViewModel() {
         _battery.postValue( newStatus )
     }
 
-    fun setConnectionStatus( status : StatusEnumBT){
+    fun setConnectionStatus( status : ConnectionStatus){
         _connectionStatus.postValue(status)
     }
 

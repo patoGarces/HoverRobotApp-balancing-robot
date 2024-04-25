@@ -3,33 +3,36 @@ package com.example.hoverrobot.data.repository
 import android.bluetooth.BluetoothDevice
 import android.content.Context
 import com.example.hoverrobot.bluetooth.BluetoothManager
-import com.example.hoverrobot.bluetooth.StatusBtEnable
-import com.example.hoverrobot.data.models.BluetoothInterface
 import com.example.hoverrobot.data.models.comms.AxisControl
 import com.example.hoverrobot.data.models.comms.MainBoardRobotStatus
 import com.example.hoverrobot.data.models.comms.PidSettings
 import com.example.hoverrobot.data.models.comms.asRobotStatus
+import com.example.hoverrobot.data.utils.ConnectionStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-class CommsRepository(private val context: Context, bluetoothInterface: BluetoothInterface) {   // TODO: hacer context y bluetooth manager injectable, eliminar bluetooth interface
+class CommsRepository(private val context: Context) {   // TODO: hacer context injectable, eliminar bluetooth interface
 
-    private var bluetoothManager: BluetoothManager
+    private var bluetoothManager: BluetoothManager = BluetoothManager(context)
 
     private val _statusRobotFlow = MutableSharedFlow<MainBoardRobotStatus>()
     val statusRobotFlow: SharedFlow<MainBoardRobotStatus> = _statusRobotFlow
 
-    private val _sendDataBtFlow = MutableSharedFlow<ByteBuffer>()        // TODO: revisar replay
-    val sendDataBtFlow: SharedFlow<ByteBuffer> = _sendDataBtFlow
+    private val _availableDevices = MutableSharedFlow<List<BluetoothDevice>>()
+    val availableDevices: SharedFlow<List<BluetoothDevice>> = _availableDevices
+
+    private val _connectionStateFlow = MutableStateFlow(ConnectionStatus.INIT)
+    val connectionStateFlow: StateFlow<ConnectionStatus> = _connectionStateFlow
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
     init {
-        bluetoothManager = BluetoothManager(context,bluetoothInterface)
         setupObservers()
     }
 
@@ -37,6 +40,18 @@ class CommsRepository(private val context: Context, bluetoothInterface: Bluetoot
         ioScope.launch {
             bluetoothManager.receivedDataBtFlow.collect {
                 _statusRobotFlow.emit(it.asRobotStatus)                                             // El dia de mañana si se reciben otros tipos de datos, se deberia hacer el split aca
+            }
+        }
+
+        ioScope.launch {                // TODO arreglar coroutinas
+            bluetoothManager.connectionsStatus.collect {
+                _connectionStateFlow.emit(it)
+            }
+        }
+
+        ioScope.launch {
+            bluetoothManager.availableBtDevices.collect {
+                ioScope.launch { _availableDevices.emit(it) }
             }
         }
     }
@@ -92,7 +107,7 @@ class CommsRepository(private val context: Context, bluetoothInterface: Bluetoot
         bluetoothManager.startDiscoverBT()
     }
 
-    fun isBluetoothEnabled(): StatusBtEnable {
+    fun isBluetoothEnabled(): Boolean {
         return bluetoothManager.isBluetoothEnabled()
     }
     companion object {

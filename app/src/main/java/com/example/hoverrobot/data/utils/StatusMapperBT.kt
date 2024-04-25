@@ -4,21 +4,21 @@ import com.example.hoverrobot.R
 
 object StatusMapperBT {
     private val mapStatusBtString = mapOf(
-        StatusEnumBT.STATUS_DISCONNECT to "Desconectado",
-        StatusEnumBT.STATUS_INIT to "Iniciando",
-        StatusEnumBT.STATUS_DISCOVERING to "Discovering",
-        StatusEnumBT.STATUS_CONNECTING to "Conectando",
-        StatusEnumBT.STATUS_CONNECTED to "Conectado",
-        StatusEnumBT.STATUS_ERROR to "Reintentar"
+        ConnectionStatus.DISCONNECT to "Desconectado",
+        ConnectionStatus.INIT to "Iniciando",
+        ConnectionStatus.DISCOVERING to "Discovering",
+        ConnectionStatus.CONNECTING to "Conectando",
+        ConnectionStatus.CONNECTED to "Conectado",
+        ConnectionStatus.ERROR to "Reintentar"
     )
 
     private val mapStatusBtColor = mapOf(
-        StatusEnumBT.STATUS_DISCONNECT to R.color.status_red,
-        StatusEnumBT.STATUS_INIT to R.color.status_orange,
-        StatusEnumBT.STATUS_DISCOVERING to R.color.status_turquesa,
-        StatusEnumBT.STATUS_CONNECTING to R.color.status_blue,
-        StatusEnumBT.STATUS_CONNECTED to R.color.gray_80_percent,
-        StatusEnumBT.STATUS_ERROR to R.color.status_red
+        ConnectionStatus.DISCONNECT to R.color.status_red,
+        ConnectionStatus.INIT to R.color.status_orange,
+        ConnectionStatus.DISCOVERING to R.color.status_turquesa,
+        ConnectionStatus.CONNECTING to R.color.status_blue,
+        ConnectionStatus.CONNECTED to R.color.gray_80_percent,
+        ConnectionStatus.ERROR to R.color.status_red
     )
 
     private val mapStatusRobotString = mapOf(
@@ -37,16 +37,16 @@ object StatusMapperBT {
         StatusEnumRobot.STATUS_ROBOT_ERROR to R.color.status_red
     )
 
-    fun mapStatusTostring(statusBt: StatusEnumBT, statusRobot: StatusEnumRobot?): String {
-        return if (statusBt == StatusEnumBT.STATUS_CONNECTED && statusRobot != null) {
+    fun mapStatusTostring(statusBt: ConnectionStatus, statusRobot: StatusEnumRobot?): String {
+        return if (statusBt == ConnectionStatus.CONNECTED && statusRobot != null) {
             if (mapStatusRobotString.containsKey(statusRobot)) mapStatusRobotString[statusRobot]!! else "XXX"
         } else {
             if (mapStatusBtString.containsKey(statusBt)) mapStatusBtString[statusBt]!! else "XXX"
         }
     }
 
-    fun mapStatusToColor(statusBt: StatusEnumBT, statusRobot: StatusEnumRobot?): Int {
-        return if (statusBt == StatusEnumBT.STATUS_CONNECTED) {
+    fun mapStatusToColor(statusBt: ConnectionStatus, statusRobot: StatusEnumRobot?): Int {
+        return if (statusBt == ConnectionStatus.CONNECTED) {
             if (mapStatusRobotColor.containsKey(statusRobot)) mapStatusRobotColor[statusRobot]!! else R.color.gray_80_percent
         } else {
             if (mapStatusBtColor.containsKey(statusBt)) mapStatusBtColor[statusBt]!! else R.color.gray_80_percent
@@ -54,13 +54,13 @@ object StatusMapperBT {
     }
 }
 
-enum class StatusEnumBT {
-    STATUS_INIT,
-    STATUS_DISCOVERING,
-    STATUS_CONNECTING,
-    STATUS_CONNECTED,
-    STATUS_DISCONNECT,
-    STATUS_ERROR
+enum class ConnectionStatus {
+    INIT,
+    DISCOVERING,
+    CONNECTING,
+    CONNECTED,
+    DISCONNECT,
+    ERROR
 }
 
 enum class StatusEnumRobot {

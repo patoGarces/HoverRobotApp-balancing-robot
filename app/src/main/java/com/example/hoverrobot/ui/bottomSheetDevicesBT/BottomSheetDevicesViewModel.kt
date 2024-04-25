@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothDevice
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.hoverrobot.data.utils.ConnectionStatus
 
 class BottomSheetDevicesViewModel : ViewModel() {
 
@@ -13,11 +14,11 @@ class BottomSheetDevicesViewModel : ViewModel() {
     private var _deviceSelected : MutableLiveData<BluetoothDevice> = MutableLiveData()
     val deviceSelected: LiveData<BluetoothDevice> get() = _deviceSelected
 
-    private var _statusBtnRefresh : MutableLiveData<StatusViewBt> = MutableLiveData()
-    val statusBtnRefresh: LiveData<StatusViewBt> get() = _statusBtnRefresh
+    private var _statusBtnRefresh : MutableLiveData<ConnectionStatus> = MutableLiveData()
+    val statusBtnRefresh: LiveData<ConnectionStatus> get() = _statusBtnRefresh
 
     init {
-        _devicesList.value = null
+        _devicesList.value = null                                       // TODO: revisar
         _deviceSelected.value = null
         _statusBtnRefresh.value = null
     }
@@ -29,7 +30,7 @@ class BottomSheetDevicesViewModel : ViewModel() {
         _devicesList.value = devicesList
     }
 
-    fun updateStatusBtnRefresh( status : StatusViewBt){
-        _statusBtnRefresh.value = status
+    fun updateStatusBtnRefresh(connectionStatus: ConnectionStatus){
+        _statusBtnRefresh.value = connectionStatus
     }
 }

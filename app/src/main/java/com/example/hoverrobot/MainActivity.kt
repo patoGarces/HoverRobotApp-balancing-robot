@@ -2,17 +2,16 @@ package com.example.hoverrobot
 
 import android.Manifest
 import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import androidx.appcompat.app.AppCompatActivity
 import android.view.View
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
@@ -22,21 +21,15 @@ import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.example.hoverrobot.Models.comms.Battery
 import com.example.hoverrobot.data.models.comms.PidSettings
-import com.example.hoverrobot.data.models.BluetoothInterface
-import com.example.hoverrobot.bluetooth.BluetoothManager
-import com.example.hoverrobot.bluetooth.StatusBtEnable
-import com.example.hoverrobot.data.models.comms.MainBoardRobotStatus
-import com.example.hoverrobot.data.models.comms.asRobotStatus
 import com.example.hoverrobot.data.repository.CommsRepository
 import com.example.hoverrobot.data.repository.CommsRepository.Companion.HEADER_PACKET
-import com.example.hoverrobot.data.utils.StatusEnumBT
+import com.example.hoverrobot.data.utils.ConnectionStatus
 import com.example.hoverrobot.data.utils.StatusEnumRobot
 import com.example.hoverrobot.databinding.ActivityMainBinding
 import com.example.hoverrobot.ui.analisisFragment.AnalisisFragment
 import com.example.hoverrobot.ui.analisisFragment.AnalisisViewModel
 import com.example.hoverrobot.ui.bottomSheetDevicesBT.BottomSheetDevicesFragment
 import com.example.hoverrobot.ui.bottomSheetDevicesBT.BottomSheetDevicesViewModel
-import com.example.hoverrobot.ui.bottomSheetDevicesBT.StatusViewBt
 import com.example.hoverrobot.ui.controlFragment.ControlFragment
 import com.example.hoverrobot.ui.controlFragment.ControlViewModel
 import com.example.hoverrobot.ui.settingsFragment.SettingsFragment
@@ -44,13 +37,11 @@ import com.example.hoverrobot.ui.settingsFragment.SettingsFragmentViewModel
 import com.example.hoverrobot.ui.statusBarFragment.StatusBarViewModel
 import com.example.hoverrobot.ui.statusDataFragment.StatusDataViewModel
 import com.google.android.material.tabs.TabLayoutMediator
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
-class MainActivity : AppCompatActivity(),BluetoothInterface {
+class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
 
@@ -69,7 +60,7 @@ class MainActivity : AppCompatActivity(),BluetoothInterface {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        commsRepository = CommsRepository(this,this)
+        commsRepository = CommsRepository(this)
 
         getPermissions()
 
@@ -119,7 +110,7 @@ class MainActivity : AppCompatActivity(),BluetoothInterface {
 
         settingsFragmentViewModel.pidSettingToRobot.observe(this) {
             it?.let {
-                if (this.getStatusBT() == StatusEnumBT.STATUS_CONNECTED) {                          // TODO: WTF con getStatusBT
+                if (commsRepository.connectionStateFlow.value == ConnectionStatus.CONNECTED) {
                     commsRepository.sendPidParam(it)
                 } else {
                     Log.d("activity", "No se puede enviar configuración")
@@ -139,22 +130,22 @@ class MainActivity : AppCompatActivity(),BluetoothInterface {
             Log.d("activity", "connetionStatus changed: $it")
             it?.let {
                 when (it) {
-                    StatusEnumBT.STATUS_INIT,
-                    StatusEnumBT.STATUS_DISCONNECT -> {
+                    ConnectionStatus.INIT,
+                    ConnectionStatus.DISCONNECT -> {
                         showDevicesToConnect()
                     }
 
-                    StatusEnumBT.STATUS_CONNECTED -> {
+                    ConnectionStatus.CONNECTED -> {
 //                        binding.btnTest.isEnabled = true
                         controlViewModel.setVisibility(true)
                     }
 
-                    StatusEnumBT.STATUS_ERROR -> {
+                    ConnectionStatus.ERROR -> {
                         Log.d("connectionStatus", "STATUS_ERROR")
                     }
 
-                    StatusEnumBT.STATUS_DISCOVERING,
-                    StatusEnumBT.STATUS_CONNECTING -> {} // TODO()
+                    ConnectionStatus.DISCOVERING,
+                    ConnectionStatus.CONNECTING -> {} // TODO()
                 }
             }
         }
@@ -173,8 +164,51 @@ class MainActivity : AppCompatActivity(),BluetoothInterface {
         }
 
         lifecycleScope.launch {
-            commsRepository.statusRobotFlow.collect {
-                newMessageReceive(it)
+            commsRepository.availableDevices.collect {
+                bottomSheetDevicesViewModel.updateDevicesList(it)
+            }
+        }
+
+        lifecycleScope.launch {
+            commsRepository.connectionStateFlow.collect {
+                statusBarViewModel.setConnectionStatus(it)
+                bottomSheetDevicesViewModel.updateStatusBtnRefresh(it)
+            }
+        }
+
+        lifecycleScope.launch {
+            commsRepository.statusRobotFlow.collect { newStatus ->
+                if (newStatus.header == HEADER_PACKET.toShort()) {
+
+                    statusBarViewModel.setTempImu((newStatus.tempUcMain.toFloat() / 10))
+
+                    val battery = Battery(
+                        newStatus.batPercent.toInt(),
+                        newStatus.batVoltage.toFloat(),
+                        newStatus.batTemp.toFloat() / 10
+                    )
+                    statusBarViewModel.setBatteryStatus(battery)
+
+                    StatusEnumRobot.values().getOrNull(newStatus.statusCode.toInt())
+                    ?.let { statusBarViewModel.setStatusRobot(it) }
+
+                    statusDataViewModel.setEscsTemp(newStatus.tempUcControl.toFloat() / 10)
+
+                    statusDataViewModel.setImuTemp(newStatus.tempUcMain.toFloat() / 10)
+
+                    statusDataViewModel.setGralStatus(newStatus.statusCode)
+
+                    analisisViewModel.addNewPointData(newStatus)
+
+                    val newPidSettings = PidSettings(
+                        newStatus.kp,
+                        newStatus.ki,
+                        newStatus.kd,
+                        newStatus.centerAngle,
+                        newStatus.safetyLimits
+                    )
+                    settingsFragmentViewModel.setPidTunningfromRobot(newPidSettings)
+                }
             }
         }
     }
@@ -253,61 +287,6 @@ class MainActivity : AppCompatActivity(),BluetoothInterface {
 //        }
 //
 //    }
-
-     fun newMessageReceive(newStatus: MainBoardRobotStatus) {
-        if (newStatus.header == HEADER_PACKET.toShort()) {
-
-            statusBarViewModel.setTempImu((newStatus.tempUcMain.toFloat() / 10))
-
-            val battery = Battery(
-                newStatus.batPercent.toInt(),
-                newStatus.batVoltage.toFloat(),
-                newStatus.batTemp.toFloat() / 10
-            )
-            statusBarViewModel.setBatteryStatus(battery)
-
-            StatusEnumRobot.values().getOrNull(newStatus.statusCode.toInt())
-                ?.let { statusBarViewModel.setStatusRobot(it) }
-
-            statusDataViewModel.setEscsTemp(newStatus.tempUcControl.toFloat() / 10)
-
-            statusDataViewModel.setImuTemp(newStatus.tempUcMain.toFloat() / 10)
-
-            statusDataViewModel.setGralStatus(newStatus.statusCode)
-
-            analisisViewModel.addNewPointData(newStatus)
-
-            val newPidSettings = PidSettings(
-                newStatus.kp,
-                newStatus.ki,
-                newStatus.kd,
-                newStatus.centerAngle,
-                newStatus.safetyLimits
-            )
-
-            settingsFragmentViewModel.setPidTunningfromRobot(newPidSettings)
-        }
-    }
-
-    override fun setStatusBT(status: StatusEnumBT) {
-        statusBarViewModel.setConnectionStatus(status)
-    }
-
-    override fun getStatusBT(): StatusEnumBT {
-        return statusBarViewModel.connectionStatus.value!!
-    }
-
-    override fun getDevicesBT(devices: List<BluetoothDevice>) {
-        bottomSheetDevicesViewModel.updateDevicesList(devices)
-    }
-
-    override fun initDiscover() {
-        bottomSheetDevicesViewModel.updateStatusBtnRefresh(StatusViewBt.BT_SEARCHING)
-    }
-
-    override fun stopDiscover() {
-        bottomSheetDevicesViewModel.updateStatusBtnRefresh(StatusViewBt.BT_DISCONNECTED)
-    }
 
     fun retryDiscover() {
         commsRepository.startDiscoverBT()

@@ -13,19 +13,13 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.util.Log
 import androidx.core.app.ActivityCompat
-import com.example.hoverrobot.data.models.comms.AxisControl
-import com.example.hoverrobot.data.models.comms.PidSettings
-import com.example.hoverrobot.data.models.BluetoothInterface
-import com.example.hoverrobot.data.models.comms.MainBoardRobotStatus
-import com.example.hoverrobot.data.models.comms.asRobotStatus
-import com.example.hoverrobot.data.utils.StatusEnumBT
+import com.example.hoverrobot.data.utils.ConnectionStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -33,7 +27,7 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.*
 
-class BluetoothManager(private val context: Context, private val interfaceBT: BluetoothInterface) {
+class BluetoothManager(private val context: Context) {
 
     private var bluetoothAdapter: BluetoothAdapter = getDefaultAdapter()
     private var discoverDevicesBT = arrayListOf<BluetoothDevice>()
@@ -49,8 +43,16 @@ class BluetoothManager(private val context: Context, private val interfaceBT: Bl
     private val _receivedDataBtFlow = MutableSharedFlow<ByteBuffer>()
     val receivedDataBtFlow: SharedFlow<ByteBuffer> = _receivedDataBtFlow
 
+    private val _connectionsStatus = MutableSharedFlow<ConnectionStatus>()
+    val connectionsStatus: SharedFlow<ConnectionStatus> = _connectionsStatus
+
+    private val _availableBtDevices = MutableSharedFlow<List<BluetoothDevice>>()
+    val availableBtDevices: SharedFlow<List<BluetoothDevice>> = _availableBtDevices
+
+    private var actualConnectionStatus: ConnectionStatus = ConnectionStatus.INIT
+
     init {
-        interfaceBT.setStatusBT(StatusEnumBT.STATUS_INIT)
+        setConnectionStatus(ConnectionStatus.INIT)
     }
 
     fun isBluetoothEnabled(): Boolean {
@@ -76,7 +78,7 @@ class BluetoothManager(private val context: Context, private val interfaceBT: Bl
             return
         }
         bluetoothAdapter.startDiscovery()
-        interfaceBT.setStatusBT(StatusEnumBT.STATUS_DISCOVERING)
+        setConnectionStatus(ConnectionStatus.DISCOVERING)
 
         val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
         (context as Activity).registerReceiver(receiver, filter)
@@ -103,14 +105,13 @@ class BluetoothManager(private val context: Context, private val interfaceBT: Bl
                 }
 
                 BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
-                    interfaceBT.stopDiscover()
-                    if (interfaceBT.getStatusBT() != StatusEnumBT.STATUS_CONNECTING) {
-                        interfaceBT.setStatusBT(StatusEnumBT.STATUS_DISCONNECT)
+                    if (actualConnectionStatus != ConnectionStatus.CONNECTING) {
+                        setConnectionStatus(ConnectionStatus.DISCONNECT)
                     }
                 }
 
                 BluetoothAdapter.ACTION_DISCOVERY_STARTED -> {
-                    interfaceBT.initDiscover()
+                    setConnectionStatus(ConnectionStatus.DISCOVERING)
                 }
             }
         }
@@ -129,31 +130,30 @@ class BluetoothManager(private val context: Context, private val interfaceBT: Bl
     private fun addDeviceAvailable(device: BluetoothDevice) {
         if (!discoverDevicesBT.contains(device)) {
             discoverDevicesBT.add(device)
-
             Log.d(TAG, "Nuevo dispositivo detectado: $discoverDevicesBT")
         }
-        interfaceBT.getDevicesBT(discoverDevicesBT)
+        ioScope.launch { _availableBtDevices.emit(discoverDevicesBT) }
     }
 
     fun connectDevice(device: BluetoothDevice) {
 
         Log.d(TAG, "Intentando conectar con ${device.name}")
-        if (StatusEnumBT.STATUS_CONNECTING == interfaceBT.getStatusBT()) {
+        if (ConnectionStatus.CONNECTING == actualConnectionStatus) {
             Log.d(TAG, "ABORTADO: ESTAS INTENTANDO CONECTARTE DURANTE UN INTENTO DE CONEXION")
             return
         }
         bluetoothAdapter.cancelDiscovery()
-        interfaceBT.setStatusBT(StatusEnumBT.STATUS_CONNECTING)
+        setConnectionStatus(ConnectionStatus.CONNECTING)
 
         GlobalScope.launch {
             try {
                 bluetoothSocket = device.createRfcommSocketToServiceRecord(SPP_UUID)
                 bluetoothSocket.connect()
-                interfaceBT.setStatusBT(StatusEnumBT.STATUS_CONNECTED)
+                setConnectionStatus(ConnectionStatus.CONNECTED)
                 Log.d("connectResponse", "conexion exitosa")
                 initStreams()
             } catch (e: IOException) {
-                interfaceBT.setStatusBT(StatusEnumBT.STATUS_DISCONNECT)
+                setConnectionStatus(ConnectionStatus.DISCONNECT)
                 Log.d(TAG, "Error en intento de conexion")
             }
         }
@@ -165,7 +165,7 @@ class BluetoothManager(private val context: Context, private val interfaceBT: Bl
             inputStreamBt = bluetoothSocket.inputStream
             receiverListener()
         } catch (e: IOException) {
-            interfaceBT.setStatusBT(StatusEnumBT.STATUS_DISCONNECT)
+            setConnectionStatus(ConnectionStatus.DISCONNECT)
             Log.e(TAG, "Error al obtener el outputStream", e)
         }
     }
@@ -192,9 +192,14 @@ class BluetoothManager(private val context: Context, private val interfaceBT: Bl
                 }
             } while (bytesRead >= 0)
         } catch (e: IOException) {
-            interfaceBT.setStatusBT(StatusEnumBT.STATUS_DISCONNECT)
+            setConnectionStatus(ConnectionStatus.DISCONNECT)
             Log.e(TAG, "Error inputStream", e)
         }
+    }
+
+    private fun setConnectionStatus(connectionStatus: ConnectionStatus) {
+        actualConnectionStatus = connectionStatus
+        ioScope.launch { _connectionsStatus.emit(connectionStatus) }
     }
 
     fun destroy() {

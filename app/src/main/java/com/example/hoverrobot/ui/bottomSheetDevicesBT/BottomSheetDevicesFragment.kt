@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.hoverrobot.MainActivity
 import com.example.hoverrobot.MainActivity.Companion.SKIP_BLUETOOTH
 import com.example.hoverrobot.ui.statusBarFragment.StatusBarViewModel
-import com.example.hoverrobot.data.utils.StatusEnumBT
+import com.example.hoverrobot.data.utils.ConnectionStatus
 import com.example.hoverrobot.databinding.BottomSheetDevicesFragmentBinding
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -74,28 +74,25 @@ class BottomSheetDevicesFragment : BottomSheetDialogFragment() {
 
         statusBarViewModel.connectionStatus.observe(viewLifecycleOwner){
             it?.let{
-                if(it == StatusEnumBT.STATUS_CONNECTED){
+                if(it == ConnectionStatus.CONNECTED){
                     dismiss()                                                                       // una vez que estoy conectado cierro el dialog.
                 }
             }
         }
     }
 
-    private fun setStatusView(status : StatusViewBt){
+    private fun setStatusView(status : ConnectionStatus){
         when(status){
-
-            StatusViewBt.BT_SEARCHING ->{
+            ConnectionStatus.DISCOVERING ->{
                 binding.refreshBtn.visibility = View.GONE
                 binding.pbSearching.visibility = View.VISIBLE
 
             }
-            StatusViewBt.BT_DISCONNECTED ->{
+            ConnectionStatus.DISCONNECT ->{
                 binding.refreshBtn.visibility = View.VISIBLE
                 binding.pbSearching.visibility = View.GONE
             }
-
-            StatusViewBt.BT_CONNECTING -> TODO()
-            StatusViewBt.BT_CONNECTED -> TODO()
+            else -> {}
         }
     }
 
