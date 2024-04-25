@@ -29,8 +29,6 @@ interface CommsRepository {
 
     val connectionStateFlow: StateFlow<ConnectionStatus>
 
-    fun helloWorld()
-
     fun sendPidParams(pidParams: PidSettings)
 
     fun sendJoystickUpdate(axisControl: AxisControl)
@@ -108,10 +106,6 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
 
         buffer.putInt(checksum)
         bluetoothManager.sendDataBt(buffer)
-    }
-
-    override fun helloWorld() {
-        Log.d("Hello","World")
     }
 
     override fun sendJoystickUpdate(axisControl: AxisControl) {

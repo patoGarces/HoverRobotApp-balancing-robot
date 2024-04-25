@@ -53,9 +53,9 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
 
     // Para cargar gif
-    implementation("pl.droidsonroids.gif:android-gif-drawable:1.2.19")
+    implementation(libs.android.gif.drawable)
 
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.2")
+    implementation(libs.kotlinx.serialization.json)
 
     // Joystick
     implementation("io.github.controlwear:virtualjoystick:1.10.1")
