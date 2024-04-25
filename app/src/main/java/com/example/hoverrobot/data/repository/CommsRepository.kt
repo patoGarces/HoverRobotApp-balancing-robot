@@ -2,12 +2,14 @@ package com.example.hoverrobot.data.repository
 
 import android.bluetooth.BluetoothDevice
 import android.content.Context
+import android.util.Log
 import com.example.hoverrobot.bluetooth.BluetoothManager
 import com.example.hoverrobot.data.models.comms.AxisControl
 import com.example.hoverrobot.data.models.comms.MainBoardRobotStatus
 import com.example.hoverrobot.data.models.comms.PidSettings
 import com.example.hoverrobot.data.models.comms.asRobotStatus
 import com.example.hoverrobot.data.utils.ConnectionStatus
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -17,19 +19,41 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import javax.inject.Inject
 
-class CommsRepository(private val context: Context) {   // TODO: hacer context injectable, eliminar bluetooth interface
+interface CommsRepository {
+
+    val statusRobotFlow: SharedFlow<MainBoardRobotStatus>
+
+    val availableDevices: SharedFlow<List<BluetoothDevice>>
+
+    val connectionStateFlow: StateFlow<ConnectionStatus>
+
+    fun helloWorld()
+
+    fun sendPidParams(pidParams: PidSettings)
+
+    fun sendJoystickUpdate(axisControl: AxisControl)
+
+    fun connectDevice(device: BluetoothDevice)
+
+    fun startDiscoverBT()
+
+    fun isBluetoothEnabled(): Boolean
+}
+
+class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val context: Context): CommsRepository {   // TODO: hacer context injectable, eliminar bluetooth interface
 
     private var bluetoothManager: BluetoothManager = BluetoothManager(context)
 
     private val _statusRobotFlow = MutableSharedFlow<MainBoardRobotStatus>()
-    val statusRobotFlow: SharedFlow<MainBoardRobotStatus> = _statusRobotFlow
+    override val statusRobotFlow: SharedFlow<MainBoardRobotStatus> = _statusRobotFlow
 
     private val _availableDevices = MutableSharedFlow<List<BluetoothDevice>>()
-    val availableDevices: SharedFlow<List<BluetoothDevice>> = _availableDevices
+    override val availableDevices: SharedFlow<List<BluetoothDevice>> = _availableDevices
 
     private val _connectionStateFlow = MutableStateFlow(ConnectionStatus.INIT)
-    val connectionStateFlow: StateFlow<ConnectionStatus> = _connectionStateFlow
+    override val connectionStateFlow: StateFlow<ConnectionStatus> = _connectionStateFlow
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
     init {
@@ -57,7 +81,7 @@ class CommsRepository(private val context: Context) {   // TODO: hacer context i
     }
 
 
-    fun sendPidParam(pidParams: PidSettings) {
+    override fun sendPidParams(pidParams: PidSettings) {
         val paramList = listOf(
             HEADER_PACKET,
             HEADER_TX_KEY_SETTINGS,
@@ -86,7 +110,11 @@ class CommsRepository(private val context: Context) {   // TODO: hacer context i
         bluetoothManager.sendDataBt(buffer)
     }
 
-    fun sendJoystickUpdate(axisControl: AxisControl) {
+    override fun helloWorld() {
+        Log.d("Hello","World")
+    }
+
+    override fun sendJoystickUpdate(axisControl: AxisControl) {
         val paramList =
             listOf(HEADER_PACKET, HEADER_TX_KEY_CONTROL, axisControl.axisX, axisControl.axisY)
         val buffer = ByteBuffer.allocate((paramList.size + 1) * 4)
@@ -99,15 +127,15 @@ class CommsRepository(private val context: Context) {   // TODO: hacer context i
         bluetoothManager.sendDataBt(buffer)
     }
 
-    fun connectDevice(device: BluetoothDevice) {        // TODO: borrar
+    override fun connectDevice(device: BluetoothDevice) {        // TODO: borrar
         bluetoothManager.connectDevice(device)
     }
 
-    fun startDiscoverBT() {
+    override fun startDiscoverBT() {
         bluetoothManager.startDiscoverBT()
     }
 
-    fun isBluetoothEnabled(): Boolean {
+    override fun isBluetoothEnabled(): Boolean {
         return bluetoothManager.isBluetoothEnabled()
     }
     companion object {
