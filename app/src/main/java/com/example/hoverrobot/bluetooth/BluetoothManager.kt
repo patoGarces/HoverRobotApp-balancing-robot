@@ -13,6 +13,7 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.util.Log
 import androidx.core.app.ActivityCompat
+import com.example.hoverrobot.ToolBox.Companion.ioScope
 import com.example.hoverrobot.data.utils.ConnectionStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -37,8 +38,6 @@ class BluetoothManager(private val context: Context) {
     private lateinit var outputStreamBt: OutputStream
     private lateinit var inputStreamBt: InputStream
     private val TAG = "bluetoothManager"
-
-    private val ioScope = CoroutineScope(Dispatchers.IO)
 
     private val _receivedDataBtFlow = MutableSharedFlow<ByteBuffer>()
     val receivedDataBtFlow: SharedFlow<ByteBuffer> = _receivedDataBtFlow

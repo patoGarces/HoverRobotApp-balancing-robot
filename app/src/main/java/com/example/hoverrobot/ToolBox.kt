@@ -3,10 +3,14 @@ package com.example.hoverrobot
 import android.content.Context
 import android.graphics.drawable.GradientDrawable
 import android.view.View
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 
 class ToolBox {
 
     companion object{
+
+        val ioScope = CoroutineScope(Dispatchers.IO)
 
         fun changeStrokeColor(context : Context, view : View, color : Int, width : Int){
 

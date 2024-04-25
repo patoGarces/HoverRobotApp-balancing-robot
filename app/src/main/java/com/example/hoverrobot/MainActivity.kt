@@ -108,26 +108,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupObservers() {
 
-        settingsFragmentViewModel.pidSettingToRobot.observe(this) {
-            it?.let {
-                if (commsRepository.connectionStateFlow.value == ConnectionStatus.CONNECTED) {
-                    commsRepository.sendPidParams(it)
-                } else {
-                    Log.d("activity", "No se puede enviar configuración")
-                    Toast.makeText(this, "Debe conectarse al bluetooth!", Toast.LENGTH_LONG).show()
-                }
-            }
-        }
-
-        bottomSheetDevicesViewModel.deviceSelected.observe(this) {
-            it?.let {
-                commsRepository.connectDevice(it)
-            }
-        }
-
         statusBarViewModel.connectionStatus.observe(this) {
-
-            Log.d("activity", "connetionStatus changed: $it")
             it?.let {
                 when (it) {
                     ConnectionStatus.INIT,
@@ -154,59 +135,6 @@ class MainActivity : AppCompatActivity() {
             if (it == true) {
                 showDevicesToConnect()
                 statusBarViewModel.setShowDialogDevices(false)
-            }
-        }
-
-        controlViewModel.controlAxis.observe(this) {
-            it?.let {
-                commsRepository.sendJoystickUpdate(it)
-            }
-        }
-
-        lifecycleScope.launch {
-            commsRepository.availableDevices.collect {
-                bottomSheetDevicesViewModel.updateDevicesList(it)
-            }
-        }
-
-        lifecycleScope.launch {
-            commsRepository.connectionStateFlow.collect {
-                statusBarViewModel.setConnectionStatus(it)
-                bottomSheetDevicesViewModel.updateStatusBtnRefresh(it)
-            }
-        }
-
-        lifecycleScope.launch {
-            commsRepository.statusRobotFlow.collect { newStatus ->
-                if (newStatus.header == HEADER_PACKET.toShort()) {
-
-                    statusBarViewModel.setTempImu((newStatus.tempUcMain.toFloat() / 10))
-
-                    val battery = Battery(
-                        newStatus.batPercent.toInt(),
-                        newStatus.batVoltage.toFloat(),
-                        newStatus.batTemp.toFloat() / 10
-                    )
-                    statusBarViewModel.setBatteryStatus(battery)
-
-                    StatusEnumRobot.values().getOrNull(newStatus.statusCode.toInt())
-                    ?.let { statusBarViewModel.setStatusRobot(it) }
-
-                    statusDataViewModel.setEscsTemp(newStatus.tempUcControl.toFloat() / 10)
-
-                    statusDataViewModel.setImuTemp(newStatus.tempUcMain.toFloat() / 10)
-
-                    statusDataViewModel.setGralStatus(newStatus.statusCode)
-
-                    val newPidSettings = PidSettings(
-                        newStatus.kp,
-                        newStatus.ki,
-                        newStatus.kd,
-                        newStatus.centerAngle,
-                        newStatus.safetyLimits
-                    )
-                    settingsFragmentViewModel.setPidTunningfromRobot(newPidSettings)
-                }
             }
         }
     }
