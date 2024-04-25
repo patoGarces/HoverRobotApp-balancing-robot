@@ -1,6 +1,7 @@
 package com.example.hoverrobot
 
 import android.Manifest
+import android.app.Application
 import android.bluetooth.BluetoothAdapter
 import android.content.Context
 import android.content.Intent
@@ -57,7 +58,7 @@ class MainActivity : AppCompatActivity() {
     private val bottomSheetDevicesViewModel: BottomSheetDevicesViewModel by viewModels()
 
     @Inject
-    private lateinit var commsRepository: CommsRepository
+    lateinit var commsRepository: CommsRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
