@@ -42,7 +42,6 @@ class ControlFragment : Fragment() {
             val y = (strength * Math.sin(Math.toRadians(angle.toDouble()))).toInt()
 
             controlViewModel.newCoordinatesJoystick(AxisControl(x,y))
-//            Log.d("joystick","Coordinates: $x, $y")
         }
     }
 

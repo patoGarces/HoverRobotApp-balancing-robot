@@ -1,25 +1,44 @@
 package com.example.hoverrobot.ui.settingsFragment
 
+import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.hoverrobot.ToolBox.Companion.ioScope
 import com.example.hoverrobot.data.models.comms.PidSettings
+import com.example.hoverrobot.data.repository.CommsRepository
+import com.example.hoverrobot.data.utils.ConnectionStatus
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class SettingsFragmentViewModel: ViewModel(){
-
-    private var _pidSettingToRobot: MutableLiveData<PidSettings?> = MutableLiveData()
-    val pidSettingToRobot : LiveData<PidSettings?> get() = _pidSettingToRobot
+@HiltViewModel
+class SettingsFragmentViewModel @Inject constructor(
+    private val commsRepository: CommsRepository
+): ViewModel(){
 
     private var _pidSettingFromRobot: MutableLiveData<PidSettings?> = MutableLiveData()
     val pidSettingFromRobot : LiveData<PidSettings?> get() = _pidSettingFromRobot
 
     init {
-        _pidSettingToRobot.value = null
         _pidSettingFromRobot.value = null
+
+        ioScope.launch {
+            commsRepository.statusRobotFlow.collect {
+                _pidSettingFromRobot.postValue(it.pid)
+            }
+        }
     }
 
     fun setPidTunningToRobot(newTunning : PidSettings){
-        _pidSettingToRobot.postValue( newTunning )
+        if (commsRepository.connectionStateFlow.value == ConnectionStatus.CONNECTED) {
+            commsRepository.sendPidParams(newTunning)
+        } else {
+            Log.d("activity", "No se puede enviar configuración")
+        }
     }
 
     fun setPidTunningfromRobot(newTunning : PidSettings){

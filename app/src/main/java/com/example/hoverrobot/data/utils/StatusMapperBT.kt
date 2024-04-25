@@ -22,19 +22,19 @@ object StatusMapperBT {
     )
 
     private val mapStatusRobotString = mapOf(
-        StatusEnumRobot.STATUS_ROBOT_INIT to "Iniciando",
-        StatusEnumRobot.STATUS_ROBOT_DISABLE to "Deshabilitado",
-        StatusEnumRobot.STATUS_ROBOT_ENABLE to "Habilitado",
-        StatusEnumRobot.STATUS_ROBOT_STABILIZED to "Estabilizado",
-        StatusEnumRobot.STATUS_ROBOT_ERROR to "Error"
+        StatusEnumRobot.ROBOT_INIT to "Iniciando",
+        StatusEnumRobot.ROBOT_DISABLE to "Deshabilitado",
+        StatusEnumRobot.ROBOT_ENABLE to "Habilitado",
+        StatusEnumRobot.ROBOT_STABILIZED to "Estabilizado",
+        StatusEnumRobot.ROBOT_ERROR to "Error"
     )
 
     private val mapStatusRobotColor = mapOf(
-        StatusEnumRobot.STATUS_ROBOT_INIT to R.color.gray_80_percent,
-        StatusEnumRobot.STATUS_ROBOT_DISABLE to R.color.gray_80_percent,
-        StatusEnumRobot.STATUS_ROBOT_ENABLE to R.color.status_turquesa,
-        StatusEnumRobot.STATUS_ROBOT_STABILIZED to R.color.status_blue,
-        StatusEnumRobot.STATUS_ROBOT_ERROR to R.color.status_red
+        StatusEnumRobot.ROBOT_INIT to R.color.gray_80_percent,
+        StatusEnumRobot.ROBOT_DISABLE to R.color.gray_80_percent,
+        StatusEnumRobot.ROBOT_ENABLE to R.color.status_turquesa,
+        StatusEnumRobot.ROBOT_STABILIZED to R.color.status_blue,
+        StatusEnumRobot.ROBOT_ERROR to R.color.status_red
     )
 
     fun mapStatusTostring(statusBt: ConnectionStatus, statusRobot: StatusEnumRobot?): String {
@@ -64,9 +64,16 @@ enum class ConnectionStatus {
 }
 
 enum class StatusEnumRobot {
-    STATUS_ROBOT_INIT,
-    STATUS_ROBOT_DISABLE,
-    STATUS_ROBOT_ENABLE,
-    STATUS_ROBOT_STABILIZED,
-    STATUS_ROBOT_ERROR
+    ROBOT_INIT,
+    ROBOT_DISABLE,
+    ROBOT_ENABLE,
+    ROBOT_STABILIZED,
+    ROBOT_ERROR;
+
+    companion object {
+        fun getStatusRobot(code: Int): StatusEnumRobot? {
+            val codeMap = entries.associateBy { it.ordinal }
+            return codeMap[code]
+        }
+    }
 }

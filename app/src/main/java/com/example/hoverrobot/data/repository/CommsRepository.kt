@@ -3,6 +3,7 @@ package com.example.hoverrobot.data.repository
 import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.util.Log
+import com.example.hoverrobot.ToolBox.Companion.ioScope
 import com.example.hoverrobot.bluetooth.BluetoothManager
 import com.example.hoverrobot.data.models.comms.AxisControl
 import com.example.hoverrobot.data.models.comms.MainBoardRobotStatus
@@ -53,7 +54,6 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
     private val _connectionStateFlow = MutableStateFlow(ConnectionStatus.INIT)
     override val connectionStateFlow: StateFlow<ConnectionStatus> = _connectionStateFlow
 
-    private val ioScope = CoroutineScope(Dispatchers.IO)
     init {
         setupObservers()
     }

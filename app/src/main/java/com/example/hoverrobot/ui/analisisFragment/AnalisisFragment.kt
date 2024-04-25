@@ -9,6 +9,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.example.hoverrobot.data.models.comms.MainBoardRobotStatus
 import com.example.hoverrobot.R
+import com.example.hoverrobot.data.models.comms.PidSettings
 import com.example.hoverrobot.databinding.AnalisisFragmentBinding
 import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.components.LimitLine
@@ -124,11 +125,13 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
                     ((Math.random() - 0.5) * 180).toFloat(),
                     ((Math.random() - 0.5) * 180).toFloat(),
                     ((Math.random() - 0.5) * 180).toFloat(),
-                    0f,
-                    1f,
-                    2f,
-                    0f,
-                    0f,
+                    PidSettings(
+                        0f,
+                        1f,
+                        2f,
+                        0f,
+                        0f,
+                    ),
                     0f,
                     Math.random().toInt().toShort(),
                     Math.random().toInt().toShort(),
@@ -198,10 +201,10 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
     private fun newAngle(newFrame: MainBoardRobotStatus) {
 
         with(binding) {
-            tvParamKp.text = getString(R.string.placeholder_kp, newFrame.kp.toString())
-            tvParamKi.text = getString(R.string.placeholder_ki, newFrame.ki.toString())
-            tvParamKd.text = getString(R.string.placeholder_kd, newFrame.kd.toString())
-            tvParamCenter.text = getString(R.string.placeholder_center, newFrame.centerAngle.toString())
+            tvParamKp.text = getString(R.string.placeholder_kp, newFrame.pid.kp.toString())
+            tvParamKi.text = getString(R.string.placeholder_ki, newFrame.pid.ki.toString())
+            tvParamKd.text = getString(R.string.placeholder_kd, newFrame.pid.kd.toString())
+            tvParamCenter.text = getString(R.string.placeholder_center, newFrame.pid.centerAngle.toString())
 
             val lineDataAnglePitch =
                 LineDataSet(entryAnglePitch.takeLast(frameSize), "Pitch Angle").also {
@@ -327,7 +330,7 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
         val colorSafetyLimits =
             requireContext().getColor(androidx.appcompat.R.color.material_deep_teal_200)
 
-        val centerAngleLimitLine = LimitLine(actualLineLimits.centerAngle, "Centro de gravedad")
+        val centerAngleLimitLine = LimitLine(actualLineLimits.pid.centerAngle, "Centro de gravedad")
         centerAngleLimitLine.lineWidth = 2f
         centerAngleLimitLine.enableDashedLine(20f, 10f, 10f)
         centerAngleLimitLine.labelPosition = LimitLine.LimitLabelPosition.LEFT_TOP
@@ -336,7 +339,7 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
         binding.chart.axisLeft.addLimitLine(centerAngleLimitLine)
 
         val upperLimitLine = LimitLine(
-            actualLineLimits.centerAngle + actualLineLimits.safetyLimits,
+            actualLineLimits.pid.centerAngle + actualLineLimits.pid.safetyLimits,
             "Limite seguridad superior"
         )
         upperLimitLine.lineWidth = 2f
@@ -347,7 +350,7 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
         binding.chart.axisLeft.addLimitLine(upperLimitLine)
 
         val lowerLimitLine = LimitLine(
-            actualLineLimits.centerAngle - actualLineLimits.safetyLimits,
+            actualLineLimits.pid.centerAngle - actualLineLimits.pid.safetyLimits,
             "Limite seguridad inferior"
         )
         lowerLimitLine.lineWidth = 2f
@@ -364,7 +367,7 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
 
         binding.chart.axisLeft.removeAllLimitLines()
 
-        val centerAngleLimitLine = LimitLine(newFrame.centerAngle, "Centro de gravedad")
+        val centerAngleLimitLine = LimitLine(newFrame.pid.centerAngle, "Centro de gravedad")
         centerAngleLimitLine.lineWidth = 2f
         centerAngleLimitLine.enableDashedLine(20f, 10f, 10f)
         centerAngleLimitLine.labelPosition = LimitLine.LimitLabelPosition.LEFT_TOP

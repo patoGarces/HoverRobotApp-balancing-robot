@@ -3,11 +3,23 @@ package com.example.hoverrobot.ui.statusBarFragment
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.lifecycleScope
 import com.example.hoverrobot.Models.comms.Battery
+import com.example.hoverrobot.ToolBox.Companion.ioScope
+import com.example.hoverrobot.data.repository.CommsRepository
 import com.example.hoverrobot.data.utils.ConnectionStatus
 import com.example.hoverrobot.data.utils.StatusEnumRobot
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class StatusBarViewModel: ViewModel() {
+@HiltViewModel
+class StatusBarViewModel @Inject constructor(
+    private val commsRepository: CommsRepository
+): ViewModel() {
 
     private var _battery = MutableLiveData<Battery>()
     val battery : LiveData<Battery> = _battery
@@ -34,19 +46,28 @@ class StatusBarViewModel: ViewModel() {
         _tempImu.postValue(0F)
         _connectionStatus.postValue(ConnectionStatus.INIT)
         _statusRobot.postValue(null)
-    }
 
+        ioScope.launch {
+            commsRepository.statusRobotFlow.collect {
+                _battery.postValue(
+                    Battery(
+                        it.batPercent.toInt(),
+                        it.batVoltage.toFloat(),
+                        it.batTemp.toFloat() / 10
+                    )
+                )
 
-    fun setBatteryStatus( newStatus : Battery ){
-        _battery.postValue( newStatus )
-    }
+                _tempImu.postValue((it.tempUcMain.toFloat() / 10))
 
-    fun setConnectionStatus( status : ConnectionStatus){
-        _connectionStatus.postValue(status)
-    }
+                _statusRobot.postValue(StatusEnumRobot.getStatusRobot(it.statusCode.toInt()))
+            }
+        }
 
-    fun setTempImu( temp : Float ){
-        _tempImu.postValue( temp )
+        ioScope.launch {
+            commsRepository.connectionStateFlow.collect {
+                _connectionStatus.postValue(it)
+            }
+        }
     }
 
     fun setShowDialogDevices( show : Boolean ){
