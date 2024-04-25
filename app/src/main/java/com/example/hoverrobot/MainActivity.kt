@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothAdapter
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.AttributeSet
 import android.util.Log
 import android.view.View
 import android.view.WindowManager
@@ -22,7 +23,7 @@ import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.example.hoverrobot.Models.comms.Battery
 import com.example.hoverrobot.data.models.comms.PidSettings
 import com.example.hoverrobot.data.repository.CommsRepository
-import com.example.hoverrobot.data.repository.CommsRepository.Companion.HEADER_PACKET
+import com.example.hoverrobot.data.repository.CommsRepositoryImpl.Companion.HEADER_PACKET
 import com.example.hoverrobot.data.utils.ConnectionStatus
 import com.example.hoverrobot.data.utils.StatusEnumRobot
 import com.example.hoverrobot.databinding.ActivityMainBinding
@@ -37,10 +38,13 @@ import com.example.hoverrobot.ui.settingsFragment.SettingsFragmentViewModel
 import com.example.hoverrobot.ui.statusBarFragment.StatusBarViewModel
 import com.example.hoverrobot.ui.statusDataFragment.StatusDataViewModel
 import com.google.android.material.tabs.TabLayoutMediator
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
@@ -52,6 +56,7 @@ class MainActivity : AppCompatActivity() {
     private val settingsFragmentViewModel: SettingsFragmentViewModel by viewModels()
     private val bottomSheetDevicesViewModel: BottomSheetDevicesViewModel by viewModels()
 
+    @Inject
     private lateinit var commsRepository: CommsRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,8 +65,9 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        commsRepository = CommsRepository(this)
+//        commsRepository = CommsRepository(this)
 
+        commsRepository.helloWorld()
         getPermissions()
 
 //        webViewSetup()
@@ -111,7 +117,7 @@ class MainActivity : AppCompatActivity() {
         settingsFragmentViewModel.pidSettingToRobot.observe(this) {
             it?.let {
                 if (commsRepository.connectionStateFlow.value == ConnectionStatus.CONNECTED) {
-                    commsRepository.sendPidParam(it)
+                    commsRepository.sendPidParams(it)
                 } else {
                     Log.d("activity", "No se puede enviar configuración")
                     Toast.makeText(this, "Debe conectarse al bluetooth!", Toast.LENGTH_LONG).show()
