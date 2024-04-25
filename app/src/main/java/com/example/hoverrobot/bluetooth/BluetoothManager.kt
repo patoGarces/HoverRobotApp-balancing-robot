@@ -187,11 +187,11 @@ class BluetoothManager(private val context: Context, private val interfaceBT: Bl
         val paramList = listOf(
             HEADER_PACKET,
             HEADER_TX_KEY_SETTINGS,
-            (pidSettings.kp * 10).toInt(),
-            (pidSettings.ki * 10).toInt(),
-            (pidSettings.kd * 10).toInt(),
-            (pidSettings.centerAngle * 10).toInt(),
-            (pidSettings.safetyLimits * 10).toInt()
+            (pidSettings.kp * 100).toInt(),
+            (pidSettings.ki * 100).toInt(),
+            (pidSettings.kd * 100).toInt(),
+            (pidSettings.centerAngle * 100).toInt(),
+            (pidSettings.safetyLimits * 100).toInt()
         )
         val buffer =
             ByteBuffer.allocate((paramList.size + 1) * 4)                                        // Float ocupa 4 bytes, int igual, agrego 1 para el checksum
@@ -205,11 +205,11 @@ class BluetoothManager(private val context: Context, private val interfaceBT: Bl
         val checksum = (
                 HEADER_PACKET xor
                         HEADER_TX_KEY_SETTINGS xor
-                        (pidSettings.kp * 10).toInt() xor
-                        (pidSettings.ki * 10).toInt() xor
-                        (pidSettings.kd * 10).toInt() xor
-                        (pidSettings.centerAngle * 10).toInt() xor
-                        (pidSettings.safetyLimits * 10).toInt()
+                        (pidSettings.kp * 100).toInt() xor
+                        (pidSettings.ki * 100).toInt() xor
+                        (pidSettings.kd * 100).toInt() xor
+                        (pidSettings.centerAngle * 100).toInt() xor
+                        (pidSettings.safetyLimits * 100).toInt()
                 )
 
         buffer.putInt(checksum)
