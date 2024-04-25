@@ -5,13 +5,11 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import com.example.hoverrobot.data.models.comms.MainBoardResponse
+import com.example.hoverrobot.data.models.comms.MainBoardRobotStatus
 import com.example.hoverrobot.R
 import com.example.hoverrobot.databinding.AnalisisFragmentBinding
-import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.components.LimitLine
 import com.github.mikephil.charting.data.Entry
@@ -114,7 +112,7 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
 
         binding.btnGenerateDataset.setOnClickListener {
             for (i in 0..100) {
-                val randomData = MainBoardResponse(
+                val randomData = MainBoardRobotStatus(
                     Math.random().toInt().toShort(),
                     Math.random().toInt().toShort(),
                     Math.random().toInt().toShort(),
@@ -197,7 +195,7 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
         }
     }
 
-    private fun newAngle(newFrame: MainBoardResponse) {
+    private fun newAngle(newFrame: MainBoardRobotStatus) {
 
         with(binding) {
             tvParamKp.text = getString(R.string.placeholder_kp, newFrame.kp.toString())
@@ -320,7 +318,7 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
         binding.chart.axisLeft.removeAllLimitLines()
     }
 
-    private fun setImuMode(actualLineLimits: MainBoardResponse) {
+    private fun setImuMode(actualLineLimits: MainBoardRobotStatus) {
 
         actualLimitScale = 100F
         setAutoScale(binding.switchAutoscale.isChecked)
@@ -360,7 +358,7 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
         binding.chart.axisLeft.addLimitLine(lowerLimitLine)
     }
 
-    fun setPidMode(newFrame: MainBoardResponse) {
+    fun setPidMode(newFrame: MainBoardRobotStatus) {
         actualLimitScale = 15F
         setAutoScale(binding.switchAutoscale.isChecked)
 

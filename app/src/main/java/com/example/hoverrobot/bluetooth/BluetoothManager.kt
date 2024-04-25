@@ -16,9 +16,16 @@ import androidx.core.app.ActivityCompat
 import com.example.hoverrobot.data.models.comms.AxisControl
 import com.example.hoverrobot.data.models.comms.PidSettings
 import com.example.hoverrobot.data.models.BluetoothInterface
+import com.example.hoverrobot.data.models.comms.MainBoardRobotStatus
+import com.example.hoverrobot.data.models.comms.asRobotStatus
 import com.example.hoverrobot.data.utils.StatusEnumBT
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -37,16 +44,17 @@ class BluetoothManager(private val context: Context, private val interfaceBT: Bl
     private lateinit var inputStreamBt: InputStream
     private val TAG = "bluetoothManager"
 
+    private val ioScope = CoroutineScope(Dispatchers.IO)
+
+    private val _receivedDataBtFlow = MutableSharedFlow<ByteBuffer>()
+    val receivedDataBtFlow: SharedFlow<ByteBuffer> = _receivedDataBtFlow
+
     init {
         interfaceBT.setStatusBT(StatusEnumBT.STATUS_INIT)
     }
 
-    fun isBluetoothEnabled(): StatusBtEnable {
-        return if (bluetoothAdapter.isEnabled) {
-            StatusBtEnable.BLUETOOTH_ON
-        } else {
-            StatusBtEnable.BLUETOOTH_OFF
-        }
+    fun isBluetoothEnabled(): Boolean {
+        return bluetoothAdapter.isEnabled
     }
 
     fun startDiscoverBT() {
@@ -152,7 +160,6 @@ class BluetoothManager(private val context: Context, private val interfaceBT: Bl
     }
 
     private fun initStreams() {
-
         try {
             outputStreamBt = bluetoothSocket.outputStream
             inputStreamBt = bluetoothSocket.inputStream
@@ -163,62 +170,11 @@ class BluetoothManager(private val context: Context, private val interfaceBT: Bl
         }
     }
 
-    fun sendJoystickUpdate(axisControl: AxisControl) {
-        val paramList =
-            listOf(HEADER_PACKET, HEADER_TX_KEY_CONTROL, axisControl.axisX, axisControl.axisY)
-        val buffer =
-            ByteBuffer.allocate((paramList.size + 1) * 4)                                        // Float ocupa 4 bytes, int igual, agrego 1 para el checksum
-
-        buffer.order(ByteOrder.LITTLE_ENDIAN)
-
-        for (intValue in paramList) {
-            buffer.putInt(intValue)
-        }
-
-        val checksum =
-            HEADER_PACKET xor HEADER_TX_KEY_CONTROL xor axisControl.axisX xor axisControl.axisY
-        buffer.putInt(checksum)
-
-        outputStreamBt.write(buffer.array())
-    }
-
-    fun sendPidParam(pidSettings: PidSettings) {
-
-        val paramList = listOf(
-            HEADER_PACKET,
-            HEADER_TX_KEY_SETTINGS,
-            (pidSettings.kp * 100).toInt(),
-            (pidSettings.ki * 100).toInt(),
-            (pidSettings.kd * 100).toInt(),
-            (pidSettings.centerAngle * 100).toInt(),
-            (pidSettings.safetyLimits * 100).toInt()
-        )
-        val buffer =
-            ByteBuffer.allocate((paramList.size + 1) * 4)                                        // Float ocupa 4 bytes, int igual, agrego 1 para el checksum
-
-        buffer.order(ByteOrder.LITTLE_ENDIAN)
-
-        for (intValue in paramList) {
-            buffer.putInt(intValue)
-        }
-
-        val checksum = (
-                HEADER_PACKET xor
-                        HEADER_TX_KEY_SETTINGS xor
-                        (pidSettings.kp * 100).toInt() xor
-                        (pidSettings.ki * 100).toInt() xor
-                        (pidSettings.kd * 100).toInt() xor
-                        (pidSettings.centerAngle * 100).toInt() xor
-                        (pidSettings.safetyLimits * 100).toInt()
-                )
-
-        buffer.putInt(checksum)
-
+    fun sendDataBt(buffer: ByteBuffer) {
         outputStreamBt.write(buffer.array())
     }
 
     private fun receiverListener() {
-
         try {
             val bufferSize = 100
             val buffer = ByteArray(bufferSize)
@@ -230,7 +186,9 @@ class BluetoothManager(private val context: Context, private val interfaceBT: Bl
                     val byteBuffer = ByteBuffer.wrap(buffer)
                     byteBuffer.order(ByteOrder.LITTLE_ENDIAN)
 
-                    interfaceBT.newMessageReceive(byteBuffer)
+                    ioScope.launch {
+                        _receivedDataBtFlow.emit(byteBuffer)
+                    }
                 }
             } while (bytesRead >= 0)
         } catch (e: IOException) {
@@ -246,22 +204,6 @@ class BluetoothManager(private val context: Context, private val interfaceBT: Bl
             Log.e(TAG, "Error cerrando el socket bluetooth", e)
         }
     }
-
-    companion object {
-        private val SPP_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
-
-        const val HEADER_PACKET = 0xABC0
-        const val HEADER_RX_KEY_STATUS =
-            0xAB01           // key que indica que el paquete recibido es un status
-        const val HEADER_TX_KEY_CONTROL =
-            0xAB02          // key que indica qe el paquete a enviar es de control
-        const val HEADER_TX_KEY_SETTINGS =
-            0xAB03         // key que indica qe el paquete a enviar es de configuracion
-
-    }
 }
 
-enum class StatusBtEnable {
-    BLUETOOTH_ON,
-    BLUETOOTH_OFF,
-}
+private val SPP_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")

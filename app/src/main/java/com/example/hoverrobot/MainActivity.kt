@@ -18,13 +18,17 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.example.hoverrobot.Models.comms.Battery
-import com.example.hoverrobot.data.models.comms.MainBoardResponse
 import com.example.hoverrobot.data.models.comms.PidSettings
 import com.example.hoverrobot.data.models.BluetoothInterface
 import com.example.hoverrobot.bluetooth.BluetoothManager
 import com.example.hoverrobot.bluetooth.StatusBtEnable
+import com.example.hoverrobot.data.models.comms.MainBoardRobotStatus
+import com.example.hoverrobot.data.models.comms.asRobotStatus
+import com.example.hoverrobot.data.repository.CommsRepository
+import com.example.hoverrobot.data.repository.CommsRepository.Companion.HEADER_PACKET
 import com.example.hoverrobot.data.utils.StatusEnumBT
 import com.example.hoverrobot.data.utils.StatusEnumRobot
 import com.example.hoverrobot.databinding.ActivityMainBinding
@@ -40,11 +44,13 @@ import com.example.hoverrobot.ui.settingsFragment.SettingsFragmentViewModel
 import com.example.hoverrobot.ui.statusBarFragment.StatusBarViewModel
 import com.example.hoverrobot.ui.statusDataFragment.StatusDataViewModel
 import com.google.android.material.tabs.TabLayoutMediator
-import java.nio.ByteBuffer
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
-class MainActivity : AppCompatActivity(), BluetoothInterface {
+class MainActivity : AppCompatActivity(),BluetoothInterface {
 
     private lateinit var binding: ActivityMainBinding
 
@@ -55,7 +61,7 @@ class MainActivity : AppCompatActivity(), BluetoothInterface {
     private val settingsFragmentViewModel: SettingsFragmentViewModel by viewModels()
     private val bottomSheetDevicesViewModel: BottomSheetDevicesViewModel by viewModels()
 
-    private lateinit var bluetoothManager: BluetoothManager
+    private lateinit var commsRepository: CommsRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,7 +69,8 @@ class MainActivity : AppCompatActivity(), BluetoothInterface {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        bluetoothManager = BluetoothManager(this, this)
+        commsRepository = CommsRepository(this,this)
+
         getPermissions()
 
 //        webViewSetup()
@@ -112,8 +119,8 @@ class MainActivity : AppCompatActivity(), BluetoothInterface {
 
         settingsFragmentViewModel.pidSettingToRobot.observe(this) {
             it?.let {
-                if (getStatusBT() == StatusEnumBT.STATUS_CONNECTED) {
-                    bluetoothManager.sendPidParam(it)
+                if (this.getStatusBT() == StatusEnumBT.STATUS_CONNECTED) {                          // TODO: WTF con getStatusBT
+                    commsRepository.sendPidParam(it)
                 } else {
                     Log.d("activity", "No se puede enviar configuración")
                     Toast.makeText(this, "Debe conectarse al bluetooth!", Toast.LENGTH_LONG).show()
@@ -123,7 +130,7 @@ class MainActivity : AppCompatActivity(), BluetoothInterface {
 
         bottomSheetDevicesViewModel.deviceSelected.observe(this) {
             it?.let {
-                bluetoothManager.connectDevice(it)
+                commsRepository.connectDevice(it)
             }
         }
 
@@ -161,7 +168,13 @@ class MainActivity : AppCompatActivity(), BluetoothInterface {
 
         controlViewModel.controlAxis.observe(this) {
             it?.let {
-                bluetoothManager.sendJoystickUpdate(it)
+                commsRepository.sendJoystickUpdate(it)
+            }
+        }
+
+        lifecycleScope.launch {
+            commsRepository.statusRobotFlow.collect {
+                newMessageReceive(it)
             }
         }
     }
@@ -188,7 +201,7 @@ class MainActivity : AppCompatActivity(), BluetoothInterface {
         val requestEnableBt =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
                 if (result.resultCode == RESULT_OK) {
-                    bluetoothManager.startDiscoverBT()
+                    commsRepository.startDiscoverBT()
                 } else {
                     Log.d("bluetooth", "El user rechazo el encendido del bluetooth")
                 }
@@ -204,16 +217,12 @@ class MainActivity : AppCompatActivity(), BluetoothInterface {
                 }
 
                 if (btPermissions) {
-
-                    if (bluetoothManager.isBluetoothEnabled() == StatusBtEnable.BLUETOOTH_OFF) {
-
+                    if (!commsRepository.isBluetoothEnabled()) {
                         val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
                         requestEnableBt.launch(enableBtIntent)
-                    } else if (bluetoothManager.isBluetoothEnabled() == StatusBtEnable.BLUETOOTH_ON) {
-
-
+                    } else {
                         Log.d("bluetooth", "ya esta encendido")
-                        bluetoothManager.startDiscoverBT()
+                        commsRepository.startDiscoverBT()
                     }
                 } else {
                     Toast.makeText(this, "ERROR PERMISOS BLUETOOTH", Toast.LENGTH_LONG).show()
@@ -245,59 +254,35 @@ class MainActivity : AppCompatActivity(), BluetoothInterface {
 //
 //    }
 
-    override fun newMessageReceive(buffer: ByteBuffer) {
+     fun newMessageReceive(newStatus: MainBoardRobotStatus) {
+        if (newStatus.header == HEADER_PACKET.toShort()) {
 
-        val newMainBoardResponse = MainBoardResponse(
-            buffer.short,
-            buffer.short,
-            buffer.short,
-            buffer.short,
-            buffer.short,
-            buffer.short,
-            buffer.short,
-            buffer.short,
-            buffer.float,
-            buffer.float,
-            buffer.float,
-            buffer.float,
-            buffer.float,
-            buffer.float,
-            buffer.float,
-            buffer.float,
-            buffer.float,
-            buffer.short,
-            buffer.short,
-            buffer.short
-        )
-
-        if (newMainBoardResponse.header == BluetoothManager.HEADER_PACKET.toShort()) {
-
-            statusBarViewModel.setTempImu((newMainBoardResponse.tempUcMain.toFloat() / 10))
+            statusBarViewModel.setTempImu((newStatus.tempUcMain.toFloat() / 10))
 
             val battery = Battery(
-                newMainBoardResponse.batPercent.toInt(),
-                newMainBoardResponse.batVoltage.toFloat(),
-                newMainBoardResponse.batTemp.toFloat() / 10
+                newStatus.batPercent.toInt(),
+                newStatus.batVoltage.toFloat(),
+                newStatus.batTemp.toFloat() / 10
             )
             statusBarViewModel.setBatteryStatus(battery)
 
-            StatusEnumRobot.values().getOrNull(newMainBoardResponse.statusCode.toInt())
+            StatusEnumRobot.values().getOrNull(newStatus.statusCode.toInt())
                 ?.let { statusBarViewModel.setStatusRobot(it) }
 
-            statusDataViewModel.setEscsTemp(newMainBoardResponse.tempUcControl.toFloat() / 10)
+            statusDataViewModel.setEscsTemp(newStatus.tempUcControl.toFloat() / 10)
 
-            statusDataViewModel.setImuTemp(newMainBoardResponse.tempUcMain.toFloat() / 10)
+            statusDataViewModel.setImuTemp(newStatus.tempUcMain.toFloat() / 10)
 
-            statusDataViewModel.setGralStatus(newMainBoardResponse.statusCode)
+            statusDataViewModel.setGralStatus(newStatus.statusCode)
 
-            analisisViewModel.addNewPointData(newMainBoardResponse)
+            analisisViewModel.addNewPointData(newStatus)
 
             val newPidSettings = PidSettings(
-                newMainBoardResponse.kp,
-                newMainBoardResponse.ki,
-                newMainBoardResponse.kd,
-                newMainBoardResponse.centerAngle,
-                newMainBoardResponse.safetyLimits
+                newStatus.kp,
+                newStatus.ki,
+                newStatus.kd,
+                newStatus.centerAngle,
+                newStatus.safetyLimits
             )
 
             settingsFragmentViewModel.setPidTunningfromRobot(newPidSettings)
@@ -325,7 +310,7 @@ class MainActivity : AppCompatActivity(), BluetoothInterface {
     }
 
     fun retryDiscover() {
-        bluetoothManager.startDiscoverBT()
+        commsRepository.startDiscoverBT()
     }
 
     private fun hideSystemBars() {
