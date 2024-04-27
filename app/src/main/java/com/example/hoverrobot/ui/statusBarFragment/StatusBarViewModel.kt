@@ -53,7 +53,7 @@ class StatusBarViewModel @Inject constructor(
                     )
                 )
 
-                _tempImu.postValue((it.tempUcMain.toFloat() / 10))
+                _tempImu.postValue((it.tempEsc.toFloat() / 10))
 
                 _statusRobot.postValue(StatusEnumRobot.getStatusRobot(it.statusCode.toInt()))
             }

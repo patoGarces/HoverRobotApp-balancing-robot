@@ -40,7 +40,7 @@ interface CommsRepository {
     fun isBluetoothEnabled(): Boolean
 }
 
-class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val context: Context): CommsRepository {   // TODO: hacer context injectable, eliminar bluetooth interface
+class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val context: Context): CommsRepository {
 
     private var bluetoothManager: BluetoothManager = BluetoothManager(context)
 
@@ -63,7 +63,7 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
         ioScope.launch {
             bluetoothManager.receivedDataBtFlow.collect {
                 val statusRobot = it.asRobotStatus
-                if (statusRobot.header == HEADER_PACKET.toShort() &&
+                if (statusRobot.header == HEADER_RX_KEY_STATUS.toShort() &&
                     statusRobot.checksum == statusRobot.calculateChecksum) {
                     _statusRobotFlow.emit(statusRobot)                                             // El dia de mañana si se reciben otros tipos de datos, se deberia hacer el split aca
                 }
@@ -73,7 +73,7 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
             }
         }
 
-        ioScope.launch {                // TODO arreglar coroutinas
+        ioScope.launch {
             bluetoothManager.connectionsStatus.collect {
                 _connectionStateFlow.emit(it)
             }
@@ -129,7 +129,7 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
         bluetoothManager.sendDataBt(buffer)
     }
 
-    override fun connectDevice(device: BluetoothDevice) {        // TODO: borrar
+    override fun connectDevice(device: BluetoothDevice) {
         bluetoothManager.connectDevice(device)
     }
 
@@ -143,8 +143,8 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
 
     companion object {
         const val HEADER_PACKET = 0xABC0
-        const val HEADER_RX_KEY_STATUS = 0xAB01  // key que indica que el paquete recibido es un status
-        const val HEADER_TX_KEY_CONTROL = 0xAB02  // key que indica qe el paquete a enviar es de control
-        const val HEADER_TX_KEY_SETTINGS = 0xAB03  // key que indica qe el paquete a enviar es de configuracion
+        const val HEADER_RX_KEY_STATUS = 0xAB01     // key que indica que el paquete recibido es un status
+        const val HEADER_TX_KEY_CONTROL = 0xAB02    // key que indica qe el paquete a enviar es de control
+        const val HEADER_TX_KEY_SETTINGS = 0xAB03   // key que indica qe el paquete a enviar es de configuracion
     }
 }
