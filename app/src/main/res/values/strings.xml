@@ -5,8 +5,10 @@
     <string name="title_status_fragment">Estado general</string>
     <string name="title_bt_status">Conexion</string>
     <string name="title_imu_status">status IMU</string>
-    <string name="title_motorboard_temp">Temperatura ESCS</string>
-    <string name="title_imuboard_temp">Temperatura IMU</string>
+    <string name="title_temp">Temperaturas</string>
+    <string name="title_battery_temp">Bateria</string>
+    <string name="title_motorboard_temp">ESC</string>
+    <string name="title_imu_temp">IMU</string>
     <string name="title_recyclerview_devices">Seleccione dispositivo:</string>
     <string name="title_recyclerview_refresh_btn">Buscar</string>
 

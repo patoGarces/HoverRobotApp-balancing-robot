@@ -8,8 +8,8 @@ data class MainBoardRobotStatus(
     val batVoltage: Short,
     val batPercent: Short,
     val batTemp: Short,
-    val tempUcControl: Short,
-    val tempUcMain: Short,
+    val tempImu: Short,
+    val tempEsc: Short,
     val speedR: Short,
     val speedL: Short,
     val pitchAngle: Float,
@@ -54,8 +54,8 @@ val MainBoardRobotStatus.calculateChecksum: Short
             batVoltage xor
             batPercent xor
             batTemp xor
-            tempUcControl xor
-            tempUcMain xor
+            tempImu xor
+            tempEsc xor
             speedR xor
             speedL xor
             pitchAngle.toInt().toShort() xor

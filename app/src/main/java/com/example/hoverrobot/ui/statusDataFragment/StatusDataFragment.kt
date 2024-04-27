@@ -60,8 +60,8 @@ class StatusDataFragment : Fragment() {
 
         statusDataViewModel.escsTemp.observe(viewLifecycleOwner){
             it?.let{
-                binding.tvMotorboardTemp.text = getString(R.string.placehoder_temp).format(it)
-                ToolBox.changeStrokeColor(requireContext(),binding.tvMotorboardTemp, R.color.gray_80_percent, 2)
+                binding.tvEscTemp.text = getString(R.string.placehoder_temp).format(it)
+                ToolBox.changeStrokeColor(requireContext(),binding.tvEscTemp, R.color.gray_80_percent, 2)
             }
         }
 
@@ -69,6 +69,13 @@ class StatusDataFragment : Fragment() {
             it?.let{
                 binding.tvImuboardTemp.text = getString(R.string.placehoder_temp).format(it)
                 ToolBox.changeStrokeColor(requireContext(),binding.tvImuboardTemp, R.color.gray_80_percent, 2)
+            }
+        }
+
+        statusDataViewModel.batteryTemp.observe(viewLifecycleOwner){
+            it?.let{
+                binding.tvBatteryTemp.text = getString(R.string.placehoder_temp).format(it)
+                ToolBox.changeStrokeColor(requireContext(),binding.tvBatteryTemp, R.color.gray_80_percent, 2)
             }
         }
     }
