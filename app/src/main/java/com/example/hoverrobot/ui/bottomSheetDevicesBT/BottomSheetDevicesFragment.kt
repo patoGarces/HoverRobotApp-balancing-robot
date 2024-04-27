@@ -23,7 +23,6 @@ class BottomSheetDevicesFragment : BottomSheetDialogFragment() {
     private val binding get() = _binding!!
 
     private val bottomSheetDevicesViewModel: BottomSheetDevicesViewModel by viewModels(ownerProducer = { requireActivity() })
-    private val statusBarViewModel: StatusBarViewModel by viewModels(ownerProducer = { requireActivity() })
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -66,14 +65,9 @@ class BottomSheetDevicesFragment : BottomSheetDialogFragment() {
             }
         }
 
-        bottomSheetDevicesViewModel.statusBtnRefresh.observe(viewLifecycleOwner){
-            it?.let {
-                setStatusView(it)
-            }
-        }
-
-        statusBarViewModel.connectionStatus.observe(viewLifecycleOwner){
+        bottomSheetDevicesViewModel.connectionStatus.observe(viewLifecycleOwner){
             it?.let{
+                setStatusView(it)
                 if(it == ConnectionStatus.CONNECTED){
                     dismiss()                                                                       // una vez que estoy conectado cierro el dialog.
                 }

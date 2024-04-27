@@ -1,12 +1,13 @@
 package com.example.hoverrobot.data.models.comms
 
 import java.nio.ByteBuffer
+import kotlin.experimental.xor
 
 data class MainBoardRobotStatus(
     val header: Short,
     val batVoltage: Short,
     val batPercent: Short,
-    val batTemp : Short,
+    val batTemp: Short,
     val tempUcControl: Short,
     val tempUcMain: Short,
     val speedR: Short,
@@ -22,7 +23,7 @@ data class MainBoardRobotStatus(
 )
 
 val ByteBuffer.asRobotStatus: MainBoardRobotStatus
-    get() = MainBoardRobotStatus (
+    get() = MainBoardRobotStatus(
         this.short,
         this.short,
         this.short,
@@ -46,3 +47,26 @@ val ByteBuffer.asRobotStatus: MainBoardRobotStatus
         this.short,
         this.short
     )
+
+val MainBoardRobotStatus.calculateChecksum: Short
+    get() = (
+            header xor
+            batVoltage xor
+            batPercent xor
+            batTemp xor
+            tempUcControl xor
+            tempUcMain xor
+            speedR xor
+            speedL xor
+            pitchAngle.toInt().toShort() xor
+            rollAngle.toInt().toShort() xor
+            yawAngle.toInt().toShort() xor
+            pid.kp.toInt().toShort() xor
+            pid.ki.toInt().toShort() xor
+            pid.kd.toInt().toShort() xor
+            pid.centerAngle.toInt().toShort() xor
+            pid.safetyLimits.toInt().toShort() xor
+            setPoint.toInt().toShort() xor
+            ordenCode xor
+            statusCode
+        )

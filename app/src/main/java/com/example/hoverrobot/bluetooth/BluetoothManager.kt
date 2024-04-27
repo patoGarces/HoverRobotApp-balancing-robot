@@ -62,31 +62,18 @@ class BluetoothManager(private val context: Context) {
 
         discoverDevicesBT.clear()
         loadPairedDevices()
-        if (ActivityCompat.checkSelfPermission(
-                context,
-                Manifest.permission.BLUETOOTH_SCAN
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return
-        }
+
         bluetoothAdapter.startDiscovery()
         setConnectionStatus(ConnectionStatus.DISCOVERING)
 
         val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
-        (context as Activity).registerReceiver(receiver, filter)
+        context.registerReceiver(receiver, filter)
 
         val filter2 = IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_STARTED)
-        (context as Activity).registerReceiver(receiver, filter2)
+        context.registerReceiver(receiver, filter2)
 
         val filter3 = IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
-        (context as Activity).registerReceiver(receiver, filter3)
+        context.registerReceiver(receiver, filter3)
     }
 
     private val receiver = object : BroadcastReceiver() {

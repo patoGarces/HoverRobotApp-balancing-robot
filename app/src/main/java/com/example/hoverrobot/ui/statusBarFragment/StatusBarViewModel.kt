@@ -3,16 +3,12 @@ package com.example.hoverrobot.ui.statusBarFragment
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.lifecycleScope
 import com.example.hoverrobot.Models.comms.Battery
 import com.example.hoverrobot.ToolBox.Companion.ioScope
-import com.example.hoverrobot.data.repository.CommsRepository
+import com.example.hoverrobot.data.repositories.CommsRepository
 import com.example.hoverrobot.data.utils.ConnectionStatus
 import com.example.hoverrobot.data.utils.StatusEnumRobot
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -72,9 +68,5 @@ class StatusBarViewModel @Inject constructor(
 
     fun setShowDialogDevices( show : Boolean ){
         _showDialogDevices.postValue( show )
-    }
-
-    fun setStatusRobot( status : StatusEnumRobot){
-        _statusRobot.postValue( status )
     }
 }

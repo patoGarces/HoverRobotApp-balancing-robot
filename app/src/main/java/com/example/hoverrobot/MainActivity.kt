@@ -17,14 +17,10 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.adapter.FragmentStateAdapter
-import com.example.hoverrobot.Models.comms.Battery
-import com.example.hoverrobot.data.models.comms.PidSettings
-import com.example.hoverrobot.data.repository.CommsRepository
-import com.example.hoverrobot.data.repository.CommsRepositoryImpl.Companion.HEADER_PACKET
+import com.example.hoverrobot.ToolBox.Companion.ioScope
+import com.example.hoverrobot.data.repositories.CommsRepository
 import com.example.hoverrobot.data.utils.ConnectionStatus
-import com.example.hoverrobot.data.utils.StatusEnumRobot
 import com.example.hoverrobot.databinding.ActivityMainBinding
 import com.example.hoverrobot.ui.analisisFragment.AnalisisFragment
 import com.example.hoverrobot.ui.analisisFragment.AnalisisViewModel
@@ -107,24 +103,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupObservers() {
-
-        statusBarViewModel.connectionStatus.observe(this) {
-            it?.let {
+        ioScope.launch {
+            commsRepository.connectionStateFlow.collect {
                 when (it) {
                     ConnectionStatus.INIT,
                     ConnectionStatus.DISCONNECT -> {
                         showDevicesToConnect()
                     }
-
-                    ConnectionStatus.CONNECTED -> {
-//                        binding.btnTest.isEnabled = true
-                        controlViewModel.setVisibility(true)
-                    }
-
-                    ConnectionStatus.ERROR -> {
-                        Log.d("connectionStatus", "STATUS_ERROR")
-                    }
-
+                    ConnectionStatus.CONNECTED,
+                    ConnectionStatus.ERROR,
                     ConnectionStatus.DISCOVERING,
                     ConnectionStatus.CONNECTING -> {} // TODO()
                 }
@@ -150,7 +137,6 @@ class MainActivity : AppCompatActivity() {
             )
         }
         fragmentTransaction.commit()
-        controlViewModel.setVisibility(false)
     }
 
 

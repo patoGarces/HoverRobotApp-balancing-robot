@@ -5,11 +5,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.hoverrobot.ToolBox.Companion.ioScope
 import com.example.hoverrobot.data.models.comms.MainBoardRobotStatus
-import com.example.hoverrobot.data.repository.CommsRepository
+import com.example.hoverrobot.data.repositories.CommsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 

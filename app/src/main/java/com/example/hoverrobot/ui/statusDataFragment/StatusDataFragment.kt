@@ -19,7 +19,6 @@ class StatusDataFragment : Fragment() {
     private val binding get() = _binding
 
     private val statusDataViewModel: StatusDataViewModel by viewModels( ownerProducer = { requireActivity() } )
-    private val statusBarViewModel: StatusBarViewModel by viewModels( ownerProducer = { requireActivity() } )
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -38,7 +37,7 @@ class StatusDataFragment : Fragment() {
     }
 
     private fun setupObservables() {
-        statusBarViewModel.connectionStatus.observe(viewLifecycleOwner){
+        statusDataViewModel.connectionStatus.observe(viewLifecycleOwner){
             it?.let {
                 binding.btnBtStatus.text = StatusMapperBT.mapStatusTostring(it,null)
                 ToolBox.changeStrokeColor(requireContext(),binding.btnBtStatus, StatusMapperBT.mapStatusToColor(it,null), 2)

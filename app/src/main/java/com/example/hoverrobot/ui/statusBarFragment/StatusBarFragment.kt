@@ -89,7 +89,6 @@ class StatusBarFragment : Fragment() {
         }
 
         statusBarViewModel.fpsStatus.observe(viewLifecycleOwner){
-
             binding.tvStreamFps.text = String.format(binding.tvStreamFps.text.toString(),it)
         }
 
