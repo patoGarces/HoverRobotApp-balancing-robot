@@ -24,7 +24,7 @@ object StatusMapperBT {
     private val mapStatusRobotString = mapOf(
         StatusEnumRobot.ROBOT_INIT to "Iniciando",
         StatusEnumRobot.ROBOT_DISABLE to "Deshabilitado",
-        StatusEnumRobot.ROBOT_ENABLE to "Habilitado",
+        StatusEnumRobot.ROBOT_ENABLE to "Armado",
         StatusEnumRobot.ROBOT_STABILIZED to "Estabilizado",
         StatusEnumRobot.ROBOT_ERROR to "Error"
     )

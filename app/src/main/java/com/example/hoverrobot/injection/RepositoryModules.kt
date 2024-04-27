@@ -1,8 +1,8 @@
 package com.example.hoverrobot.injection
 
 import android.content.Context
-import com.example.hoverrobot.data.repository.CommsRepository
-import com.example.hoverrobot.data.repository.CommsRepositoryImpl
+import com.example.hoverrobot.data.repositories.CommsRepository
+import com.example.hoverrobot.data.repositories.CommsRepositoryImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

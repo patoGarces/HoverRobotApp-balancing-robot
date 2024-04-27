@@ -1,4 +1,4 @@
-package com.example.hoverrobot.data.repository
+package com.example.hoverrobot.data.repositories
 
 import android.bluetooth.BluetoothDevice
 import android.content.Context
@@ -9,10 +9,9 @@ import com.example.hoverrobot.data.models.comms.AxisControl
 import com.example.hoverrobot.data.models.comms.MainBoardRobotStatus
 import com.example.hoverrobot.data.models.comms.PidSettings
 import com.example.hoverrobot.data.models.comms.asRobotStatus
+import com.example.hoverrobot.data.models.comms.calculateChecksum
 import com.example.hoverrobot.data.utils.ConnectionStatus
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -54,6 +53,8 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
     private val _connectionStateFlow = MutableStateFlow(ConnectionStatus.INIT)
     override val connectionStateFlow: StateFlow<ConnectionStatus> = _connectionStateFlow
 
+    private val TAG = "CommsRepository"
+
     init {
         setupObservers()
     }
@@ -61,7 +62,14 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
     private fun setupObservers() {
         ioScope.launch {
             bluetoothManager.receivedDataBtFlow.collect {
-                _statusRobotFlow.emit(it.asRobotStatus)                                             // El dia de mañana si se reciben otros tipos de datos, se deberia hacer el split aca
+                val statusRobot = it.asRobotStatus
+                if (statusRobot.header == HEADER_PACKET.toShort() &&
+                    statusRobot.checksum == statusRobot.calculateChecksum) {
+                    _statusRobotFlow.emit(statusRobot)                                             // El dia de mañana si se reciben otros tipos de datos, se deberia hacer el split aca
+                }
+                else {
+                    Log.d(TAG,"error paquete")
+                }
             }
         }
 
@@ -132,6 +140,7 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
     override fun isBluetoothEnabled(): Boolean {
         return bluetoothManager.isBluetoothEnabled()
     }
+
     companion object {
         const val HEADER_PACKET = 0xABC0
         const val HEADER_RX_KEY_STATUS = 0xAB01  // key que indica que el paquete recibido es un status

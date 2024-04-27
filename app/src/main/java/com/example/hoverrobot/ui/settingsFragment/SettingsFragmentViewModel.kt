@@ -1,17 +1,14 @@
 package com.example.hoverrobot.ui.settingsFragment
 
 import android.util.Log
-import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.hoverrobot.ToolBox.Companion.ioScope
 import com.example.hoverrobot.data.models.comms.PidSettings
-import com.example.hoverrobot.data.repository.CommsRepository
+import com.example.hoverrobot.data.repositories.CommsRepository
 import com.example.hoverrobot.data.utils.ConnectionStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
