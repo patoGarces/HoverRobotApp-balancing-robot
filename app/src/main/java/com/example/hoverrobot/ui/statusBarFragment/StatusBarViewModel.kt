@@ -4,7 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.hoverrobot.Models.comms.Battery
-import com.example.hoverrobot.ToolBox.Companion.ioScope
+import com.example.hoverrobot.data.utils.ToolBox.Companion.ioScope
 import com.example.hoverrobot.data.repositories.CommsRepository
 import com.example.hoverrobot.data.utils.ConnectionStatus
 import com.example.hoverrobot.data.utils.StatusEnumRobot
@@ -48,13 +48,11 @@ class StatusBarViewModel @Inject constructor(
                 _battery.postValue(
                     Battery(
                         it.batPercent.toInt(),
-                        it.batVoltage.toFloat(),
+                        it.batVoltage.toFloat() / 10,
                         it.batTemp.toFloat() / 10
                     )
                 )
-
-                _tempImu.postValue((it.tempEsc.toFloat() / 10))
-
+                _tempImu.postValue((it.tempImu.toFloat() / 10))
                 _statusRobot.postValue(StatusEnumRobot.getStatusRobot(it.statusCode.toInt()))
             }
         }

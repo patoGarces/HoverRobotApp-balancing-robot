@@ -1,7 +1,5 @@
 package com.example.hoverrobot.bluetooth
 
-import android.Manifest
-import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothAdapter.getDefaultAdapter
 import android.bluetooth.BluetoothDevice
@@ -10,13 +8,9 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.pm.PackageManager
 import android.util.Log
-import androidx.core.app.ActivityCompat
-import com.example.hoverrobot.ToolBox.Companion.ioScope
+import com.example.hoverrobot.data.utils.ToolBox.Companion.ioScope
 import com.example.hoverrobot.data.utils.ConnectionStatus
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow

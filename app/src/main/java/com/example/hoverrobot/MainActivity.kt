@@ -18,7 +18,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.viewpager2.adapter.FragmentStateAdapter
-import com.example.hoverrobot.ToolBox.Companion.ioScope
+import com.example.hoverrobot.data.utils.ToolBox.Companion.ioScope
 import com.example.hoverrobot.data.repositories.CommsRepository
 import com.example.hoverrobot.data.utils.ConnectionStatus
 import com.example.hoverrobot.databinding.ActivityMainBinding

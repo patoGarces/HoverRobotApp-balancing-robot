@@ -3,7 +3,7 @@ package com.example.hoverrobot.ui.statusDataFragment
 import android.content.Context
 import com.example.hoverrobot.R
 
-class MapperGralStatus(context : Context) {
+class MapperGralStatus(context: Context) {
 
     private val mapStatusGralText = mapOf(
         StatusEnumGral.NORMAL.ordinal to context.getString(R.string.status_normal),
@@ -34,12 +34,13 @@ class MapperGralStatus(context : Context) {
     fun mapGralStatusText(status: Int): String {
         return if (mapStatusGralText.containsKey(status)) mapStatusGralText[status]!! else mapStatusGralText[StatusEnumGral.UNKNOWN.ordinal]!!
     }
-    fun mapGralStatusToColor( status: Int): Int {
+
+    fun mapGralStatusToColor(status: Int): Int {
         return if (mapStatusGralColor.containsKey(status)) mapStatusGralColor[status]!! else R.color.gray_80_percent
     }
 }
 
-enum class StatusEnumGral{
+enum class StatusEnumGral {
     NORMAL,
     INITIALIZING_IMU,
     ERROR_IMU,

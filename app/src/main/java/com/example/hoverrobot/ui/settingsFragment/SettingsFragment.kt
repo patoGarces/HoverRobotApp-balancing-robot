@@ -116,12 +116,17 @@ class SettingsFragment : Fragment() {
 
         binding.btnSavePid.setOnClickListener {
             Toast.makeText(requireContext(),"Guardando parametros",Toast.LENGTH_LONG).show()
-            saveParameters( PidSettings(kpValue,kiValue,kdValue,centerValue,safetyLimitsValue) )
+            saveParameters(PidSettings(kpValue,kiValue,kdValue,centerValue,safetyLimitsValue))
         }
 
         binding.btnGetPid.setOnClickListener {
             Toast.makeText(requireContext(),"Obteniendo parametros",Toast.LENGTH_LONG).show()
             getParametersFromStore()
+        }
+
+        binding.btnSyncPid.setOnClickListener {
+            Toast.makeText(requireContext(),"Sincronizando parametros",Toast.LENGTH_LONG).show()
+            lastPidSettings = null // para forzar la actualizacion de los sliders
         }
     }
 
