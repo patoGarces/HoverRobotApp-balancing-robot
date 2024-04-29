@@ -231,14 +231,4 @@
         app:layout_constraintEnd_toEndOf="parent"
         />
 
-<!--    <View-->
-<!--        android:id="@+id/divider5"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="1dp"-->
-<!--        android:background="@color/white"-->
-<!--        android:layout_marginTop="16dp"-->
-<!--        app:layout_constraintTop_toBottomOf="@id/tv_motorboard_temp_title"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        />-->
-
 </androidx.constraintlayout.widget.ConstraintLayout>

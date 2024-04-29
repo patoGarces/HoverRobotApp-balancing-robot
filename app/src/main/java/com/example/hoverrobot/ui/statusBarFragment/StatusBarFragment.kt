@@ -11,7 +11,7 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.Navigation
 import com.example.hoverrobot.MainActivity
 import com.example.hoverrobot.R
-import com.example.hoverrobot.ToolBox
+import com.example.hoverrobot.data.utils.ToolBox
 import com.example.hoverrobot.databinding.StatusBarFragmentBinding
 import com.example.hoverrobot.data.utils.StatusMapperBT
 import java.io.IOException
@@ -45,28 +45,29 @@ class StatusBarFragment : Fragment() {
 
     private fun setupObserver() {
 
+        // TODO: revisar color en changeStrokeColor
         statusBarViewModel.connectionStatus.observe(viewLifecycleOwner){
             it?.let {
                 binding.btnStatus.text = StatusMapperBT.mapStatusTostring(it,statusBarViewModel.statusRobot.value)
-                ToolBox.changeStrokeColor(requireContext(),binding.btnStatus,
-                    StatusMapperBT.mapStatusToColor(it,statusBarViewModel.statusRobot.value),3)
+                ToolBox.changeStrokeColor(binding.btnStatus,
+                    requireContext().getColor(StatusMapperBT.mapStatusToColor(it,statusBarViewModel.statusRobot.value)),3)
             }
         }
 
         statusBarViewModel.statusRobot.observe(viewLifecycleOwner){
             binding.btnStatus.text = StatusMapperBT.mapStatusTostring(statusBarViewModel.connectionStatus.value!!,it)
-            ToolBox.changeStrokeColor(requireContext(),binding.btnStatus,
-                StatusMapperBT.mapStatusToColor(statusBarViewModel.connectionStatus.value!!,it),3)
+            ToolBox.changeStrokeColor(binding.btnStatus,
+                requireContext().getColor(StatusMapperBT.mapStatusToColor(statusBarViewModel.connectionStatus.value!!,it)),3)
         }
 
         statusBarViewModel.battery.observe(viewLifecycleOwner) {
 
             it?.let{
+                binding.tvBatteryVoltage.text = String.format(getString(R.string.placeholder_battery_voltage),it.batVoltage)
                 with(binding.ibBatteryStatus) {
-
                     if (it.batLevel in 101..199) {
                         setImageResource(R.drawable.ic_battery_charging)
-                        binding.tvBatteryPercent.text = String.format(getString(R.string.placehoder_battery),(it.batLevel-100).toString())
+                        binding.tvBatteryPercent.text = String.format(getString(R.string.placeholder_battery_percent),(it.batLevel-100).toString())
                     }
                     else {
                         if (it.batLevel > BATTERY_HIGH) {
@@ -81,8 +82,7 @@ class StatusBarFragment : Fragment() {
                         else{
                             setImageResource(R.drawable.ic_battery_0)
                         }
-
-                        binding.tvBatteryPercent.text = String.format(getString(R.string.placehoder_battery),it.batLevel.toString())
+                        binding.tvBatteryPercent.text = String.format(getString(R.string.placeholder_battery_percent),it.batLevel.toString())
                     }
                 }
             }
@@ -94,7 +94,7 @@ class StatusBarFragment : Fragment() {
 
         statusBarViewModel.tempImu.observe(viewLifecycleOwner) {
             try {
-                binding.tvTemperature.text =  String.format(getString(R.string.placehoder_temp), it)
+                binding.tvTemperature.text =  String.format(getString(R.string.placeholder_temp), it)
             }
             catch (e : IOException){
                 Log.e("statusBarFragment","rompio el cosito de temp",e)

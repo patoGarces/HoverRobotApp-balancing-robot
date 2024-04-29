@@ -18,9 +18,10 @@
     <string name="title_status_device">status:</string>
 
     <!--    Placeholders-->
-    <string name="placehoder_battery">%s %%</string>
-    <string name="placehoder_fps">%.1f fps</string>
-    <string name="placehoder_temp">%.1f ºC</string>
+    <string name="placeholder_battery_percent">%s %%</string>
+    <string name="placeholder_battery_voltage">%.1fv</string>
+    <string name="placeholder_fps">%.1f fps</string>
+    <string name="placeholder_temp">%.1f ºC</string>
 
     <!--    tabsLayout-->
     <string name="tab_transmision">Transmision</string>
@@ -37,6 +38,7 @@
     <string name="pid_value_default">0.00</string>
     <string name="pid_btn_save">Guardar</string>
     <string name="pid_btn_get">Traer</string>
+    <string name="pid_btn_sync">Sync</string>
     <string name="value_slider_format">%.2f</string>
 
     <!--    Mapper status error-->

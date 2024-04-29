@@ -3,7 +3,7 @@ package com.example.hoverrobot.data.repositories
 import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.util.Log
-import com.example.hoverrobot.ToolBox.Companion.ioScope
+import com.example.hoverrobot.data.utils.ToolBox.Companion.ioScope
 import com.example.hoverrobot.bluetooth.BluetoothManager
 import com.example.hoverrobot.data.models.comms.AxisControl
 import com.example.hoverrobot.data.models.comms.MainBoardRobotStatus

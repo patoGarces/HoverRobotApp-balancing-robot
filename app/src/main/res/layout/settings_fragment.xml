@@ -59,6 +59,19 @@
                 android:layout_marginHorizontal="16dp"
                 app:layout_constraintTop_toTopOf="@id/tv_group_pid_title"
                 app:layout_constraintBottom_toBottomOf="@id/tv_group_pid_title"
+                app:layout_constraintEnd_toStartOf="@id/btn_sync_pid"
+                />
+
+            <Button
+                android:id="@+id/btn_sync_pid"
+                android:layout_width="wrap_content"
+                android:layout_height="35dp"
+                android:text="@string/pid_btn_sync"
+                android:background="@drawable/background_btn_status"
+                android:textSize="12sp"
+                android:layout_marginHorizontal="16dp"
+                app:layout_constraintTop_toTopOf="@id/tv_group_pid_title"
+                app:layout_constraintBottom_toBottomOf="@id/tv_group_pid_title"
                 app:layout_constraintEnd_toEndOf="parent"
                 />
 
