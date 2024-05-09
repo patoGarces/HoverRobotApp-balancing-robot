@@ -27,7 +27,7 @@ El protocolo de comunicación utilizado en esta aplicación es Bluetooth Standar
 #### Requisitos Previos
 
 - Dispositivo Android compatible
-- ESP32 con el firmware para el balancing robot cargado, que puedes encontrar en: https://github.com/patoGarces/HoverRobotMainBoard
+- ESP32 con el firmware para el balancing robot cargado, que puedes encontrar aqui(https://github.com/patoGarces/Imu-ESP32-HoverRobot)
 - No es necesario tener conectada la app con wifi a una raspberry pi para poder utilizarla!
 
 #### Pasos para Correr la Aplicación
