@@ -14,6 +14,8 @@ Esta aplicación está diseñada para controlar un balancing robot, un tipo de r
 
 - **Configuración Personalizada**: Ajusta diferentes variables del robot según tus necesidades específicas, incluyendo configuraciones de PID, límites de seguridad y ángulo del centro de gravedad.
 
+- **Control del robot mediante joystick**: Permite la posibilidad de controlar la dirección del robot mediante un joystick analógico.
+
 ### Desarrollado en Kotlin con Android Studio
 
 Esta aplicación está desarrollada en Kotlin utilizando Android Studio, al ser una aplicación nativa con el soporte de google, garantiza un rendimiento óptimo y una experiencia de desarrollo sólida.
@@ -27,7 +29,7 @@ El protocolo de comunicación utilizado en esta aplicación es Bluetooth Standar
 #### Requisitos Previos
 
 - Dispositivo Android compatible
-- ESP32 con el firmware para el balancing robot cargado, que puedes encontrar aqui(https://github.com/patoGarces/Imu-ESP32-HoverRobot)
+- ESP32 con el firmware para el balancing robot cargado, que puedes encontrar [aqui](https://github.com/patoGarces/Imu-ESP32-HoverRobot)
 - No es necesario tener conectada la app con wifi a una raspberry pi para poder utilizarla!
 
 #### Pasos para Correr la Aplicación
@@ -64,6 +66,14 @@ Pantalla de configuración
 - **Hacer un Fork**: Si prefieres trabajar en tu propio espacio de desarrollo, puedes hacer un fork de este repositorio y trabajar en tus propias modificaciones. ¡No dudes en compartir tu trabajo con la comunidad!
 
 - **Abrir un Issue**: Si encuentras algún problema o tienes alguna idea para mejorar la aplicación, no dudes en abrir un issue en el repositorio. Estaremos encantados de escuchar tus comentarios y ayudarte a resolver cualquier problema que encuentres.
+
+## Agradecimientos
+
+Especial agradecimiento a los creadores de las siguientes dependencias que fueron utilizadas en este proyecto:
+
+- **Joystick**: Agradecimientos al equipo de desarrollo de `io.github.controlwear` por su biblioteca de joystick virtual, que proporciona una interfaz intuitiva para el control del robot.
+
+- **Plotter**: Un agradecimiento especial a `com.github.PhilJay` por su biblioteca MPAndroidChart, que facilita la visualización de datos en forma de gráficos en la aplicación.
 
 ## Contacto
 
