@@ -3,7 +3,7 @@ package com.example.hoverrobot.ui.statusBarFragment
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.hoverrobot.Models.comms.Battery
+import com.example.hoverrobot.data.models.Battery
 import com.example.hoverrobot.data.utils.ToolBox.Companion.ioScope
 import com.example.hoverrobot.data.repositories.CommsRepository
 import com.example.hoverrobot.data.utils.ConnectionStatus

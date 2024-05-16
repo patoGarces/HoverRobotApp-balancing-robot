@@ -39,4 +39,8 @@ class BottomSheetDevicesViewModel @Inject constructor(
     fun newDeviceSelected( selectedDevice : BluetoothDevice){
         commsRepository.connectDevice(selectedDevice)
     }
+
+    fun retryDiscover() {
+        commsRepository.startDiscoverBT()
+    }
 }

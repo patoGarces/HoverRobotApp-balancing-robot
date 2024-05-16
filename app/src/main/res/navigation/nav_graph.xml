@@ -13,9 +13,6 @@
         <action
             android:id="@+id/action_statusBarFragment_to_statusDataFragment"
             app:destination="@id/statusDataFragment" />
-        <action
-            android:id="@+id/action_statusBarFragment_to_settingsFragment"
-            app:destination="@id/settingsFragment" />
     </fragment>
 
     <fragment
@@ -27,15 +24,4 @@
             android:id="@+id/action_statusDataFragment_to_statusBarFragment"
             app:destination="@id/statusBarFragment" />
     </fragment>
-
-    <fragment
-        android:id="@+id/settingsFragment"
-        android:name="com.example.hoverrobot.ui.settingsFragment.SettingsFragmentLegacy"
-        android:label="SettingsFragment" >
-        <action
-            android:id="@+id/action_settingsFragment_to_statusBarFragment"
-            app:destination="@id/statusBarFragment" />
-    </fragment>
-
-
 </navigation>

@@ -43,6 +43,7 @@ class BottomSheetDevicesFragment : BottomSheetDialogFragment() {
         bottomSheetBehavior.expandedOffset = 20
         bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
         bottomSheetBehavior.maxWidth = 800
+        bottomSheetBehavior.maxHeight = 900
         bottomSheetBehavior.peekHeight= 120                                                         // tamaño cuando esta collapsado
 
         setupObservers()
@@ -50,13 +51,11 @@ class BottomSheetDevicesFragment : BottomSheetDialogFragment() {
     }
 
     private fun setupListener(){
-        binding.refreshBtn.setOnClickListener {
-            binding.refreshBtn.setOnClickListener{
-                Log.d("bluetooth","actualizando")
-                (activity as MainActivity).retryDiscover()
-            }
+        binding.refreshBtn.setOnClickListener{
+            bottomSheetDevicesViewModel.retryDiscover()
         }
     }
+
     private fun setupObservers() {
 
         bottomSheetDevicesViewModel.deviceslist.observe(viewLifecycleOwner){
