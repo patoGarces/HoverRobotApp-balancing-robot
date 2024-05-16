@@ -32,6 +32,8 @@ class ControlViewModel @Inject constructor(
         }
     }
     fun newCoordinatesJoystick(newAxisControl: AxisControl){
-        commsRepository.sendJoystickUpdate(newAxisControl)
+        if (commsRepository.connectionStateFlow.value == ConnectionStatus.CONNECTED) {
+            commsRepository.sendJoystickUpdate(newAxisControl)
+        }
     }
 }

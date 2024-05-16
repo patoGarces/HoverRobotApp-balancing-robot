@@ -33,6 +33,8 @@ interface CommsRepository {
 
     fun sendJoystickUpdate(axisControl: AxisControl)
 
+    fun sendCommand(commandCode: Int)
+
     fun connectDevice(device: BluetoothDevice)
 
     fun startDiscoverBT()
@@ -86,7 +88,6 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
         }
     }
 
-
     override fun sendPidParams(pidParams: PidSettings) {
         val paramList = listOf(
             HEADER_PACKET,
@@ -129,6 +130,18 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
         bluetoothManager.sendDataBt(buffer)
     }
 
+    override fun sendCommand(commandCode: Int) {
+        val paramList =
+            listOf(HEADER_PACKET, HEADER_TX_KEY_COMMAND, commandCode)
+        val buffer = ByteBuffer.allocate((paramList.size + 1) * 4)
+        buffer.order(ByteOrder.LITTLE_ENDIAN)
+        paramList.forEach { buffer.putInt(it) }
+
+        val checksum = HEADER_PACKET xor HEADER_TX_KEY_COMMAND xor commandCode
+        buffer.putInt(checksum)
+        bluetoothManager.sendDataBt(buffer)
+    }
+
     override fun connectDevice(device: BluetoothDevice) {
         bluetoothManager.connectDevice(device)
     }
@@ -144,7 +157,8 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
     companion object {
         const val HEADER_PACKET = 0xABC0
         const val HEADER_RX_KEY_STATUS = 0xAB01     // key que indica que el paquete recibido es un status
-        const val HEADER_TX_KEY_CONTROL = 0xAB02    // key que indica qe el paquete a enviar es de control
-        const val HEADER_TX_KEY_SETTINGS = 0xAB03   // key que indica qe el paquete a enviar es de configuracion
+        const val HEADER_TX_KEY_CONTROL = 0xAB02    // key que indica que el paquete a enviar es de control
+        const val HEADER_TX_KEY_SETTINGS = 0xAB03   // key que indica que el paquete a enviar es de configuracion
+        const val HEADER_TX_KEY_COMMAND = 0xAB04    // key que indica que el paquete a enviar es un comando
     }
 }

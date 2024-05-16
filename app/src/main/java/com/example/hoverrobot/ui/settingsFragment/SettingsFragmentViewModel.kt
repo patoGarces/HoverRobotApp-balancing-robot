@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.hoverrobot.data.models.comms.CommandsToRobot.CALIBRATE_IMU
 import com.example.hoverrobot.data.utils.ToolBox.Companion.ioScope
 import com.example.hoverrobot.data.models.comms.PidSettings
 import com.example.hoverrobot.data.repositories.CommsRepository
@@ -22,7 +23,6 @@ class SettingsFragmentViewModel @Inject constructor(
 
     init {
         _pidSettingFromRobot.value = null
-
         ioScope.launch {
             commsRepository.statusRobotFlow.collect {
                 _pidSettingFromRobot.postValue(it.pid)
@@ -38,7 +38,9 @@ class SettingsFragmentViewModel @Inject constructor(
         }
     }
 
-    fun setPidTunningfromRobot(newTunning : PidSettings){
-        _pidSettingFromRobot.postValue( newTunning )
+    fun sendCalibrateImu(){
+        if (commsRepository.connectionStateFlow.value == ConnectionStatus.CONNECTED) {
+            commsRepository.sendCommand(CALIBRATE_IMU.ordinal)
+        }
     }
 }

@@ -26,6 +26,13 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("debug")
+            buildConfigField("long", "VERSION_CODE", "${defaultConfig.versionCode}")
+            buildConfigField("String","VERSION_NAME","\"${defaultConfig.versionName}\"")
+        }
+        debug {
+            buildConfigField("long", "VERSION_CODE", "${defaultConfig.versionCode}")
+            buildConfigField("String","VERSION_NAME","\"${defaultConfig.versionName}\"")
         }
     }
     compileOptions {
@@ -37,6 +44,7 @@ android {
     }
     buildFeatures {
         viewBinding = true
+        buildConfig = true
     }
 }
 
@@ -58,7 +66,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
 
     // Joystick
-    implementation("io.github.controlwear:virtualjoystick:1.10.1")
+    implementation(libs.virtualjoystick)
 
     // Plotter
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
