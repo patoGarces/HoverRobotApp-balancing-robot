@@ -1,12 +1,8 @@
 package com.example.hoverrobot.ui.controlFragment
 
-import android.annotation.SuppressLint
 import android.os.Bundle
-import android.util.Log
-import android.view.GestureDetector
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
@@ -31,6 +27,7 @@ class ControlFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
+        binding.joystickRight.setFixedCenter(true); // set up auto-define center
         setupListener()
         setupObserver()
     }
@@ -38,9 +35,8 @@ class ControlFragment : Fragment() {
     private fun setupListener(){
 
         binding.joystickRight.setOnMoveListener{ angle, strength ->
-            val x = (strength * Math.cos(Math.toRadians(angle.toDouble()))).toInt()
-            val y = (strength * Math.sin(Math.toRadians(angle.toDouble()))).toInt()
-
+            val x = (binding.joystickRight.normalizedX * 2) - 100
+            val y = 100 - (binding.joystickRight.normalizedY * 2)
             controlViewModel.newCoordinatesJoystick(AxisControl(x,y))
         }
     }

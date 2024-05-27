@@ -93,12 +93,7 @@ class StatusBarFragment : Fragment() {
         }
 
         statusBarViewModel.tempImu.observe(viewLifecycleOwner) {
-            try {
-                binding.tvTemperature.text =  String.format(getString(R.string.placeholder_temp), it)
-            }
-            catch (e : IOException){
-                Log.e("statusBarFragment","rompio el cosito de temp",e)
-            }
+            binding.tvTemperature.text =  String.format(getString(R.string.placeholder_temp), it)
         }
     }
 
