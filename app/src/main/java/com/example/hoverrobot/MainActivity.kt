@@ -8,6 +8,8 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.view.WindowManager
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -119,10 +121,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         statusBarViewModel.showDialogDevices.observe(this) {
-            if (it == true) {
-                showDevicesToConnect()
-                statusBarViewModel.setShowDialogDevices(false)
-            }
+            if (it == true) showDevicesToConnect()
         }
     }
 
@@ -186,22 +185,18 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-//    private fun webViewSetup(){
-//
-//        val webView = findViewById<WebView>(R.id.webView)
-//        webView.webViewClient = WebViewClient()
-//
-//        webView.apply {
-//            loadUrl("https://cdn.flowplayer.com/a30bd6bc-f98b-47bc-abf5-97633d4faea0/hls/de3f6ca7-2db3-4689-8160-0f574a5996ad/playlist.m3u8")
-////            loadUrl("http://192.168.1.55:8090/stream/webrtc")
-//            settings.javaScriptEnabled = true
-//            settings.safeBrowsingEnabled = true
-//        }
-//
-//    }
+    private fun webViewSetup(){
 
-    fun retryDiscover() {
-        commsRepository.startDiscoverBT()
+        val webView = findViewById<WebView>(R.id.webView)
+        webView.webViewClient = WebViewClient()
+
+        webView.apply {
+            loadUrl("https://cdn.flowplayer.com/a30bd6bc-f98b-47bc-abf5-97633d4faea0/hls/de3f6ca7-2db3-4689-8160-0f574a5996ad/playlist.m3u8")
+//            loadUrl("http://192.168.1.55:8090/stream/webrtc")
+            settings.javaScriptEnabled = true
+            settings.safeBrowsingEnabled = true
+        }
+
     }
 
     private fun hideSystemBars() {

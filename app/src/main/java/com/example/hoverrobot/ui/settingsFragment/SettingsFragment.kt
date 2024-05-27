@@ -132,6 +132,10 @@ class SettingsFragment : Fragment() {
             Toast.makeText(requireContext(),"Sincronizando parametros",Toast.LENGTH_LONG).show()
             sendNewSetting()
         }
+
+        binding.btnCalibrateImu.setOnClickListener {
+            settingsFragmentViewModel.sendCalibrateImu()            // TODO: crear dialog,esperar callback de confirmacion
+        }
     }
 
     private fun sendNewSetting() {
