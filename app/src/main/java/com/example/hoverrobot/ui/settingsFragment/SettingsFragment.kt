@@ -162,8 +162,10 @@ class SettingsFragment : Fragment() {
         }
     }
 
-    private fun saveParameters(pidSettings: PidSettings){
-        lifecycleScope.launch(Dispatchers.IO){
+    private fun saveParameters(pidSettings: PidSettings) {   // TODO: agregar el getConnectedDeviceName para tener parametros diferenciados
+        lifecycleScope.launch(Dispatchers.IO) {
+
+            Log.d("SettingsFragment", KEY_PID_PARAM_CENTER.getDeviceParams)     // TODO: implementar
             context?.dataStore?.edit { settingsKey ->
                 settingsKey[floatPreferencesKey(KEY_PID_PARAM_P)] = pidSettings.kp
                 settingsKey[floatPreferencesKey(KEY_PID_PARAM_I)] = pidSettings.ki
@@ -197,6 +199,9 @@ class SettingsFragment : Fragment() {
         val safeValue = (value * 100).toInt() / 100.00
         this.value = if( value in valueFrom..valueTo) { safeValue.toFloat() } else { valueFrom }
     }
+
+    private val String.getDeviceParams: String
+        get() = "${settingsFragmentViewModel.getDeviceConnectedName()}_${this}"
 }
 
 private const val KEY_PID_PARAM_P = "KEY_PID_P"
