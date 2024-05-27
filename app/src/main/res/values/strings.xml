@@ -30,6 +30,7 @@
 
     <!--    Settings Fragment-->
     <string name="pid_group_title">Ajustes PID</string>
+    <string name="imu_group_title">Ajustes IMU</string>
     <string name="pid_parameter_p_title">Parametro P:</string>
     <string name="pid_parameter_i_title">Parametro I:</string>
     <string name="pid_parameter_d_title">Parametro D:</string>
@@ -40,6 +41,9 @@
     <string name="pid_btn_get">Traer</string>
     <string name="pid_btn_sync">Sync</string>
     <string name="value_slider_format">%.2f</string>
+    <string name="imu_btn_calibrate">Calibrar</string>
+    <string name="pid_center_front">Front</string>
+    <string name="pid_center_back">Back</string>
 
     <!--    Mapper status error-->
     <string name="status_normal">Normal</string>

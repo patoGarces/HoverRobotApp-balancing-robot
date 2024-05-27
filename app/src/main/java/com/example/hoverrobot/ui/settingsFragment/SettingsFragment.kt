@@ -1,10 +1,12 @@
 package com.example.hoverrobot.ui.settingsFragment
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.view.isVisible
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.fragment.app.Fragment
@@ -19,6 +21,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import java.lang.Math.round
+import kotlin.math.truncate
 
 
 class SettingsFragment : Fragment() {
@@ -62,7 +66,7 @@ class SettingsFragment : Fragment() {
         binding.sbPidP.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
             override fun onStartTrackingTouch(slider: Slider) { }
             override fun onStopTrackingTouch(slider: Slider) {
-                settingsFragmentViewModel.setPidTunningToRobot(PidSettings(kpValue,kiValue,kdValue,centerValue,safetyLimitsValue))
+                sendNewSetting()
             }
         })
 
@@ -74,7 +78,7 @@ class SettingsFragment : Fragment() {
         binding.sbPidI.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
             override fun onStartTrackingTouch(slider: Slider) { }
             override fun onStopTrackingTouch(slider: Slider) {
-                settingsFragmentViewModel.setPidTunningToRobot(PidSettings(kpValue,kiValue,kdValue,centerValue,safetyLimitsValue))
+                sendNewSetting()
             }
         })
 
@@ -86,7 +90,7 @@ class SettingsFragment : Fragment() {
         binding.sbPidD.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
             override fun onStartTrackingTouch(slider: Slider) { }
             override fun onStopTrackingTouch(slider: Slider) {
-                settingsFragmentViewModel.setPidTunningToRobot(PidSettings(kpValue,kiValue,kdValue,centerValue,safetyLimitsValue))
+                sendNewSetting()
             }
         })
 
@@ -98,7 +102,7 @@ class SettingsFragment : Fragment() {
         binding.sbCenterAngle.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
             override fun onStartTrackingTouch(slider: Slider) { }
             override fun onStopTrackingTouch(slider: Slider) {
-                settingsFragmentViewModel.setPidTunningToRobot(PidSettings(kpValue,kiValue,kdValue,centerValue,safetyLimitsValue))
+                sendNewSetting()
             }
         })
 
@@ -110,7 +114,7 @@ class SettingsFragment : Fragment() {
         binding.sbSafetyLimits.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
             override fun onStartTrackingTouch(slider: Slider) { }
             override fun onStopTrackingTouch(slider: Slider) {
-                settingsFragmentViewModel.setPidTunningToRobot(PidSettings(kpValue,kiValue,kdValue,centerValue,safetyLimitsValue))
+                sendNewSetting()
             }
         })
 
@@ -126,20 +130,29 @@ class SettingsFragment : Fragment() {
 
         binding.btnSyncPid.setOnClickListener {
             Toast.makeText(requireContext(),"Sincronizando parametros",Toast.LENGTH_LONG).show()
-            lastPidSettings = null // para forzar la actualizacion de los sliders
+            sendNewSetting()
         }
+    }
+
+    private fun sendNewSetting() {
+        settingsFragmentViewModel.setPidTunningToRobot(PidSettings(kpValue,kiValue,kdValue,centerValue,safetyLimitsValue))
+        binding.btnSyncPid.isEnabled = false
+        binding.pbSyncLoading.isVisible = true
+        lastPidSettings = null
     }
 
     private fun setupObserver(){
         settingsFragmentViewModel.pidSettingFromRobot.observe(viewLifecycleOwner) {
             it?.let {
                 if (it != lastPidSettings) {
-                    binding.sbPidP.saveParam(it.kp)
-                    binding.sbPidI.saveParam(it.ki)
-                    binding.sbPidD.saveParam(it.kd)
-                    binding.sbCenterAngle.saveParam(it.centerAngle)
-                    binding.sbSafetyLimits.saveParam(it.safetyLimits)
+                    binding.sbPidP.inRange(it.kp)
+                    binding.sbPidI.inRange(it.ki)
+                    binding.sbPidD.inRange(it.kd)
+                    binding.sbCenterAngle.inRange(it.centerAngle)
+                    binding.sbSafetyLimits.inRange(it.safetyLimits)
                     lastPidSettings = settingsFragmentViewModel.pidSettingFromRobot.value
+                    binding.btnSyncPid.isEnabled = true
+                    binding.pbSyncLoading.isVisible = false
                 }
             }
         }
@@ -166,17 +179,19 @@ class SettingsFragment : Fragment() {
                 val paramCenter = this?.map { it[floatPreferencesKey(KEY_PID_PARAM_CENTER)] }?.first()
                 val safetyLimits = this?.map { it[floatPreferencesKey(KEY_PID_PARAM_SAFETY_LIM)] }?.first()
 
-                paramP?.let { binding.sbPidP.saveParam(it) }
-                paramI?.let { binding.sbPidI.saveParam(it) }
-                paramD?.let { binding.sbPidD.saveParam(it) }
-                paramCenter?.let { binding.sbCenterAngle.saveParam(it) }
-                safetyLimits?.let { binding.sbSafetyLimits.saveParam(it) }
+
+                paramP?.let { binding.sbPidP.inRange(it) }
+                paramI?.let { binding.sbPidI.inRange(it) }
+                paramD?.let { binding.sbPidD.inRange(it) }
+                paramCenter?.let { binding.sbCenterAngle.inRange(it) }
+                safetyLimits?.let { binding.sbSafetyLimits.inRange(it) }
             }
         }
     }
 
-    private fun Slider.saveParam(value: Float) {
-        this.value = if( value in valueFrom..valueTo) { value } else{ valueFrom }
+    private fun Slider.inRange(value: Float) {
+        val safeValue = (value * 100).toInt() / 100.00
+        this.value = if( value in valueFrom..valueTo) { safeValue.toFloat() } else { valueFrom }
     }
 }
 
