@@ -22,6 +22,7 @@
     <string name="placeholder_battery_voltage">%.1fv</string>
     <string name="placeholder_fps">%.1f fps</string>
     <string name="placeholder_temp">%.1f ºC</string>
+    <string name="version_placeholder">HoverRobot V%s</string>
 
     <!--    tabsLayout-->
     <string name="tab_transmision">Transmision</string>

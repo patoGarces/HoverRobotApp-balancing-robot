@@ -208,12 +208,6 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-
-    override fun onDestroy() {
-        super.onDestroy()
-//        bluetoothManager.destroy()
-    }
-
     companion object {
         const val SKIP_BLUETOOTH = true
     }

@@ -17,6 +17,8 @@ android {
         versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "VERSION_NAME", "\"${versionName}\"")
     }
 
     buildTypes {

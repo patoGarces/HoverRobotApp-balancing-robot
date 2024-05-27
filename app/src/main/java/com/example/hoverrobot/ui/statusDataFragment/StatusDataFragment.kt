@@ -1,19 +1,20 @@
 package com.example.hoverrobot.ui.statusDataFragment
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.Navigation
+import com.example.hoverrobot.BuildConfig
 import com.example.hoverrobot.R
 import com.example.hoverrobot.data.utils.MapperGralStatus
 import com.example.hoverrobot.data.utils.ToolBox
 import com.example.hoverrobot.data.utils.StatusMapperBT
 import com.example.hoverrobot.data.utils.TempColorMapper
 import com.example.hoverrobot.databinding.StatusDataFragmentBinding
-import pl.droidsonroids.gif.BuildConfig
 
 class StatusDataFragment : Fragment() {
 
@@ -34,7 +35,7 @@ class StatusDataFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.tvAppVersion.text = BuildConfig.VERSION_NAME        // TODO no funciona, muestra un string vacio
+        binding.tvAppVersion.text = getString(R.string.version_placeholder,BuildConfig.VERSION_NAME)
         setupListener()
         setupObservables()
     }

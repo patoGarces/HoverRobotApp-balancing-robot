@@ -43,4 +43,8 @@ class SettingsFragmentViewModel @Inject constructor(
             commsRepository.sendCommand(CALIBRATE_IMU.ordinal)
         }
     }
+
+    fun getDeviceConnectedName(): String? {
+        return commsRepository.getConnectedDeviceName()
+    }
 }

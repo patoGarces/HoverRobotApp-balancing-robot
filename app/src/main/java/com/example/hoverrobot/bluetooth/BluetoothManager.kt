@@ -11,10 +11,12 @@ import android.content.IntentFilter
 import android.util.Log
 import com.example.hoverrobot.data.utils.ToolBox.Companion.ioScope
 import com.example.hoverrobot.data.utils.ConnectionStatus
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -44,6 +46,8 @@ class BluetoothManager(private val context: Context) {
 
     private var actualConnectionStatus: ConnectionStatus = ConnectionStatus.INIT
 
+    internal var nameDeviceConnected: String? = null
+
     init {
         setConnectionStatus(ConnectionStatus.INIT)
     }
@@ -60,14 +64,12 @@ class BluetoothManager(private val context: Context) {
         bluetoothAdapter.startDiscovery()
         setConnectionStatus(ConnectionStatus.DISCOVERING)
 
-        val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
+        val filter = IntentFilter().apply {
+            addAction(BluetoothDevice.ACTION_FOUND)
+            addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED)
+            addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
+        }
         context.registerReceiver(receiver, filter)
-
-        val filter2 = IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_STARTED)
-        context.registerReceiver(receiver, filter2)
-
-        val filter3 = IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
-        context.registerReceiver(receiver, filter3)
     }
 
     private val receiver = object : BroadcastReceiver() {
@@ -101,7 +103,6 @@ class BluetoothManager(private val context: Context) {
         if (bluetoothAdapter.isEnabled) {
             val pairedDevice: Set<BluetoothDevice>? = bluetoothAdapter.bondedDevices
             pairedDevice?.forEach { device ->
-
                 addDeviceAvailable(device)
             }
         }
@@ -110,7 +111,6 @@ class BluetoothManager(private val context: Context) {
     private fun addDeviceAvailable(device: BluetoothDevice) {
         if (!discoverDevicesBT.contains(device)) {
             discoverDevicesBT.add(device)
-            Log.d(TAG, "Nuevo dispositivo detectado: $discoverDevicesBT")
         }
         ioScope.launch { _availableBtDevices.emit(discoverDevicesBT) }
     }
@@ -125,15 +125,17 @@ class BluetoothManager(private val context: Context) {
         bluetoothAdapter.cancelDiscovery()
         setConnectionStatus(ConnectionStatus.CONNECTING)
 
-        GlobalScope.launch {
+        ioScope.launch {
             try {
                 bluetoothSocket = device.createRfcommSocketToServiceRecord(SPP_UUID)
                 bluetoothSocket.connect()
                 setConnectionStatus(ConnectionStatus.CONNECTED)
                 Log.d("connectResponse", "conexion exitosa")
+                nameDeviceConnected = device.name
                 initStreams()
             } catch (e: IOException) {
                 setConnectionStatus(ConnectionStatus.DISCONNECT)
+                nameDeviceConnected = null
                 Log.d(TAG, "Error en intento de conexion")
             }
         }
@@ -143,7 +145,9 @@ class BluetoothManager(private val context: Context) {
         try {
             outputStreamBt = bluetoothSocket.outputStream
             inputStreamBt = bluetoothSocket.inputStream
-            receiverListener()
+            ioScope.launch {
+                receiverListener()
+            }
         } catch (e: IOException) {
             setConnectionStatus(ConnectionStatus.DISCONNECT)
             Log.e(TAG, "Error al obtener el outputStream", e)
@@ -154,23 +158,24 @@ class BluetoothManager(private val context: Context) {
         outputStreamBt.write(buffer.array())
     }
 
-    private fun receiverListener() {
+    private suspend fun receiverListener() {
         try {
-            val bufferSize = 100
+            val bufferSize = 1024
             val buffer = ByteArray(bufferSize)
             var bytesRead: Int
 
-            do {
-                bytesRead = inputStreamBt.read(buffer)
+            while (true) {
+                bytesRead = withContext(Dispatchers.IO){ inputStreamBt.read(buffer) }
                 if (bytesRead > 0) {
-                    val byteBuffer = ByteBuffer.wrap(buffer)
+                    val byteBuffer = ByteBuffer.wrap(buffer)//, 0, bytesRead)
                     byteBuffer.order(ByteOrder.LITTLE_ENDIAN)
-
-                    ioScope.launch {
-                        _receivedDataBtFlow.emit(byteBuffer)
-                    }
+                    _receivedDataBtFlow.emit(byteBuffer)
                 }
-            } while (bytesRead >= 0)
+//                else {        // TODO: revisar logica
+//                    setConnectionStatus(ConnectionStatus.DISCONNECT)
+//                    break
+//                }
+            }
         } catch (e: IOException) {
             setConnectionStatus(ConnectionStatus.DISCONNECT)
             Log.e(TAG, "Error inputStream", e)
@@ -180,6 +185,10 @@ class BluetoothManager(private val context: Context) {
     private fun setConnectionStatus(connectionStatus: ConnectionStatus) {
         actualConnectionStatus = connectionStatus
         ioScope.launch { _connectionsStatus.emit(connectionStatus) }
+    }
+
+    fun getDeviceConnectedName(): String? {
+        return nameDeviceConnected
     }
 
     fun destroy() {

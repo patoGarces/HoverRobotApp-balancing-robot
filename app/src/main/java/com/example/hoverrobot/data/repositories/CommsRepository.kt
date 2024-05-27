@@ -37,6 +37,8 @@ interface CommsRepository {
 
     fun connectDevice(device: BluetoothDevice)
 
+    fun getConnectedDeviceName(): String?
+
     fun startDiscoverBT()
 
     fun isBluetoothEnabled(): Boolean
@@ -152,6 +154,10 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
 
     override fun isBluetoothEnabled(): Boolean {
         return bluetoothManager.isBluetoothEnabled()
+    }
+
+    override fun getConnectedDeviceName(): String? {
+        return bluetoothManager.getDeviceConnectedName()
     }
 
     companion object {
