@@ -24,8 +24,6 @@ class StatusBarFragment : Fragment() {
 
     private val statusBarViewModel: StatusBarViewModel by viewModels(ownerProducer = { requireActivity() })
 
-    private lateinit var myFragmentManager: FragmentManager
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -36,8 +34,6 @@ class StatusBarFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        myFragmentManager = (activity as MainActivity).supportFragmentManager
 
         setupListener()
         setupObserver()
