@@ -1,6 +1,7 @@
 package com.example.hoverrobot.ui.controlFragment
 
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -27,16 +28,23 @@ class ControlFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
-        binding.joystickRight.setFixedCenter(true); // set up auto-define center
+        binding.joystickThrottle.setFixedCenter(true)
+        binding.joystickDirection.setFixedCenter(true)
         setupListener()
         setupObserver()
     }
 
     private fun setupListener(){
 
-        binding.joystickRight.setOnMoveListener{ angle, strength ->
-            val x = (binding.joystickRight.normalizedX * 2) - 100
-            val y = 100 - (binding.joystickRight.normalizedY * 2)
+        binding.joystickDirection.setOnMoveListener{ _, _ ->
+            val y = 100 - (binding.joystickThrottle.normalizedY * 2)
+            val x = (binding.joystickDirection.normalizedX * 2) -100
+            controlViewModel.newCoordinatesJoystick(AxisControl(x,y))
+        }
+
+        binding.joystickThrottle.setOnMoveListener{ _, _ ->
+            val y = 100 - (binding.joystickThrottle.normalizedY * 2)
+            val x = (binding.joystickDirection.normalizedX * 2) -100
             controlViewModel.newCoordinatesJoystick(AxisControl(x,y))
         }
     }
@@ -45,10 +53,12 @@ class ControlFragment : Fragment() {
         controlViewModel.joyVisible.observe(viewLifecycleOwner){
             it?.let{
                 if(it){
-                    binding.joystickRight.visibility = View.VISIBLE
+                    binding.joystickThrottle.visibility = View.VISIBLE
+                    binding.joystickDirection.visibility = View.VISIBLE
                 }
                 else{
-                    binding.joystickRight.visibility = View.GONE
+                    binding.joystickThrottle.visibility = View.GONE
+                    binding.joystickDirection.visibility = View.GONE
                 }
             }
         }
