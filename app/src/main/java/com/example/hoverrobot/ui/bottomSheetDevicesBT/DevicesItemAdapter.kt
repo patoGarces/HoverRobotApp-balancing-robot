@@ -20,7 +20,6 @@ class DevicesItemAdapter(private val devicesItem : List<BluetoothDevice>, privat
 
     override fun onBindViewHolder(holder: DevicesItemViewHolder, position: Int) {
         val item = devicesItem[position]
-        Log.d("DeviceBT","mac: ${item}")
         holder.render(item,onClickListener)
     }
 

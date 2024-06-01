@@ -1,9 +1,15 @@
 package com.example.hoverrobot
 
 import android.Manifest
+import android.Manifest.permission.ACCESS_COARSE_LOCATION
+import android.Manifest.permission.ACCESS_FINE_LOCATION
+import android.Manifest.permission.BLUETOOTH
+import android.Manifest.permission.BLUETOOTH_ADMIN
+import android.Manifest.permission.BLUETOOTH_SCAN
 import android.bluetooth.BluetoothAdapter
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -13,7 +19,9 @@ import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
@@ -139,6 +147,7 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+    @RequiresApi(Build.VERSION_CODES.S)
     private fun getPermissions() {
 
         var btPermissions = true
@@ -175,12 +184,21 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
+        ActivityCompat.requestPermissions(this, arrayOf(
+            ACCESS_COARSE_LOCATION,
+            ACCESS_FINE_LOCATION,
+            BLUETOOTH,
+            BLUETOOTH_ADMIN,
+            BLUETOOTH_SCAN
+            ), 1)
+
         requestMultiplesPermissions.launch(
             arrayOf(
-                Manifest.permission.ACCESS_COARSE_LOCATION,
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.BLUETOOTH,
-                Manifest.permission.BLUETOOTH_ADMIN
+                ACCESS_COARSE_LOCATION,
+                ACCESS_FINE_LOCATION,
+                BLUETOOTH,
+                BLUETOOTH_ADMIN,
+                BLUETOOTH_SCAN
             )
         )
     }
@@ -211,5 +229,4 @@ class MainActivity : AppCompatActivity() {
     companion object {
         const val SKIP_BLUETOOTH = true
     }
-
 }
