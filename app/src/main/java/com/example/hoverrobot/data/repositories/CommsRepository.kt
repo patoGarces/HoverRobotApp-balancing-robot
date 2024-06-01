@@ -3,6 +3,7 @@ package com.example.hoverrobot.data.repositories
 import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.util.Log
+import com.example.hoverrobot.bluetooth.BLEManager
 import com.example.hoverrobot.data.utils.ToolBox.Companion.ioScope
 import com.example.hoverrobot.bluetooth.BluetoothManager
 import com.example.hoverrobot.data.models.comms.AxisControl
@@ -46,7 +47,8 @@ interface CommsRepository {
 
 class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val context: Context): CommsRepository {
 
-    private var bluetoothManager: BluetoothManager = BluetoothManager(context)
+//    private var bluetoothManager = BluetoothManager(context)
+    private var bleManager = BLEManager(context)
 
     private val _statusRobotFlow = MutableSharedFlow<MainBoardRobotStatus>()
     override val statusRobotFlow: SharedFlow<MainBoardRobotStatus> = _statusRobotFlow
@@ -64,27 +66,27 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
     }
 
     private fun setupObservers() {
-        ioScope.launch {
-            bluetoothManager.receivedDataBtFlow.collect {
-                val statusRobot = it.asRobotStatus
-                if (statusRobot.header == HEADER_RX_KEY_STATUS.toShort() &&
-                    statusRobot.checksum == statusRobot.calculateChecksum) {
-                    _statusRobotFlow.emit(statusRobot)                                             // El dia de mañana si se reciben otros tipos de datos, se deberia hacer el split aca
-                }
-                else {
-                    Log.d(TAG,"error paquete")
-                }
-            }
-        }
+//        ioScope.launch {
+//            bluetoothManager.receivedDataBtFlow.collect {
+//                val statusRobot = it.asRobotStatus
+//                if (statusRobot.header == HEADER_RX_KEY_STATUS.toShort() &&
+//                    statusRobot.checksum == statusRobot.calculateChecksum) {
+//                    _statusRobotFlow.emit(statusRobot)                                             // El dia de mañana si se reciben otros tipos de datos, se deberia hacer el split aca
+//                }
+//                else {
+//                    Log.d(TAG,"error paquete")
+//                }
+//            }
+//        }
 
         ioScope.launch {
-            bluetoothManager.connectionsStatus.collect {
+            bleManager.connectionsStatus.collect {
                 _connectionStateFlow.emit(it)
             }
         }
 
         ioScope.launch {
-            bluetoothManager.availableBtDevices.collect {
+            bleManager.availableBtDevices.collect {
                 ioScope.launch { _availableDevices.emit(it) }
             }
         }
@@ -116,7 +118,7 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
         )
 
         buffer.putInt(checksum)
-        bluetoothManager.sendDataBt(buffer)
+//        bluetoothManager.sendDataBt(buffer)
     }
 
     override fun sendJoystickUpdate(axisControl: AxisControl) {
@@ -129,7 +131,7 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
         val checksum =
             HEADER_PACKET xor HEADER_TX_KEY_CONTROL xor axisControl.axisX xor axisControl.axisY
         buffer.putInt(checksum)
-        bluetoothManager.sendDataBt(buffer)
+//        bluetoothManager.sendDataBt(buffer)
     }
 
     override fun sendCommand(commandCode: Int) {
@@ -141,23 +143,25 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
 
         val checksum = HEADER_PACKET xor HEADER_TX_KEY_COMMAND xor commandCode
         buffer.putInt(checksum)
-        bluetoothManager.sendDataBt(buffer)
+//        bluetoothManager.sendDataBt(buffer)
     }
 
     override fun connectDevice(device: BluetoothDevice) {
-        bluetoothManager.connectDevice(device)
+        bleManager.connectDevice(device)
     }
 
     override fun startDiscoverBT() {
-        bluetoothManager.startDiscoverBT()
+//        bluetoothManager.startDiscoverBT()
+
+        bleManager.startScan()
     }
 
     override fun isBluetoothEnabled(): Boolean {
-        return bluetoothManager.isBluetoothEnabled()
+        return bleManager.isBluetoothEnabled()
     }
 
     override fun getConnectedDeviceName(): String? {
-        return bluetoothManager.getDeviceConnectedName()
+        return bleManager.getDeviceConnectedName()
     }
 
     companion object {
