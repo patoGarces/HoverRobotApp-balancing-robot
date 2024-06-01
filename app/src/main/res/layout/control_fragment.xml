@@ -8,7 +8,24 @@
     tools:context=".ui.controlFragment.ControlFragment">
 
     <io.github.controlwear.virtual.joystick.android.JoystickView
-        android:id="@+id/joystick_right"
+        android:id="@+id/joystick_throttle"
+        android:layout_width="140dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="32dp"
+        app:JV_buttonSizeRatio="40%"
+        app:JV_backgroundSizeRatio="60%"
+        app:JV_buttonImage="@mipmap/ic_analog_foreground"
+        app:JV_borderColor="@color/white"
+        app:JV_backgroundColor="@color/transparent"
+        app:JV_borderWidth="2dp"
+        app:JV_buttonDirection="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:JV_fixedCenter="false"/>
+
+    <io.github.controlwear.virtual.joystick.android.JoystickView
+        android:id="@+id/joystick_direction"
         android:layout_width="140dp"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
@@ -19,6 +36,7 @@
         app:JV_borderColor="@color/white"
         app:JV_backgroundColor="@color/transparent"
         app:JV_borderWidth="2dp"
+        app:JV_buttonDirection="horizontal"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:JV_fixedCenter="false"/>
