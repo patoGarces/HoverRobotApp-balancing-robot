@@ -118,7 +118,7 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
         )
 
         buffer.putInt(checksum)
-//        bluetoothManager.sendDataBt(buffer)
+        bleManager.sendData(buffer.array())
     }
 
     override fun sendJoystickUpdate(axisControl: AxisControl) {
@@ -131,7 +131,7 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
         val checksum =
             HEADER_PACKET xor HEADER_TX_KEY_CONTROL xor axisControl.axisX xor axisControl.axisY
         buffer.putInt(checksum)
-//        bluetoothManager.sendDataBt(buffer)
+        bleManager.sendData(buffer.array())
     }
 
     override fun sendCommand(commandCode: Int) {
@@ -143,7 +143,7 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
 
         val checksum = HEADER_PACKET xor HEADER_TX_KEY_COMMAND xor commandCode
         buffer.putInt(checksum)
-//        bluetoothManager.sendDataBt(buffer)
+        bleManager.sendData(buffer.array())
     }
 
     override fun connectDevice(device: BluetoothDevice) {
