@@ -161,25 +161,13 @@ class BLEManager(private val context: Context): BluetoothManagerInterface {
                 Log.d(TAG,"2 Caracteristica leida: ${characteristic?.value.contentToString()}")
             }
 
-            override fun onCharacteristicChanged(
-                gatt: BluetoothGatt,
-                characteristic: BluetoothGattCharacteristic,
-                value: ByteArray
-            ) {
-                super.onCharacteristicChanged(gatt, characteristic, value)
-
-                Log.d(TAG,"on characteristicChanged: $value")
-            }
-
             override fun onCharacteristicWrite(
                 gatt: BluetoothGatt,
                 characteristic: BluetoothGattCharacteristic,
                 status: Int
             ) {
                 super.onCharacteristicWrite(gatt, characteristic, status)
-//                if (characteristic.uuid == servicesAvailableBLE?.first()?.uuid) {                   // TODO: cambiar UUID a conveniencia
-                    Log.v(TAG, "Write status: $status")
-//                }
+                Log.v(TAG, "Write status: $status")
             }
         }
 
@@ -255,17 +243,6 @@ class BLEManager(private val context: Context): BluetoothManagerInterface {
             val success = bluetoothGatt?.readCharacteristic(characteristic)
             Log.v(TAG, "Read status: $success")
         }
-    }
-
-    private fun readCharacteristicNotify(serviceName: String, characteristicName: String) {
-        val service = bluetoothGatt?.getService(UUID.fromString(serviceName))
-        val characteristic = service?.getCharacteristic(UUID.fromString(characteristicName))
-        bluetoothGatt?.setCharacteristicNotification(characteristic, true)
-
-//        val CLIENT_CONFIG_DESCRIPTOR = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
-//        val desc = characteristic?.getDescriptor(CLIENT_CONFIG_DESCRIPTOR)
-//        desc?.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE)
-//        bluetoothGatt?.writeDescriptor(desc)
     }
 
     private fun writeCharacteristic(serviceName: String,characteristicName: String, data: ByteArray) {
