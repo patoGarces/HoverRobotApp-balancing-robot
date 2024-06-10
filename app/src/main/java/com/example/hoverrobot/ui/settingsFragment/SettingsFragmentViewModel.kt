@@ -40,7 +40,7 @@ class SettingsFragmentViewModel @Inject constructor(
 
     fun sendCalibrateImu(){
         if (commsRepository.connectionStateFlow.value == ConnectionStatus.CONNECTED) {
-            commsRepository.sendCommand(CALIBRATE_IMU.ordinal)
+            commsRepository.sendCommand(CALIBRATE_IMU.ordinal.toShort())
         }
     }
 

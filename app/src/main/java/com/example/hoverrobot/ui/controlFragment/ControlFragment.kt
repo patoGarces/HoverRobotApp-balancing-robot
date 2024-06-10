@@ -37,7 +37,7 @@ class ControlFragment : Fragment() {
         binding.joystickRight.setOnMoveListener{ angle, strength ->
             val x = (binding.joystickRight.normalizedX * 2) - 100
             val y = 100 - (binding.joystickRight.normalizedY * 2)
-            controlViewModel.newCoordinatesJoystick(AxisControl(x,y))
+            controlViewModel.newCoordinatesJoystick(AxisControl(x.toShort(),y.toShort()))       // ToDO: revisar casteo por BLE
         }
     }
 
