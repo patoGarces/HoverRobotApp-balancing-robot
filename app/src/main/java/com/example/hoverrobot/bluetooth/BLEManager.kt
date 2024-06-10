@@ -98,6 +98,8 @@ class BLEManager(private val context: Context): BluetoothManagerInterface {
                         changeStatus(CONNECTED)
                         bluetoothGatt?.discoverServices()
                         Log.d(TAG,"CONECTADO")
+
+//                        bluetoothGatt?.requestMtu(MTU_SIZE)
                     }
                     BluetoothGatt.STATE_CONNECTING -> { changeStatus(CONNECTING) }
                     BluetoothGatt.STATE_DISCONNECTED -> { changeStatus(DISCONNECT) }
@@ -231,6 +233,7 @@ class BLEManager(private val context: Context): BluetoothManagerInterface {
     override fun sendData(data: ByteArray) {           // TODO: encolar envios
         val serviceName = SERVICE_ID
         val characteristicName = CHARACTERISTIC_WRITE
+        Log.d(TAG,"Tamaño de paquete a enviar: ${data.size}, data: $data")
         writeCharacteristic(serviceName, characteristicName, data)
     }
 
@@ -272,6 +275,7 @@ class BLEManager(private val context: Context): BluetoothManagerInterface {
 }
 
 private const val SCAN_PERIOD: Long = 10000
+private const val MTU_SIZE = 32
 
 private const val SERVICE_ID = "0000abf0-0000-1000-8000-00805f9b34fb"
 private const val CHARACTERISTIC_READ = "0000abf1-0000-1000-8000-00805f9b34fb"
