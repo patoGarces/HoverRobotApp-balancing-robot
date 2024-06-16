@@ -23,11 +23,11 @@ class SettingsFragmentViewModel @Inject constructor(
 
     init {
         _pidSettingFromRobot.value = null
-        ioScope.launch {
-            commsRepository.statusRobotFlow.collect {
-                _pidSettingFromRobot.postValue(it.pid)
-            }
-        }
+//        ioScope.launch {                                                                          // TODO: analizar que hacer con los parametros pid
+//            commsRepository.dynamicDataRobotFlow.collect {
+//                _pidSettingFromRobot.postValue(it.pid)
+//            }
+//        }
     }
 
     fun setPidTunningToRobot(newTunning : PidSettings){
