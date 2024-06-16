@@ -12,11 +12,13 @@ import android.bluetooth.le.ScanResult
 import android.content.Context
 import android.os.Handler
 import android.util.Log
+import com.example.hoverrobot.data.utils.ByteArraysUtils.toByteBuffer
 import com.example.hoverrobot.data.utils.ConnectionStatus
 import com.example.hoverrobot.data.utils.ConnectionStatus.CONNECTED
 import com.example.hoverrobot.data.utils.ConnectionStatus.CONNECTING
 import com.example.hoverrobot.data.utils.ConnectionStatus.DISCOVERING
 import com.example.hoverrobot.data.utils.ConnectionStatus.DISCONNECT
+import com.example.hoverrobot.data.utils.FormatPrintsLogs.toHex
 import com.example.hoverrobot.data.utils.ToolBox.Companion.ioScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -67,7 +69,7 @@ class BLEManager(private val context: Context): BluetoothManagerInterface {
 
     internal var actualConnectionStatus: ConnectionStatus = ConnectionStatus.INIT
     internal var deviceNameConnected: String? = null
-    internal var servicesAvailableBLE: List<BluetoothGattService>? = emptyList()
+    internal var servicesAvailableBLE: MutableList<BluetoothGattService> = arrayListOf()
 
     override fun isBluetoothEnabled(): Boolean {
         return bluetoothAdapter.isEnabled
@@ -118,8 +120,7 @@ class BLEManager(private val context: Context): BluetoothManagerInterface {
 //                }
 
 //                readCharacteristic(SERVICE_ID, CHARACTERISTIC_READ)
-//                readCharacteristicNotify(SERVICE_ID, CHARACTERISTIC_READ_NOTIFY)
-                val servicesAvailableBLE = gatt.services
+                servicesAvailableBLE = gatt.services
                 servicesAvailableBLE.forEach { service ->
                     val serviceUUIDHex = service.uuid.toString().toUpperCase(Locale.ROOT)
                     Log.d(TAG, "UUID service: $serviceUUIDHex")
@@ -145,22 +146,25 @@ class BLEManager(private val context: Context): BluetoothManagerInterface {
                 }
             }
 
-            override fun onCharacteristicRead(
-                gatt: BluetoothGatt?,
-                characteristic: BluetoothGattCharacteristic?,
-                status: Int
-            ) {
-                super.onCharacteristicRead(gatt, characteristic, status)
-
-                Log.d(TAG,"Caracteristica leida: ${characteristic}")
-            }
+//            override fun onCharacteristicRead(
+//                gatt: BluetoothGatt?,
+//                characteristic: BluetoothGattCharacteristic?,
+//                status: Int
+//            ) {
+//                super.onCharacteristicRead(gatt, characteristic, status)
+//
+//            }
 
             override fun onCharacteristicChanged(
                 gatt: BluetoothGatt?,
                 characteristic: BluetoothGattCharacteristic?
             ) {
                 super.onCharacteristicChanged(gatt, characteristic)
-                Log.d(TAG,"2 Caracteristica leida: ${characteristic?.value.contentToString()}")
+                characteristic?.value?.let {
+//                    Log.d(TAG, "Caracteristica leida: ${it.toHex()}, tamaño: ${it.size}")
+
+                    if(it.size > 15) ioScope.launch { _receivedDataBtFlow.emit(it.toByteBuffer()) }     // TODO: definir tamaño
+                }
             }
 
             override fun onCharacteristicWrite(
@@ -169,7 +173,7 @@ class BLEManager(private val context: Context): BluetoothManagerInterface {
                 status: Int
             ) {
                 super.onCharacteristicWrite(gatt, characteristic, status)
-                Log.v(TAG, "Write status: $status")
+//                Log.v(TAG, "Write status: $status")
             }
         }
 
@@ -230,10 +234,12 @@ class BLEManager(private val context: Context): BluetoothManagerInterface {
         ioScope.launch { _connectionsStatus.emit(newStatus) }
     }
 
+    var outputCont:Int = 0
     override fun sendData(data: ByteArray) {           // TODO: encolar envios
         val serviceName = SERVICE_ID
         val characteristicName = CHARACTERISTIC_WRITE
-        Log.d(TAG,"Tamaño de paquete a enviar: ${data.size}, data: $data")
+        outputCont++
+        Log.d(TAG,"Tamaño de paquete a enviar $outputCont: ${data.size}, data: $data")
         writeCharacteristic(serviceName, characteristicName, data)
     }
 
@@ -268,9 +274,13 @@ class BLEManager(private val context: Context): BluetoothManagerInterface {
 //            // for ActivityCompat#requestPermissions for more details.
 //            return
 //        }
-        characteristic?.value = data
-        val success = bluetoothGatt?.writeCharacteristic(characteristic)
-        Log.v("bluetooth", "Write status: $success")
+
+        characteristic?.let {
+            it.value = data
+//            it.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+            val success = bluetoothGatt?.writeCharacteristic(it)
+            Log.d("bluetooth", "Write status: $success")
+        }
     }
 }
 

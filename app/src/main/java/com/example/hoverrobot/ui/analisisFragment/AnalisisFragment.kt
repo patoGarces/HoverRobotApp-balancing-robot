@@ -7,9 +7,9 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import com.example.hoverrobot.data.models.comms.MainBoardRobotStatus
 import com.example.hoverrobot.R
-import com.example.hoverrobot.data.models.comms.PidSettings
+import com.example.hoverrobot.data.models.comms.RobotDynamicData
+import com.example.hoverrobot.data.models.comms.RobotDynamicDataRaw
 import com.example.hoverrobot.databinding.AnalisisFragmentBinding
 import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.components.LimitLine
@@ -66,7 +66,7 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
         analisisViewModel.newDataAnalisis.observe(viewLifecycleOwner) {
             it?.let {
                 if (!isAnalisisPaused) {
-                    newAngle(it)
+                    newDynamicFrame(it)
                 }
             }
         }
@@ -111,34 +111,34 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
             entrySetPoint.clear()
         }
 
-        binding.btnGenerateDataset.setOnClickListener {
-            for (i in 0..100) {
-                val randomData = MainBoardRobotStatus(
-                    Math.random().toInt().toShort(),
-                    Math.random().toInt().toShort(),
-                    Math.random().toInt().toShort(),
-                    Math.random().toInt().toShort(),
-                    Math.random().toInt().toShort(),
-                    Math.random().toInt().toShort(),
-                    Math.random().toInt().toShort(),
-                    Math.random().toInt().toShort(),
-                    ((Math.random() - 0.5) * 180).toFloat(),
-                    ((Math.random() - 0.5) * 180).toFloat(),
-                    ((Math.random() - 0.5) * 180).toFloat(),
-                    PidSettings(
-                        0f,
-                        1f,
-                        2f,
-                        0f,
-                        0f,
-                    ),
-                    0f,
-                    Math.random().toInt().toShort(),
-                    Math.random().toInt().toShort(),
-                    Math.random().toInt().toShort()
-                )
-                newAngle(randomData)
-            }
+        binding.btnGenerateDataset.setOnClickListener { // TODO: arreglar random generator
+//            for (i in 0..100) {
+//                val randomData = MainBoardRobotStatus(
+//                    Math.random().toInt().toShort(),
+//                    Math.random().toInt().toShort(),
+//                    Math.random().toInt().toShort(),
+//                    Math.random().toInt().toShort(),
+//                    Math.random().toInt().toShort(),
+//                    Math.random().toInt().toShort(),
+//                    Math.random().toInt().toShort(),
+//                    Math.random().toInt().toShort(),
+//                    ((Math.random() - 0.5) * 180).toFloat(),
+//                    ((Math.random() - 0.5) * 180).toFloat(),
+//                    ((Math.random() - 0.5) * 180).toFloat(),
+//                    PidSettings(
+//                        0f,
+//                        1f,
+//                        2f,
+//                        0f,
+//                        0f,
+//                    ),
+//                    0f,
+//                    Math.random().toInt().toShort(),
+//                    Math.random().toInt().toShort(),
+//                    Math.random().toInt().toShort()
+//                )
+//                newAngle(randomData)
+//            }
         }
     }
 
@@ -198,13 +198,9 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
         }
     }
 
-    private fun newAngle(newFrame: MainBoardRobotStatus) {
+    private fun newDynamicFrame(newFrame: RobotDynamicData) {
 
         with(binding) {
-            tvParamKp.text = getString(R.string.placeholder_kp, newFrame.pid.kp.toString())
-            tvParamKi.text = getString(R.string.placeholder_ki, newFrame.pid.ki.toString())
-            tvParamKd.text = getString(R.string.placeholder_kd, newFrame.pid.kd.toString())
-            tvParamCenter.text = getString(R.string.placeholder_center, newFrame.pid.centerAngle.toString())
 
             val lineDataAnglePitch =
                 LineDataSet(entryAnglePitch.takeLast(frameSize), "Pitch Angle").also {
@@ -303,6 +299,111 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
         }
     }
 
+//    private fun newAngle(newFrame: MainBoardRobotStatus) {
+//
+//        with(binding) {
+//            tvParamKp.text = getString(R.string.placeholder_kp, newFrame.pid.kp.toString())
+//            tvParamKi.text = getString(R.string.placeholder_ki, newFrame.pid.ki.toString())
+//            tvParamKd.text = getString(R.string.placeholder_kd, newFrame.pid.kd.toString())
+//            tvParamCenter.text = getString(R.string.placeholder_center, newFrame.pid.centerAngle.toString())
+//
+//            val lineDataAnglePitch =
+//                LineDataSet(entryAnglePitch.takeLast(frameSize), "Pitch Angle").also {
+//                    it.lineWidth = 2.5f
+//                    it.circleRadius = 1f
+//                    it.color = requireContext().getColor(R.color.red_80_percent)
+//                    it.setCircleColor(it.color)
+//                }                                                                                           // Agrego nuevo dataset que es el conjunto de puntos relacionados entre si, con su label
+//
+//            val lineDataAngleRoll =
+//                LineDataSet(entryAngleRoll.takeLast(frameSize), "Roll Angle").also {
+//                    it.lineWidth = 2.5f
+//                    it.circleRadius = 1f
+//                    it.color = requireContext().getColor(R.color.green_80_percent)
+//                    it.setCircleColor(it.color)
+//                }                                                                                           // Agrego nuevo dataset que es el conjunto de puntos relacionados entre si, con su label
+//
+//            val lineDataAngleYaw =
+//                LineDataSet(entryAngleYaw.takeLast(frameSize), "Yaw Angle").also {
+//                    it.lineWidth = 2.5f
+//                    it.circleRadius = 1f
+//                    it.color = requireContext().getColor(R.color.yellow_80_percent)
+//                    it.setCircleColor(it.color)
+//                }                                                                                           // Agrego nuevo dataset que es el conjunto de puntos relacionados entre si, con su label
+//
+//            val lineDataMotorL = LineDataSet(entryMotorL.takeLast(frameSize), "Motor L x100").also {
+//                it.lineWidth = 2.5f
+//                it.circleRadius = 1f
+//                it.color = requireContext().getColor(R.color.blue_80_percent)
+//                it.setCircleColor(it.color)
+//            }
+//
+//            val lineDataMotorR = LineDataSet(entryMotorR.takeLast(frameSize), "Motor R x100").also {
+//                it.lineWidth = 2.5f
+//                it.circleRadius = 1f
+//                it.color = requireContext().getColor(R.color.red_80_percent)
+//                it.setCircleColor(it.color)
+//            }
+//
+//            val lineDataSetPoint = LineDataSet(entrySetPoint.takeLast(frameSize), "setPoint").also {
+//                it.lineWidth = 2.5f
+//                it.circleRadius = 1f
+//                it.color = requireContext().getColor(R.color.status_turquesa)
+//                it.setCircleColor(it.color)
+//            }
+//            val actualTimeInSec = ((System.currentTimeMillis() - initTimeStamp).toFloat()) / 1000
+//            entryAnglePitch.add(Entry(actualTimeInSec, newFrame.pitchAngle))
+//            entryAngleRoll.add(Entry(actualTimeInSec, newFrame.rollAngle))
+//            entryAngleYaw.add(Entry(actualTimeInSec, newFrame.yawAngle))
+//            entryMotorL.add(Entry(actualTimeInSec, newFrame.speedL.toFloat() / 100))
+//            entryMotorR.add(Entry(actualTimeInSec, newFrame.speedR.toFloat() / 100))
+//            entrySetPoint.add(Entry(actualTimeInSec, newFrame.setPoint))
+//
+//            if (entrySetPoint.size >= frameSize) {
+//                entryAnglePitch.removeFirst()
+//                entryAngleRoll.removeFirst()
+//                entryAngleYaw.removeFirst()
+//                entryMotorL.removeFirst()
+//                entryMotorR.removeFirst()
+//                entrySetPoint.removeFirst()
+//            }
+//
+//            dataSet = when (viewDataset) {
+//                DatasetView.DATASET_IMU -> {
+//                    setImuMode(newFrame)
+//                    val arrayImuDataset = ArrayList<ILineDataSet>()
+//                    arrayImuDataset.clear()
+//                    arrayImuDataset.add(lineDataAnglePitch)
+//                    arrayImuDataset.add(lineDataAngleRoll)
+//                    arrayImuDataset.add(lineDataAngleYaw)
+//                    LineData(arrayImuDataset)
+//                }
+//
+//                DatasetView.DATASET_MOTOR -> {
+//                    setMotorControlMode()
+//                    val arrayMotorDataset = ArrayList<ILineDataSet>()
+//                    arrayMotorDataset.clear()
+//                    arrayMotorDataset.add(lineDataMotorL)
+//                    arrayMotorDataset.add(lineDataMotorR)
+//                    LineData(arrayMotorDataset)
+//                }
+//
+//                DatasetView.DATASET_PID -> {
+//                    setPidMode(newFrame)
+//                    val arrayPidDataset = ArrayList<ILineDataSet>()
+//                    arrayPidDataset.clear()
+//                    arrayPidDataset.add(lineDataSetPoint)
+//                    arrayPidDataset.add(lineDataAnglePitch)
+//                    arrayPidDataset.add(lineDataMotorL)
+//                    LineData(arrayPidDataset)
+//                }
+//            }
+//
+//            chart.data = dataSet
+//            chart.invalidate()
+//        }
+//    }
+
 
     override fun onValueSelected(e: Entry?, h: Highlight?) {
         Log.i(
@@ -321,7 +422,7 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
         binding.chart.axisLeft.removeAllLimitLines()
     }
 
-    private fun setImuMode(actualLineLimits: MainBoardRobotStatus) {
+    private fun setImuMode(actualLineLimits: RobotDynamicData) {
 
         actualLimitScale = 100F
         setAutoScale(binding.switchAutoscale.isChecked)
@@ -330,7 +431,7 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
         val colorSafetyLimits =
             requireContext().getColor(androidx.appcompat.R.color.material_deep_teal_200)
 
-        val centerAngleLimitLine = LimitLine(actualLineLimits.pid.centerAngle, "Centro de gravedad")
+        val centerAngleLimitLine = LimitLine(actualLineLimits.centerAngle, "Centro de gravedad")
         centerAngleLimitLine.lineWidth = 2f
         centerAngleLimitLine.enableDashedLine(20f, 10f, 10f)
         centerAngleLimitLine.labelPosition = LimitLine.LimitLabelPosition.LEFT_TOP
@@ -338,36 +439,36 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
         centerAngleLimitLine.lineColor = requireContext().getColor(R.color.status_blue)
         binding.chart.axisLeft.addLimitLine(centerAngleLimitLine)
 
-        val upperLimitLine = LimitLine(
-            actualLineLimits.pid.centerAngle + actualLineLimits.pid.safetyLimits,
-            "Limite seguridad superior"
-        )
-        upperLimitLine.lineWidth = 2f
-        upperLimitLine.enableDashedLine(20f, 10f, 10f)
-        upperLimitLine.labelPosition = LimitLine.LimitLabelPosition.LEFT_TOP
-        upperLimitLine.textSize = 10f
-        upperLimitLine.lineColor = colorSafetyLimits
-        binding.chart.axisLeft.addLimitLine(upperLimitLine)
-
-        val lowerLimitLine = LimitLine(
-            actualLineLimits.pid.centerAngle - actualLineLimits.pid.safetyLimits,
-            "Limite seguridad inferior"
-        )
-        lowerLimitLine.lineWidth = 2f
-        lowerLimitLine.enableDashedLine(20f, 10f, 10f)
-        lowerLimitLine.labelPosition = LimitLine.LimitLabelPosition.LEFT_TOP
-        lowerLimitLine.textSize = 10f
-        lowerLimitLine.lineColor = colorSafetyLimits
-        binding.chart.axisLeft.addLimitLine(lowerLimitLine)
+//        val upperLimitLine = LimitLine(                                                             // TODO: habilitar, me falta el safetyLimit
+//            actualLineLimits.pid.centerAngle + actualLineLimits.pid.safetyLimits,
+//            "Limite seguridad superior"
+//        )
+//        upperLimitLine.lineWidth = 2f
+//        upperLimitLine.enableDashedLine(20f, 10f, 10f)
+//        upperLimitLine.labelPosition = LimitLine.LimitLabelPosition.LEFT_TOP
+//        upperLimitLine.textSize = 10f
+//        upperLimitLine.lineColor = colorSafetyLimits
+//        binding.chart.axisLeft.addLimitLine(upperLimitLine)
+//
+//        val lowerLimitLine = LimitLine(
+//            actualLineLimits.pid.centerAngle - actualLineLimits.pid.safetyLimits,
+//            "Limite seguridad inferior"
+//        )
+//        lowerLimitLine.lineWidth = 2f
+//        lowerLimitLine.enableDashedLine(20f, 10f, 10f)
+//        lowerLimitLine.labelPosition = LimitLine.LimitLabelPosition.LEFT_TOP
+//        lowerLimitLine.textSize = 10f
+//        lowerLimitLine.lineColor = colorSafetyLimits
+//        binding.chart.axisLeft.addLimitLine(lowerLimitLine)
     }
 
-    fun setPidMode(newFrame: MainBoardRobotStatus) {
+    fun setPidMode(newFrame: RobotDynamicData) {
         actualLimitScale = 15F
         setAutoScale(binding.switchAutoscale.isChecked)
 
         binding.chart.axisLeft.removeAllLimitLines()
 
-        val centerAngleLimitLine = LimitLine(newFrame.pid.centerAngle, "Centro de gravedad")
+        val centerAngleLimitLine = LimitLine(newFrame.centerAngle, "Centro de gravedad")
         centerAngleLimitLine.lineWidth = 2f
         centerAngleLimitLine.enableDashedLine(20f, 10f, 10f)
         centerAngleLimitLine.labelPosition = LimitLine.LimitLabelPosition.LEFT_TOP

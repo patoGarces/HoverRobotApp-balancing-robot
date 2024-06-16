@@ -5,11 +5,12 @@ import android.content.Context
 import android.util.Log
 import com.example.hoverrobot.bluetooth.BLEManager
 import com.example.hoverrobot.data.utils.ToolBox.Companion.ioScope
-import com.example.hoverrobot.bluetooth.BluetoothManager
 import com.example.hoverrobot.data.models.comms.AxisControl
-import com.example.hoverrobot.data.models.comms.MainBoardRobotStatus
 import com.example.hoverrobot.data.models.comms.PidSettings
-import com.example.hoverrobot.data.models.comms.asRobotStatus
+import com.example.hoverrobot.data.models.comms.RobotDynamicData
+import com.example.hoverrobot.data.models.comms.RobotDynamicDataRaw
+import com.example.hoverrobot.data.models.comms.asRobotDynamicData
+import com.example.hoverrobot.data.models.comms.asRobotDynamicDataRaw
 import com.example.hoverrobot.data.models.comms.calculateChecksum
 import com.example.hoverrobot.data.utils.ConnectionStatus
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -25,7 +26,7 @@ import kotlin.experimental.xor
 
 interface CommsRepository {
 
-    val statusRobotFlow: SharedFlow<MainBoardRobotStatus>
+    val dynamicDataRobotFlow: SharedFlow<RobotDynamicData>
 
     val availableDevices: SharedFlow<List<BluetoothDevice>>
 
@@ -48,11 +49,10 @@ interface CommsRepository {
 
 class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val context: Context): CommsRepository {
 
-//    private var bluetoothManager = BluetoothManager(context)
     private var bleManager = BLEManager(context)
 
-    private val _statusRobotFlow = MutableSharedFlow<MainBoardRobotStatus>()
-    override val statusRobotFlow: SharedFlow<MainBoardRobotStatus> = _statusRobotFlow
+    private val _dynamicDataRobotFlow = MutableSharedFlow<RobotDynamicData>()
+    override val dynamicDataRobotFlow: SharedFlow<RobotDynamicData> = _dynamicDataRobotFlow
 
     private val _availableDevices = MutableSharedFlow<List<BluetoothDevice>>()
     override val availableDevices: SharedFlow<List<BluetoothDevice>> = _availableDevices
@@ -67,18 +67,21 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
     }
 
     private fun setupObservers() {
-//        ioScope.launch {
-//            bluetoothManager.receivedDataBtFlow.collect {
-//                val statusRobot = it.asRobotStatus
-//                if (statusRobot.header == HEADER_RX_KEY_STATUS.toShort() &&
-//                    statusRobot.checksum == statusRobot.calculateChecksum) {
-//                    _statusRobotFlow.emit(statusRobot)                                             // El dia de mañana si se reciben otros tipos de datos, se deberia hacer el split aca
+        ioScope.launch {
+            bleManager.receivedDataBtFlow.collect {
+//                Log.d(TAG,"SIZE COLLECT: ${ it.remaining()}")
+//                if(it.remaining() > 20) {
+                    val rawDynamicData = it.asRobotDynamicDataRaw
+                    if (rawDynamicData.header == HEADER_RX_KEY_STATUS &&
+                        rawDynamicData.checksum == rawDynamicData.calculateChecksum
+                    ) {
+                        _dynamicDataRobotFlow.emit(rawDynamicData.asRobotDynamicData)                                             // El dia de mañana si se reciben otros tipos de datos, se deberia hacer el split aca
+                    } else {
+                        Log.d(TAG, "error paquete")
+                    }
 //                }
-//                else {
-//                    Log.d(TAG,"error paquete")
-//                }
-//            }
-//        }
+            }
+        }
 
         ioScope.launch {
             bleManager.connectionsStatus.collect {
@@ -173,3 +176,5 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
         const val HEADER_TX_KEY_COMMAND: Short = 0xAB04.toShort()    // key que indica que el paquete a enviar es un comando
     }
 }
+
+const val PRECISION_DECIMALS_COMMS = 100    // Precision al convertir la data cruda del BLE a float, en este caso 100 = 0.01
