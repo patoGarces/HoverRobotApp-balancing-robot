@@ -1,8 +1,11 @@
 package com.example.hoverrobot.data.repositories
 
+import android.Manifest
 import android.bluetooth.BluetoothDevice
 import android.content.Context
+import android.content.pm.PackageManager
 import android.util.Log
+import androidx.core.app.ActivityCompat
 import com.example.hoverrobot.bluetooth.BLEManager
 import com.example.hoverrobot.data.utils.ToolBox.Companion.ioScope
 import com.example.hoverrobot.data.models.comms.AxisControl
@@ -72,7 +75,7 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
 //                Log.d(TAG,"SIZE COLLECT: ${ it.remaining()}")
 //                if(it.remaining() > 20) {
                     val rawDynamicData = it.asRobotDynamicDataRaw
-                    if (rawDynamicData.header == HEADER_RX_KEY_STATUS &&
+                    if (rawDynamicData.header == HEADER_PACKAGE_STATUS &&
                         rawDynamicData.checksum == rawDynamicData.calculateChecksum
                     ) {
                         _dynamicDataRobotFlow.emit(rawDynamicData.asRobotDynamicData)                                             // El dia de mañana si se reciben otros tipos de datos, se deberia hacer el split aca
@@ -97,9 +100,8 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
     }
 
     override fun sendPidParams(pidParams: PidSettings) {
-        val paramList = listOf<Short>(
-            HEADER_PACKET,
-            HEADER_TX_KEY_SETTINGS,
+        val paramList = listOf(
+            HEADER_PACKAGE_SETTINGS,
             (pidParams.kp * 100).toInt().toShort(),
             (pidParams.ki * 100).toInt().toShort(),
             (pidParams.kd * 100).toInt().toShort(),
@@ -112,8 +114,7 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
         paramList.forEach { buffer.putShort(it) }
 
         val checksum = (
-            HEADER_PACKET xor
-            HEADER_TX_KEY_SETTINGS xor
+            HEADER_PACKAGE_SETTINGS xor
             (pidParams.kp * 100).toInt().toShort() xor
             (pidParams.ki * 100).toInt().toShort() xor
             (pidParams.kd * 100).toInt().toShort() xor
@@ -127,25 +128,25 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
 
     override fun sendJoystickUpdate(axisControl: AxisControl) {
         val paramList =
-            listOf(HEADER_PACKET, HEADER_TX_KEY_CONTROL, axisControl.axisX, axisControl.axisY)
+            listOf(HEADER_PACKAGE_CONTROL, axisControl.axisX, axisControl.axisY)
         val buffer = ByteBuffer.allocate((paramList.size + 1) * 2)
         buffer.order(ByteOrder.LITTLE_ENDIAN)
         paramList.forEach { buffer.putShort(it) }
 
         val checksum =
-            HEADER_PACKET xor HEADER_TX_KEY_CONTROL xor axisControl.axisX xor axisControl.axisY
+            HEADER_PACKAGE_CONTROL xor axisControl.axisX xor axisControl.axisY
         buffer.putShort(checksum)
         bleManager.sendData(buffer.array())
     }
 
     override fun sendCommand(commandCode: Short) {
         val paramList =
-            listOf<Short>(HEADER_PACKET, HEADER_TX_KEY_COMMAND, commandCode)
+            listOf(HEADER_PACKAGE_COMMAND, commandCode)
         val buffer = ByteBuffer.allocate((paramList.size + 1) * 4)
         buffer.order(ByteOrder.LITTLE_ENDIAN)
         paramList.forEach { buffer.putShort(it) }
 
-        val checksum = HEADER_PACKET xor HEADER_TX_KEY_COMMAND xor commandCode
+        val checksum = HEADER_PACKAGE_COMMAND xor commandCode
         buffer.putShort(checksum)
         bleManager.sendData(buffer.array())
     }
@@ -155,8 +156,6 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
     }
 
     override fun startDiscoverBT() {
-//        bluetoothManager.startDiscoverBT()
-
         bleManager.startScan()
     }
 
@@ -169,11 +168,10 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
     }
 
     companion object {
-        const val HEADER_PACKET: Short = 0xABC0.toShort()
-        const val HEADER_RX_KEY_STATUS: Short = 0xAB01.toShort()     // key que indica que el paquete recibido es un status
-        const val HEADER_TX_KEY_CONTROL: Short = 0xAB02.toShort()    // key que indica que el paquete a enviar es de control
-        const val HEADER_TX_KEY_SETTINGS: Short = 0xAB03.toShort()   // key que indica que el paquete a enviar es de configuracion
-        const val HEADER_TX_KEY_COMMAND: Short = 0xAB04.toShort()    // key que indica que el paquete a enviar es un comando
+        const val HEADER_PACKAGE_STATUS: Short = 0xAB01.toShort()     // key que indica que el paquete recibido es un status
+        const val HEADER_PACKAGE_CONTROL: Short = 0xAB02.toShort()    // key que indica que el paquete a enviar es de control
+        const val HEADER_PACKAGE_SETTINGS: Short = 0xAB03.toShort()   // key que indica que el paquete a enviar es de configuracion
+        const val HEADER_PACKAGE_COMMAND: Short = 0xAB04.toShort()    // key que indica que el paquete a enviar es un comando
     }
 }
 
