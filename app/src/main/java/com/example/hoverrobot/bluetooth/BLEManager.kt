@@ -1,5 +1,7 @@
 package com.example.hoverrobot.bluetooth
 
+import android.Manifest
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
@@ -10,8 +12,11 @@ import android.bluetooth.BluetoothGattService
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Handler
 import android.util.Log
+import androidx.annotation.RequiresPermission
+import androidx.core.app.ActivityCompat
 import com.example.hoverrobot.data.utils.ByteArraysUtils.toByteBuffer
 import com.example.hoverrobot.data.utils.ConnectionStatus
 import com.example.hoverrobot.data.utils.ConnectionStatus.CONNECTED
@@ -49,7 +54,6 @@ class BLEManager(private val context: Context): BluetoothManagerInterface {
     private val TAG = "BLEManager"
 
     private var bluetoothAdapter: BluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
-    private val bluetoothLeScanner = bluetoothAdapter.bluetoothLeScanner
 
     private var scanning = false
     private val handler = Handler()
@@ -75,6 +79,7 @@ class BLEManager(private val context: Context): BluetoothManagerInterface {
         return bluetoothAdapter.isEnabled
     }
 
+    @SuppressLint("MissingPermission")                     // TODO: manejar correctamente los permisos
     override fun connectDevice(device: BluetoothDevice) {
 
 //        if (ActivityCompat.checkSelfPermission(           // TODO: manejar correctamente los permisos
@@ -82,6 +87,7 @@ class BLEManager(private val context: Context): BluetoothManagerInterface {
 //                Manifest.permission.BLUETOOTH_CONNECT
 //            ) != PackageManager.PERMISSION_GRANTED
 //        ) {
+//            Log.d(TAG,"ERROR PERMISOS")
 //            return
 //        }
 
@@ -180,8 +186,8 @@ class BLEManager(private val context: Context): BluetoothManagerInterface {
         bluetoothGatt = device.connectGatt(context,true,gattCallback)
     }
 
+    @SuppressLint("MissingPermission")                     // TODO: manejar correctamente los permisos
     override fun startScan() {
-
 //        if (ActivityCompat.checkSelfPermission(
 //                context,
 //                Manifest.permission.BLUETOOTH_SCAN
@@ -191,6 +197,7 @@ class BLEManager(private val context: Context): BluetoothManagerInterface {
 //            Log.e(TAG,"No hay permiso de BLUETOOTH_SCAN")
 //            return
 //        }
+        val bluetoothLeScanner = bluetoothAdapter.bluetoothLeScanner
 
         val leScanCallback: ScanCallback = object : ScanCallback() {
             override fun onScanResult(callbackType: Int, result: ScanResult) {
@@ -202,7 +209,6 @@ class BLEManager(private val context: Context): BluetoothManagerInterface {
                 }
             }
         }
-
         discoveredDevices.clear()
 
         if (!scanning) { // Stops scanning after a pre-defined scan period.
@@ -234,16 +240,13 @@ class BLEManager(private val context: Context): BluetoothManagerInterface {
         ioScope.launch { _connectionsStatus.emit(newStatus) }
     }
 
-    var outputCont:Int = 0
     override fun sendData(data: ByteArray) {           // TODO: encolar envios
         val serviceName = SERVICE_ID
         val characteristicName = CHARACTERISTIC_WRITE
-        outputCont++
-        Log.d(TAG,"Tamaño de paquete a enviar $outputCont: ${data.size}, data: $data")
         writeCharacteristic(serviceName, characteristicName, data)
     }
 
-//    @RequiresPermission(PERMISSION_BLUETOOTH_CONNECT)
+    @SuppressLint("MissingPermission")                     // TODO: manejar correctamente los permisos
     fun readCharacteristic(serviceName: String, characteristicName: String) {
         val service = bluetoothGatt?.getService(UUID.fromString(serviceName))
         val characteristic = service?.getCharacteristic(UUID.fromString(characteristicName))
@@ -254,24 +257,17 @@ class BLEManager(private val context: Context): BluetoothManagerInterface {
         }
     }
 
+    @SuppressLint("MissingPermission")                     // TODO: manejar correctamente los permisos
     private fun writeCharacteristic(serviceName: String,characteristicName: String, data: ByteArray) {
 
         val service = bluetoothGatt?.getService(UUID.fromString(serviceName))
         val characteristic = service?.getCharacteristic(UUID.fromString(characteristicName))
 
-//        //...Then send the updated characteristic to the device
 //        if (ActivityCompat.checkSelfPermission(
 //                context,
 //                Manifest.permission.BLUETOOTH_CONNECT
 //            ) != PackageManager.PERMISSION_GRANTED
 //        ) {
-//            // TODO: Consider calling
-//            //    ActivityCompat#requestPermissions
-//            // here to request the missing permissions, and then overriding
-//            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-//            //                                          int[] grantResults)
-//            // to handle the case where the user grants the permission. See the documentation
-//            // for ActivityCompat#requestPermissions for more details.
 //            return
 //        }
 

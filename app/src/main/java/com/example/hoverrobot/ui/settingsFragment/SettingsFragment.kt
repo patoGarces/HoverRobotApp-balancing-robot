@@ -126,6 +126,7 @@ class SettingsFragment : Fragment() {
         binding.btnGetPid.setOnClickListener {
             Toast.makeText(requireContext(),"Obteniendo parametros",Toast.LENGTH_LONG).show()
             getParametersFromStore()
+            sendNewSetting()
         }
 
         binding.btnSyncPid.setOnClickListener {
@@ -140,8 +141,8 @@ class SettingsFragment : Fragment() {
 
     private fun sendNewSetting() {
         settingsFragmentViewModel.setPidTunningToRobot(PidSettings(kpValue,kiValue,kdValue,centerValue,safetyLimitsValue))
-        binding.btnSyncPid.isEnabled = false
-        binding.pbSyncLoading.isVisible = true
+//        binding.btnSyncPid.isEnabled = false
+//        binding.pbSyncLoading.isVisible = true
         lastPidSettings = null
     }
 
