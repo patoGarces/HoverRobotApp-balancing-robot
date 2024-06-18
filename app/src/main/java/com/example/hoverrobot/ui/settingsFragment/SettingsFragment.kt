@@ -21,6 +21,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.lang.Math.round
 import kotlin.math.truncate
 
@@ -40,6 +41,8 @@ class SettingsFragment : Fragment() {
     private var centerValue: Float = 0f
     private var safetyLimitsValue: Float = 0f
 
+    private var actualValueSaved: PidSettings? = null
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -53,7 +56,9 @@ class SettingsFragment : Fragment() {
 
         setupListener()
         setupObserver()
-        getParametersFromStore()
+        lifecycleScope.launch(Dispatchers.IO) {
+            getParametersFromStore()
+        }
     }
 
     private fun setupListener(){
@@ -120,12 +125,25 @@ class SettingsFragment : Fragment() {
 
         binding.btnSavePid.setOnClickListener {
             Toast.makeText(requireContext(),"Guardando parametros",Toast.LENGTH_LONG).show()
-            saveParameters(PidSettings(kpValue,kiValue,kdValue,centerValue,safetyLimitsValue))
+            runBlocking {
+                saveParameters(
+                    PidSettings(
+                        kpValue,
+                        kiValue,
+                        kdValue,
+                        centerValue,
+                        safetyLimitsValue
+                    )
+                )
+            }
+            sendNewSetting()
         }
 
         binding.btnGetPid.setOnClickListener {
             Toast.makeText(requireContext(),"Obteniendo parametros",Toast.LENGTH_LONG).show()
-            getParametersFromStore()
+            runBlocking {
+                getParametersFromStore()
+            }
             sendNewSetting()
         }
 
@@ -140,9 +158,12 @@ class SettingsFragment : Fragment() {
     }
 
     private fun sendNewSetting() {
-        settingsFragmentViewModel.setPidTunningToRobot(PidSettings(kpValue,kiValue,kdValue,centerValue,safetyLimitsValue))
+        val newSetting = PidSettings(kpValue,kiValue,kdValue,centerValue,safetyLimitsValue)
+        settingsFragmentViewModel.setPidTunningToRobot(newSetting)
 //        binding.btnSyncPid.isEnabled = false
 //        binding.pbSyncLoading.isVisible = true
+        binding.btnSavePid.isEnabled = newSetting != actualValueSaved
+        binding.btnGetPid.isEnabled = newSetting != actualValueSaved
         lastPidSettings = null
     }
 
@@ -163,36 +184,55 @@ class SettingsFragment : Fragment() {
         }
     }
 
-    private fun saveParameters(pidSettings: PidSettings) {   // TODO: agregar el getConnectedDeviceName para tener parametros diferenciados
-        lifecycleScope.launch(Dispatchers.IO) {
-
-            Log.d("SettingsFragment", KEY_PID_PARAM_CENTER.getDeviceParams)     // TODO: implementar
-            context?.dataStore?.edit { settingsKey ->
-                settingsKey[floatPreferencesKey(KEY_PID_PARAM_P)] = pidSettings.kp
-                settingsKey[floatPreferencesKey(KEY_PID_PARAM_I)] = pidSettings.ki
-                settingsKey[floatPreferencesKey(KEY_PID_PARAM_D)] = pidSettings.kd
-                settingsKey[floatPreferencesKey(KEY_PID_PARAM_CENTER)] = pidSettings.centerAngle
-                settingsKey[floatPreferencesKey(KEY_PID_PARAM_SAFETY_LIM)] = pidSettings.safetyLimits
-            }
+    private suspend fun saveParameters(pidSettings: PidSettings) {                                  // TODO: agregar el getConnectedDeviceName para tener parametros diferenciados
+        Log.d("SettingsFragment", KEY_PID_PARAM_CENTER.getDeviceParams)                         // TODO: implementar
+        context?.dataStore?.edit { settingsKey ->
+            settingsKey[floatPreferencesKey(KEY_PID_PARAM_P)] = pidSettings.kp
+            settingsKey[floatPreferencesKey(KEY_PID_PARAM_I)] = pidSettings.ki
+            settingsKey[floatPreferencesKey(KEY_PID_PARAM_D)] = pidSettings.kd
+            settingsKey[floatPreferencesKey(KEY_PID_PARAM_CENTER)] = pidSettings.centerAngle
+            settingsKey[floatPreferencesKey(KEY_PID_PARAM_SAFETY_LIM)] = pidSettings.safetyLimits
         }
+        actualValueSaved = pidSettings
     }
 
-    private fun getParametersFromStore() {
-        lifecycleScope.launch(Dispatchers.IO) {
-            with(context?.dataStore?.data) {
-                val paramP = this?.map { it[floatPreferencesKey(KEY_PID_PARAM_P)] }?.first()
-                val paramI = this?.map { it[floatPreferencesKey(KEY_PID_PARAM_I)] }?.first()
-                val paramD = this?.map { it[floatPreferencesKey(KEY_PID_PARAM_D)] }?.first()
-                val paramCenter = this?.map { it[floatPreferencesKey(KEY_PID_PARAM_CENTER)] }?.first()
-                val safetyLimits = this?.map { it[floatPreferencesKey(KEY_PID_PARAM_SAFETY_LIM)] }?.first()
+    private suspend fun getParametersFromStore() {
+        with(context?.dataStore?.data) {
+            val paramP = this?.map { it[floatPreferencesKey(KEY_PID_PARAM_P)] }?.first()
+            val paramI = this?.map { it[floatPreferencesKey(KEY_PID_PARAM_I)] }?.first()
+            val paramD = this?.map { it[floatPreferencesKey(KEY_PID_PARAM_D)] }?.first()
+            val paramCenter = this?.map { it[floatPreferencesKey(KEY_PID_PARAM_CENTER)] }?.first()
+            val safetyLimits =
+                this?.map { it[floatPreferencesKey(KEY_PID_PARAM_SAFETY_LIM)] }?.first()
 
-
-                paramP?.let { binding.sbPidP.inRange(it) }
-                paramI?.let { binding.sbPidI.inRange(it) }
-                paramD?.let { binding.sbPidD.inRange(it) }
-                paramCenter?.let { binding.sbCenterAngle.inRange(it) }
-                safetyLimits?.let { binding.sbSafetyLimits.inRange(it) }
+            paramP?.let {
+                kpValue = it
+                binding.sbPidP.inRange(it)
             }
+            paramI?.let {
+                kiValue = it
+                binding.sbPidI.inRange(it)
+            }
+            paramD?.let {
+                kdValue = it
+                binding.sbPidD.inRange(it)
+            }
+            paramCenter?.let {
+                centerValue = it
+                binding.sbCenterAngle.inRange(it)
+            }
+            safetyLimits?.let {
+                safetyLimitsValue = it
+                binding.sbSafetyLimits.inRange(it)
+            }
+
+            actualValueSaved = PidSettings(
+                kpValue,
+                kiValue,
+                kdValue,
+                centerValue,
+                safetyLimitsValue
+            )
         }
     }
 

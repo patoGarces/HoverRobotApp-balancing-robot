@@ -1,17 +1,13 @@
 package com.example.hoverrobot.data.repositories
 
-import android.Manifest
 import android.bluetooth.BluetoothDevice
 import android.content.Context
-import android.content.pm.PackageManager
 import android.util.Log
-import androidx.core.app.ActivityCompat
 import com.example.hoverrobot.bluetooth.BLEManager
 import com.example.hoverrobot.data.utils.ToolBox.Companion.ioScope
 import com.example.hoverrobot.data.models.comms.AxisControl
 import com.example.hoverrobot.data.models.comms.PidSettings
 import com.example.hoverrobot.data.models.comms.RobotDynamicData
-import com.example.hoverrobot.data.models.comms.RobotDynamicDataRaw
 import com.example.hoverrobot.data.models.comms.asRobotDynamicData
 import com.example.hoverrobot.data.models.comms.asRobotDynamicDataRaw
 import com.example.hoverrobot.data.models.comms.calculateChecksum
@@ -75,7 +71,7 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
 //                Log.d(TAG,"SIZE COLLECT: ${ it.remaining()}")
 //                if(it.remaining() > 20) {
                     val rawDynamicData = it.asRobotDynamicDataRaw
-                    if (rawDynamicData.header == HEADER_PACKAGE_STATUS &&
+                    if (rawDynamicData.headerPackage == HEADER_PACKAGE_STATUS &&
                         rawDynamicData.checksum == rawDynamicData.calculateChecksum
                     ) {
                         _dynamicDataRobotFlow.emit(rawDynamicData.asRobotDynamicData)                                             // El dia de mañana si se reciben otros tipos de datos, se deberia hacer el split aca

@@ -6,7 +6,7 @@ import kotlin.experimental.xor
 
 
 data class RobotDynamicDataRaw(
-    val header: Short,
+    val headerPackage: Short,
     val speedR: Short,
     val speedL: Short,
     val pitchAngle: Short,
@@ -33,11 +33,11 @@ val RobotDynamicDataRaw.asRobotDynamicData: RobotDynamicData
     get() = RobotDynamicData(
         speedR.toInt(),
         speedL.toInt(),
-        (pitchAngle / PRECISION_DECIMALS_COMMS).toFloat(),
-        (rollAngle / PRECISION_DECIMALS_COMMS).toFloat(),
-        (yawAngle / PRECISION_DECIMALS_COMMS).toFloat(),
-        (setPoint / PRECISION_DECIMALS_COMMS).toFloat(),
-        (centerAngle / PRECISION_DECIMALS_COMMS).toFloat(),
+        pitchAngle.toFloat() / PRECISION_DECIMALS_COMMS,
+        (rollAngle.toFloat() / PRECISION_DECIMALS_COMMS),
+        (yawAngle.toFloat() / PRECISION_DECIMALS_COMMS),
+        (setPoint.toFloat() / PRECISION_DECIMALS_COMMS),
+        (centerAngle.toFloat() / PRECISION_DECIMALS_COMMS),
         statusCode.toInt(),
     )
 
@@ -57,7 +57,7 @@ val ByteBuffer.asRobotDynamicDataRaw: RobotDynamicDataRaw
 
 val RobotDynamicDataRaw.calculateChecksum: Short
     get() = (
-            header xor
+            headerPackage xor
             speedR xor
             speedL xor
             pitchAngle xor

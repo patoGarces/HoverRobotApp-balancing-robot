@@ -358,6 +358,18 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     />
 
+                <ProgressBar
+                    android:id="@+id/pb_calibrate_loading"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:visibility="gone"
+                    android:indeterminateTint="@color/purple_80_percent"
+                    app:layout_constraintStart_toStartOf="@id/btn_calibrate_imu"
+                    app:layout_constraintEnd_toEndOf="@id/btn_calibrate_imu"
+                    app:layout_constraintTop_toTopOf="@id/btn_calibrate_imu"
+                    app:layout_constraintBottom_toBottomOf="@id/btn_calibrate_imu"
+                    tools:visibility="gone"/>
+
             </androidx.constraintlayout.widget.ConstraintLayout>
         </LinearLayout>
 
