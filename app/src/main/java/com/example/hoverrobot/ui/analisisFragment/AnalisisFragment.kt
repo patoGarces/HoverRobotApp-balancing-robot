@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.example.hoverrobot.R
+import com.example.hoverrobot.data.models.comms.PidSettings
 import com.example.hoverrobot.data.models.comms.RobotDynamicData
 import com.example.hoverrobot.data.models.comms.RobotDynamicDataRaw
 import com.example.hoverrobot.databinding.AnalisisFragmentBinding
@@ -111,34 +112,21 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
             entrySetPoint.clear()
         }
 
-        binding.btnGenerateDataset.setOnClickListener { // TODO: arreglar random generator
-//            for (i in 0..100) {
-//                val randomData = MainBoardRobotStatus(
-//                    Math.random().toInt().toShort(),
-//                    Math.random().toInt().toShort(),
-//                    Math.random().toInt().toShort(),
-//                    Math.random().toInt().toShort(),
-//                    Math.random().toInt().toShort(),
-//                    Math.random().toInt().toShort(),
-//                    Math.random().toInt().toShort(),
-//                    Math.random().toInt().toShort(),
-//                    ((Math.random() - 0.5) * 180).toFloat(),
-//                    ((Math.random() - 0.5) * 180).toFloat(),
-//                    ((Math.random() - 0.5) * 180).toFloat(),
-//                    PidSettings(
-//                        0f,
-//                        1f,
-//                        2f,
-//                        0f,
-//                        0f,
-//                    ),
-//                    0f,
-//                    Math.random().toInt().toShort(),
-//                    Math.random().toInt().toShort(),
-//                    Math.random().toInt().toShort()
-//                )
-//                newAngle(randomData)
-//            }
+        binding.btnGenerateDataset.setOnClickListener {
+            for (i in 0..100) {
+
+                val randomData = RobotDynamicData(
+                    speedR = Math.random().toInt(),
+                    speedL = Math.random().toInt(),
+                    pitchAngle = ((Math.random() - 0.5) * 180).toFloat(),
+                    rollAngle = ((Math.random() - 0.5) * 180).toFloat(),
+                    yawAngle = ((Math.random() - 0.5) * 180).toFloat(),
+                    setPoint = ((Math.random() - 0.5) * 180).toFloat(),
+                    centerAngle = ((Math.random() - 0.5) * 180).toFloat(),
+                    statusCode = 0,
+                )
+                newDynamicFrame(randomData)
+            }
         }
     }
 
@@ -201,6 +189,11 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
     private fun newDynamicFrame(newFrame: RobotDynamicData) {
 
         with(binding) {
+            with(binding) {
+                tvAnglePitch.text = getString(R.string.placeholder_pitch, newFrame.pitchAngle)
+                tvAngleRoll.text = getString(R.string.placeholder_roll, newFrame.rollAngle)
+                tvAngleYaw.text = getString(R.string.placeholder_yaw, newFrame.yawAngle)
+                tvParamCenter.text = getString(R.string.placeholder_center, newFrame.centerAngle)            }
 
             val lineDataAnglePitch =
                 LineDataSet(entryAnglePitch.takeLast(frameSize), "Pitch Angle").also {
@@ -289,6 +282,7 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
                     arrayPidDataset.clear()
                     arrayPidDataset.add(lineDataSetPoint)
                     arrayPidDataset.add(lineDataAnglePitch)
+                    arrayPidDataset.add(lineDataAngleRoll)
                     arrayPidDataset.add(lineDataMotorL)
                     LineData(arrayPidDataset)
                 }
