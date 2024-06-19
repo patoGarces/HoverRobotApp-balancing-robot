@@ -45,7 +45,7 @@ interface BluetoothManagerInterface {
 
     fun sendData(data: ByteArray)
 
-    fun getDeviceConnectedName(): String?
+    fun getDeviceConnected(): BluetoothDevice?
 }
 
 
@@ -72,7 +72,7 @@ class BLEManager(private val context: Context): BluetoothManagerInterface {
     private var bluetoothGatt: BluetoothGatt? = null
 
     internal var actualConnectionStatus: ConnectionStatus = ConnectionStatus.INIT
-    internal var deviceNameConnected: String? = null
+    internal var deviceConnected: BluetoothDevice? = null
     internal var servicesAvailableBLE: MutableList<BluetoothGattService> = arrayListOf()
 
     override fun isBluetoothEnabled(): Boolean {
@@ -81,6 +81,7 @@ class BLEManager(private val context: Context): BluetoothManagerInterface {
 
     @SuppressLint("MissingPermission")                     // TODO: manejar correctamente los permisos
     override fun connectDevice(device: BluetoothDevice) {
+        changeStatus(CONNECTING)
 
 //        if (ActivityCompat.checkSelfPermission(           // TODO: manejar correctamente los permisos
 //                context,
@@ -96,22 +97,18 @@ class BLEManager(private val context: Context): BluetoothManagerInterface {
             override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
                 super.onConnectionStateChange(gatt, status, newState)
 
-                if (status != BluetoothGatt.GATT_SUCCESS) {
-                    Log.e(TAG,"Error GATT callback: $status")
-                    return
-                }
-
                 when(newState) {
                     BluetoothGatt.STATE_CONNECTED -> {
                         changeStatus(CONNECTED)
                         bluetoothGatt?.discoverServices()
-                        Log.d(TAG,"CONECTADO")
-
 //                        bluetoothGatt?.requestMtu(MTU_SIZE)
                     }
+
                     BluetoothGatt.STATE_CONNECTING -> { changeStatus(CONNECTING) }
-                    BluetoothGatt.STATE_DISCONNECTED -> { changeStatus(DISCONNECT) }
-                    BluetoothGatt.STATE_DISCONNECTING -> { changeStatus(DISCONNECT) }               // TOdO: evaluar agregar este estado
+
+                    else -> {
+                        changeStatus(DISCONNECT)
+                    }
                 }
             }
 
@@ -127,20 +124,20 @@ class BLEManager(private val context: Context): BluetoothManagerInterface {
 
 //                readCharacteristic(SERVICE_ID, CHARACTERISTIC_READ)
                 servicesAvailableBLE = gatt.services
-                servicesAvailableBLE.forEach { service ->
-                    val serviceUUIDHex = service.uuid.toString().toUpperCase(Locale.ROOT)
-                    Log.d(TAG, "UUID service: $serviceUUIDHex")
+//                servicesAvailableBLE.forEach { service ->
+//                    val serviceUUIDHex = service.uuid.toString().toUpperCase(Locale.ROOT)
+//                    Log.d(TAG, "UUID service: $serviceUUIDHex")
 
-                    service.characteristics.forEach { characteristic ->
-                        val characteristicUUIDHex = characteristic.uuid.toString().toUpperCase(Locale.ROOT)
-                        Log.d(TAG, "Característica UUID: $characteristicUUIDHex, Service: $serviceUUIDHex")
+//                    service.characteristics.forEach { characteristic ->
+//                        val characteristicUUIDHex = characteristic.uuid.toString().toUpperCase(Locale.ROOT)
+//                        Log.d(TAG, "Característica UUID: $characteristicUUIDHex, Service: $serviceUUIDHex")
 
-                        characteristic.descriptors.forEach { descriptor ->
-                            val descriptorUUIDHex = descriptor.uuid.toString().toUpperCase(Locale.ROOT)
-                            Log.d(TAG, "Descriptor UUID: $descriptorUUIDHex, Característica UUID: $characteristicUUIDHex")
-                        }
-                    }
-                }
+//                        characteristic.descriptors.forEach { descriptor ->
+//                            val descriptorUUIDHex = descriptor.uuid.toString().toUpperCase(Locale.ROOT)
+//                            Log.d(TAG, "Descriptor UUID: $descriptorUUIDHex, Característica UUID: $characteristicUUIDHex")
+//                        }
+//                    }
+//                }
 
                 val service = gatt.getService(UUID.fromString(SERVICE_ID))
                 val characteristic = service?.getCharacteristic(UUID.fromString(CHARACTERISTIC_READ_NOTIFY))
@@ -166,6 +163,7 @@ class BLEManager(private val context: Context): BluetoothManagerInterface {
                 characteristic: BluetoothGattCharacteristic?
             ) {
                 super.onCharacteristicChanged(gatt, characteristic)
+                Log.d("onCharacteristicChanged","uuid: ${characteristic?.uuid}")
                 characteristic?.value?.let {
 //                    Log.d(TAG, "Caracteristica leida: ${it.toHex()}, tamaño: ${it.size}")
 
@@ -188,17 +186,7 @@ class BLEManager(private val context: Context): BluetoothManagerInterface {
 
     @SuppressLint("MissingPermission")                     // TODO: manejar correctamente los permisos
     override fun startScan() {
-//        if (ActivityCompat.checkSelfPermission(
-//                context,
-//                Manifest.permission.BLUETOOTH_SCAN
-//            ) != PackageManager.PERMISSION_GRANTED
-//        ) {
-            // TODO: Enviar solicitud a la activity para solicitar permiso de SCAN
-//            Log.e(TAG,"No hay permiso de BLUETOOTH_SCAN")
-//            return
-//        }
         val bluetoothLeScanner = bluetoothAdapter.bluetoothLeScanner
-
         val leScanCallback: ScanCallback = object : ScanCallback() {
             override fun onScanResult(callbackType: Int, result: ScanResult) {
                 super.onScanResult(callbackType, result)
@@ -211,7 +199,7 @@ class BLEManager(private val context: Context): BluetoothManagerInterface {
         }
         discoveredDevices.clear()
 
-        if (!scanning) { // Stops scanning after a pre-defined scan period.
+        if (!scanning) {
             handler.postDelayed({
                 scanning = false
                 bluetoothLeScanner.stopScan(leScanCallback)
@@ -231,22 +219,23 @@ class BLEManager(private val context: Context): BluetoothManagerInterface {
         TODO("Not yet implemented")
     }
 
-    override fun getDeviceConnectedName(): String? {
-        return deviceNameConnected
+    override fun getDeviceConnected(): BluetoothDevice? {
+        return deviceConnected
     }
 
     private fun changeStatus(newStatus: ConnectionStatus) {
+        deviceConnected = bluetoothGatt?.device.takeIf { newStatus == CONNECTED }
         actualConnectionStatus = newStatus
         ioScope.launch { _connectionsStatus.emit(newStatus) }
     }
 
-    override fun sendData(data: ByteArray) {           // TODO: encolar envios
+    override fun sendData(data: ByteArray) {                            // TODO: encolar envios
         val serviceName = SERVICE_ID
         val characteristicName = CHARACTERISTIC_WRITE
         writeCharacteristic(serviceName, characteristicName, data)
     }
 
-    @SuppressLint("MissingPermission")                     // TODO: manejar correctamente los permisos
+    @SuppressLint("MissingPermission")                                  // TODO: manejar correctamente los permisos
     fun readCharacteristic(serviceName: String, characteristicName: String) {
         val service = bluetoothGatt?.getService(UUID.fromString(serviceName))
         val characteristic = service?.getCharacteristic(UUID.fromString(characteristicName))
@@ -262,15 +251,6 @@ class BLEManager(private val context: Context): BluetoothManagerInterface {
 
         val service = bluetoothGatt?.getService(UUID.fromString(serviceName))
         val characteristic = service?.getCharacteristic(UUID.fromString(characteristicName))
-
-//        if (ActivityCompat.checkSelfPermission(
-//                context,
-//                Manifest.permission.BLUETOOTH_CONNECT
-//            ) != PackageManager.PERMISSION_GRANTED
-//        ) {
-//            return
-//        }
-
         characteristic?.let {
             it.value = data
 //            it.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT

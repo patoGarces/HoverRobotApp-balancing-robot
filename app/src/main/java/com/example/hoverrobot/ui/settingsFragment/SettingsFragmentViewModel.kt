@@ -1,5 +1,6 @@
 package com.example.hoverrobot.ui.settingsFragment
 
+import android.bluetooth.BluetoothDevice
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -33,8 +34,6 @@ class SettingsFragmentViewModel @Inject constructor(
     fun setPidTunningToRobot(newTunning : PidSettings){
         if (commsRepository.connectionStateFlow.value == ConnectionStatus.CONNECTED) {
             commsRepository.sendPidParams(newTunning)
-        } else {
-            Log.d("activity", "No se puede enviar configuración")
         }
     }
 
@@ -44,7 +43,7 @@ class SettingsFragmentViewModel @Inject constructor(
         }
     }
 
-    fun getDeviceConnectedName(): String? {
-        return commsRepository.getConnectedDeviceName()
+    fun getDeviceConnectedMAC(): String? {
+        return commsRepository.getConnectedDevice()?.address
     }
 }
