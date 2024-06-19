@@ -5,11 +5,14 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.example.hoverrobot.data.models.comms.PidSettings
@@ -33,15 +36,17 @@ class SettingsFragment : Fragment() {
     private lateinit var _binding : SettingsFragmentBinding
     private val binding get()= _binding
 
-    val settingsFragmentViewModel : SettingsFragmentViewModel by viewModels(ownerProducer = { requireActivity() })
+    private val settingsFragmentViewModel : SettingsFragmentViewModel by activityViewModels()
 
     private var kpValue: Float = 0f
     private var kiValue: Float = 0f
     private var kdValue: Float = 0f
     private var centerValue: Float = 0f
-    private var safetyLimitsValue: Float = 0f
+    private var safetyLimitsValue: Float = 10f
 
     private var actualValueSaved: PidSettings? = null
+
+    private var selectedBankMemory: Int = 0
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -54,10 +59,32 @@ class SettingsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        setupSpinner()
         setupListener()
         setupObserver()
         lifecycleScope.launch(Dispatchers.IO) {
             getParametersFromStore()
+        }
+    }
+
+    private fun setupSpinner() {
+        binding.spBankMemory.adapter = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_spinner_dropdown_item,
+            resources.getStringArray(R.array.sp_memory_items)
+        )
+
+        binding.spBankMemory.onItemSelectedListener = object :
+            AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>,
+                                        view: View, position: Int, id: Long) {
+                selectedBankMemory = position
+                lifecycleScope.launch { getParametersFromStore() }
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>) {
+                // write code to perform some action
+            }
         }
     }
 
@@ -184,26 +211,26 @@ class SettingsFragment : Fragment() {
         }
     }
 
-    private suspend fun saveParameters(pidSettings: PidSettings) {                                  // TODO: agregar el getConnectedDeviceName para tener parametros diferenciados
-        Log.d("SettingsFragment", KEY_PID_PARAM_CENTER.getDeviceParams)                         // TODO: implementar
+    private suspend fun saveParameters(pidSettings: PidSettings) {
+        Log.d("SettingsFragment", KEY_PID_PARAM_CENTER.getDeviceParams)
         context?.dataStore?.edit { settingsKey ->
-            settingsKey[floatPreferencesKey(KEY_PID_PARAM_P)] = pidSettings.kp
-            settingsKey[floatPreferencesKey(KEY_PID_PARAM_I)] = pidSettings.ki
-            settingsKey[floatPreferencesKey(KEY_PID_PARAM_D)] = pidSettings.kd
-            settingsKey[floatPreferencesKey(KEY_PID_PARAM_CENTER)] = pidSettings.centerAngle
-            settingsKey[floatPreferencesKey(KEY_PID_PARAM_SAFETY_LIM)] = pidSettings.safetyLimits
+            settingsKey[floatPreferencesKey(KEY_PID_PARAM_P.getDeviceParams)] = pidSettings.kp
+            settingsKey[floatPreferencesKey(KEY_PID_PARAM_I.getDeviceParams)] = pidSettings.ki
+            settingsKey[floatPreferencesKey(KEY_PID_PARAM_D.getDeviceParams)] = pidSettings.kd
+            settingsKey[floatPreferencesKey(KEY_PID_PARAM_CENTER.getDeviceParams)] = pidSettings.centerAngle
+            settingsKey[floatPreferencesKey(KEY_PID_PARAM_SAFETY_LIM.getDeviceParams)] = pidSettings.safetyLimits
         }
         actualValueSaved = pidSettings
     }
 
     private suspend fun getParametersFromStore() {
         with(context?.dataStore?.data) {
-            val paramP = this?.map { it[floatPreferencesKey(KEY_PID_PARAM_P)] }?.first()
-            val paramI = this?.map { it[floatPreferencesKey(KEY_PID_PARAM_I)] }?.first()
-            val paramD = this?.map { it[floatPreferencesKey(KEY_PID_PARAM_D)] }?.first()
-            val paramCenter = this?.map { it[floatPreferencesKey(KEY_PID_PARAM_CENTER)] }?.first()
+            val paramP = this?.map { it[floatPreferencesKey(KEY_PID_PARAM_P.getDeviceParams)] }?.first()
+            val paramI = this?.map { it[floatPreferencesKey(KEY_PID_PARAM_I.getDeviceParams)] }?.first()
+            val paramD = this?.map { it[floatPreferencesKey(KEY_PID_PARAM_D.getDeviceParams)] }?.first()
+            val paramCenter = this?.map { it[floatPreferencesKey(KEY_PID_PARAM_CENTER.getDeviceParams)] }?.first()
             val safetyLimits =
-                this?.map { it[floatPreferencesKey(KEY_PID_PARAM_SAFETY_LIM)] }?.first()
+                this?.map { it[floatPreferencesKey(KEY_PID_PARAM_SAFETY_LIM.getDeviceParams)] }?.first()
 
             paramP?.let {
                 kpValue = it
@@ -233,6 +260,10 @@ class SettingsFragment : Fragment() {
                 centerValue,
                 safetyLimitsValue
             )
+            lifecycleScope.launch(Dispatchers.Main) {
+                binding.btnGetPid.isEnabled = false
+                binding.btnSavePid.isEnabled = false
+            }
         }
     }
 
@@ -242,7 +273,7 @@ class SettingsFragment : Fragment() {
     }
 
     private val String.getDeviceParams: String
-        get() = "${settingsFragmentViewModel.getDeviceConnectedName()}_${this}"
+        get() = "${settingsFragmentViewModel.getDeviceConnectedMAC()}_BANK${selectedBankMemory}_${this}"
 }
 
 private const val KEY_PID_PARAM_P = "KEY_PID_P"

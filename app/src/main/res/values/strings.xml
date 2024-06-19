@@ -45,6 +45,11 @@
     <string name="imu_btn_calibrate">Calibrar</string>
     <string name="pid_center_front">Front</string>
     <string name="pid_center_back">Back</string>
+    <string-array name="sp_memory_items">
+        <item>Banco 1</item>
+        <item>Banco 2</item>
+        <item>Banco 3</item>
+    </string-array>
 
     <!--    Mapper status error-->
     <string name="status_normal">Normal</string>
@@ -86,7 +91,5 @@
     <string name="btn_clear_title">Clear data</string>
     <string name="btn_play_title">Play</string>
     <string name="btn_pause_title">Pause</string>
-
-
 
 </resources>

@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import com.example.hoverrobot.data.models.comms.AxisControl
 import com.example.hoverrobot.databinding.ControlFragmentBinding
+import io.github.controlwear.virtual.joystick.android.JoystickView
 
 class ControlFragment : Fragment() {
 
@@ -34,11 +35,11 @@ class ControlFragment : Fragment() {
 
     private fun setupListener(){
 
-        binding.joystickRight.setOnMoveListener{ angle, strength ->
+        binding.joystickRight.setOnMoveListener({ _, _ ->
             val x = (binding.joystickRight.normalizedX * 2) - 100
             val y = 100 - (binding.joystickRight.normalizedY * 2)
-            controlViewModel.newCoordinatesJoystick(AxisControl(x.toShort(),y.toShort()))       // ToDO: revisar casteo por BLE
-        }
+            controlViewModel.newCoordinatesJoystick(AxisControl(x.toShort(),y.toShort()))
+        }, 50 )
     }
 
     private fun setupObserver(){
