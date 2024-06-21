@@ -11,6 +11,7 @@ import com.example.hoverrobot.R
 import com.example.hoverrobot.data.models.comms.PidSettings
 import com.example.hoverrobot.data.models.comms.RobotDynamicData
 import com.example.hoverrobot.data.models.comms.RobotDynamicDataRaw
+import com.example.hoverrobot.data.models.comms.RobotLocalConfig
 import com.example.hoverrobot.databinding.AnalisisFragmentBinding
 import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.components.LimitLine
@@ -44,6 +45,9 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
     private var actualLimitScale = 90F
 
     private var isAnalisisPaused = false
+
+    private val robotConfig: RobotLocalConfig?
+        get() = analisisViewModel.newRobotConfig.value
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -193,7 +197,8 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
                 tvAnglePitch.text = getString(R.string.placeholder_pitch, newFrame.pitchAngle)
                 tvAngleRoll.text = getString(R.string.placeholder_roll, newFrame.rollAngle)
                 tvAngleYaw.text = getString(R.string.placeholder_yaw, newFrame.yawAngle)
-                tvParamCenter.text = getString(R.string.placeholder_center, newFrame.centerAngle)            }
+                tvParamCenter.text = getString(R.string.placeholder_center, newFrame.centerAngle)
+            }
 
             val lineDataAnglePitch =
                 LineDataSet(entryAnglePitch.takeLast(frameSize), "Pitch Angle").also {
@@ -254,6 +259,12 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
                 entryMotorL.removeFirst()
                 entryMotorR.removeFirst()
                 entrySetPoint.removeFirst()
+            }
+
+            robotConfig?.let {
+                tvParamKp.text = getString(R.string.placeholder_kp, it.kp.toString())
+                tvParamKi.text = getString(R.string.placeholder_ki, it.ki.toString())
+                tvParamKd.text = getString(R.string.placeholder_kd, it.kd.toString())
             }
 
             dataSet = when (viewDataset) {
@@ -411,7 +422,7 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
     }
 
     private fun setMotorControlMode() {
-        actualLimitScale = 1200F
+        actualLimitScale = 12F
         setAutoScale(binding.switchAutoscale.isChecked)
         binding.chart.axisLeft.removeAllLimitLines()
     }
@@ -433,30 +444,33 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
         centerAngleLimitLine.lineColor = requireContext().getColor(R.color.status_blue)
         binding.chart.axisLeft.addLimitLine(centerAngleLimitLine)
 
-//        val upperLimitLine = LimitLine(                                                             // TODO: habilitar, me falta el safetyLimit
-//            actualLineLimits.pid.centerAngle + actualLineLimits.pid.safetyLimits,
-//            "Limite seguridad superior"
-//        )
-//        upperLimitLine.lineWidth = 2f
-//        upperLimitLine.enableDashedLine(20f, 10f, 10f)
-//        upperLimitLine.labelPosition = LimitLine.LimitLabelPosition.LEFT_TOP
-//        upperLimitLine.textSize = 10f
-//        upperLimitLine.lineColor = colorSafetyLimits
-//        binding.chart.axisLeft.addLimitLine(upperLimitLine)
-//
-//        val lowerLimitLine = LimitLine(
-//            actualLineLimits.pid.centerAngle - actualLineLimits.pid.safetyLimits,
-//            "Limite seguridad inferior"
-//        )
-//        lowerLimitLine.lineWidth = 2f
-//        lowerLimitLine.enableDashedLine(20f, 10f, 10f)
-//        lowerLimitLine.labelPosition = LimitLine.LimitLabelPosition.LEFT_TOP
-//        lowerLimitLine.textSize = 10f
-//        lowerLimitLine.lineColor = colorSafetyLimits
-//        binding.chart.axisLeft.addLimitLine(lowerLimitLine)
+        robotConfig?.let { robotConfig ->
+            val upperLimitLine =
+                LimitLine(
+                    actualLineLimits.centerAngle + robotConfig.safetyLimits,
+                    "Limite seguridad superior"
+                )
+            upperLimitLine.lineWidth = 2f
+            upperLimitLine.enableDashedLine(20f, 10f, 10f)
+            upperLimitLine.labelPosition = LimitLine.LimitLabelPosition.LEFT_TOP
+            upperLimitLine.textSize = 10f
+            upperLimitLine.lineColor = colorSafetyLimits
+            binding.chart.axisLeft.addLimitLine(upperLimitLine)
+
+            val lowerLimitLine = LimitLine(
+                actualLineLimits.centerAngle - robotConfig.safetyLimits,
+                "Limite seguridad inferior"
+            )
+            lowerLimitLine.lineWidth = 2f
+            lowerLimitLine.enableDashedLine(20f, 10f, 10f)
+            lowerLimitLine.labelPosition = LimitLine.LimitLabelPosition.LEFT_TOP
+            lowerLimitLine.textSize = 10f
+            lowerLimitLine.lineColor = colorSafetyLimits
+            binding.chart.axisLeft.addLimitLine(lowerLimitLine)
+        }
     }
 
-    fun setPidMode(newFrame: RobotDynamicData) {
+    private fun setPidMode(newFrame: RobotDynamicData) {
         actualLimitScale = 15F
         setAutoScale(binding.switchAutoscale.isChecked)
 

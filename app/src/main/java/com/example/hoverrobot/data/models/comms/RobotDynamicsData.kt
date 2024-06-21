@@ -14,8 +14,7 @@ data class RobotDynamicDataRaw(
     val yawAngle: Short,
     val setPoint: Short,
     val centerAngle: Short,
-    val statusCode: Short,
-    val checksum: Short
+    val statusCode: Short
 )
 
 data class RobotDynamicData(
@@ -29,7 +28,7 @@ data class RobotDynamicData(
     val statusCode: Int,
 )
 
-val RobotDynamicDataRaw.asRobotDynamicData: RobotDynamicData
+private val RobotDynamicDataRaw.asRobotDynamicData: RobotDynamicData
     get() = RobotDynamicData(
         speedR.toInt(),
         speedL.toInt(),
@@ -41,7 +40,7 @@ val RobotDynamicDataRaw.asRobotDynamicData: RobotDynamicData
         statusCode.toInt(),
     )
 
-val ByteBuffer.asRobotDynamicDataRaw: RobotDynamicDataRaw
+private val ByteBuffer.asRobotDynamicDataRaw: RobotDynamicDataRaw
     get() = RobotDynamicDataRaw(
         this.short,
         this.short,
@@ -51,19 +50,8 @@ val ByteBuffer.asRobotDynamicDataRaw: RobotDynamicDataRaw
         this.short,
         this.short,
         this.short,
-        this.short,
-        this.short,
+        this.short
     )
 
-val RobotDynamicDataRaw.calculateChecksum: Short
-    get() = (
-            headerPackage xor
-            speedR xor
-            speedL xor
-            pitchAngle xor
-            rollAngle xor
-            yawAngle xor
-            setPoint xor
-            centerAngle xor
-            statusCode
-        )
+val ByteBuffer.asRobotDynamicData: RobotDynamicData
+    get() = this.asRobotDynamicDataRaw.asRobotDynamicData
