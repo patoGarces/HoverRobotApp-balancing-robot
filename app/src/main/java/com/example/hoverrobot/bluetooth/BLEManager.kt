@@ -1,6 +1,5 @@
 package com.example.hoverrobot.bluetooth
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
@@ -12,11 +11,8 @@ import android.bluetooth.BluetoothGattService
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import android.content.Context
-import android.content.pm.PackageManager
 import android.os.Handler
 import android.util.Log
-import androidx.annotation.RequiresPermission
-import androidx.core.app.ActivityCompat
 import com.example.hoverrobot.data.utils.ByteArraysUtils.toByteBuffer
 import com.example.hoverrobot.data.utils.ConnectionStatus
 import com.example.hoverrobot.data.utils.ConnectionStatus.CONNECTED
@@ -51,7 +47,8 @@ interface BluetoothManagerInterface {
 
 class BLEManager(private val context: Context): BluetoothManagerInterface {
 
-    private val TAG = "BLEManager"
+    private val TAG = "" +
+            ""
 
     private var bluetoothAdapter: BluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
 
@@ -82,15 +79,6 @@ class BLEManager(private val context: Context): BluetoothManagerInterface {
     @SuppressLint("MissingPermission")                     // TODO: manejar correctamente los permisos
     override fun connectDevice(device: BluetoothDevice) {
         changeStatus(CONNECTING)
-
-//        if (ActivityCompat.checkSelfPermission(           // TODO: manejar correctamente los permisos
-//                context,
-//                Manifest.permission.BLUETOOTH_CONNECT
-//            ) != PackageManager.PERMISSION_GRANTED
-//        ) {
-//            Log.d(TAG,"ERROR PERMISOS")
-//            return
-//        }
 
         val gattCallback = object: BluetoothGattCallback() {
 
@@ -124,50 +112,60 @@ class BLEManager(private val context: Context): BluetoothManagerInterface {
 
 //                readCharacteristic(SERVICE_ID, CHARACTERISTIC_READ)
                 servicesAvailableBLE = gatt.services
-//                servicesAvailableBLE.forEach { service ->
-//                    val serviceUUIDHex = service.uuid.toString().toUpperCase(Locale.ROOT)
-//                    Log.d(TAG, "UUID service: $serviceUUIDHex")
+                servicesAvailableBLE.forEach { service ->
+                    val serviceUUIDHex = service.uuid.toString().toUpperCase(Locale.ROOT)
+                    Log.d(TAG, "*********  UUID service: $serviceUUIDHex  **********")
 
-//                    service.characteristics.forEach { characteristic ->
-//                        val characteristicUUIDHex = characteristic.uuid.toString().toUpperCase(Locale.ROOT)
+                    service.characteristics.forEach { characteristic ->
+                        val characteristicUUIDHex = characteristic.uuid.toString().toUpperCase(Locale.ROOT)
 //                        Log.d(TAG, "Característica UUID: $characteristicUUIDHex, Service: $serviceUUIDHex")
 
-//                        characteristic.descriptors.forEach { descriptor ->
-//                            val descriptorUUIDHex = descriptor.uuid.toString().toUpperCase(Locale.ROOT)
-//                            Log.d(TAG, "Descriptor UUID: $descriptorUUIDHex, Característica UUID: $characteristicUUIDHex")
-//                        }
-//                    }
-//                }
+                        characteristic.descriptors.forEach { descriptor ->
+                            val descriptorUUIDHex = descriptor.uuid.toString().toUpperCase(Locale.ROOT)
+                            Log.d(TAG, "Descriptor UUID: $descriptorUUIDHex, Característica UUID: $characteristicUUIDHex")
+                        }
+                    }
+                }
 
-                val service = gatt.getService(UUID.fromString(SERVICE_ID))
-                val characteristic = service?.getCharacteristic(UUID.fromString(CHARACTERISTIC_READ_NOTIFY))
-                if (characteristic != null) {
-                    gatt.setCharacteristicNotification(characteristic, true)
-                    val descriptor = characteristic.getDescriptor(UUID.fromString("00002902-0000-1000-8000-00805F9B34FB"))
+                val service = gatt.getService(UUID.fromString(ROBOT_SERVICE_ID))
+                val characteristicDynamicData = service?.getCharacteristic(UUID.fromString(CHARACTERISTIC_READ_NOTIFY_DYNAMIC_DATA))
+                if (characteristicDynamicData != null) {
+                    gatt.setCharacteristicNotification(characteristicDynamicData, true)
+                    val descriptor = characteristicDynamicData.getDescriptor(UUID.fromString(ROBOT_SERVICE_DESCRIPTOR))
+                    descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                    gatt.writeDescriptor(descriptor)
+                }
+
+                val characteristicSettings = service?.getCharacteristic(UUID.fromString(CHARACTERISTIC_SETTINGS_READ))
+                if (characteristicSettings != null) {
+                    gatt.setCharacteristicNotification(characteristicSettings, true)
+                    val descriptor = characteristicSettings.getDescriptor(UUID.fromString(ROBOT_SETTINGS_DESCRIPTOR))
                     descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
                     gatt.writeDescriptor(descriptor)
                 }
             }
 
-//            override fun onCharacteristicRead(
-//                gatt: BluetoothGatt?,
-//                characteristic: BluetoothGattCharacteristic?,
-//                status: Int
-//            ) {
-//                super.onCharacteristicRead(gatt, characteristic, status)
-//
-//            }
+            override fun onCharacteristicRead(
+                gatt: BluetoothGatt?,
+                characteristic: BluetoothGattCharacteristic?,
+                status: Int
+            ) {
+                super.onCharacteristicRead(gatt, characteristic, status)
+                Log.d(TAG,"caracteristica leida uuid: ${characteristic?.uuid}")
+            }
 
             override fun onCharacteristicChanged(
                 gatt: BluetoothGatt?,
                 characteristic: BluetoothGattCharacteristic?
             ) {
                 super.onCharacteristicChanged(gatt, characteristic)
-                Log.d("onCharacteristicChanged","uuid: ${characteristic?.uuid}")
+                if(characteristic?.uuid != UUID.fromString("0000abf2-0000-1000-8000-00805f9b34fb")) {
+                    Log.d("onCharacteristicChanged","uuid: ${characteristic?.uuid}, value: ${characteristic?.value?.toHex()}, size: ${characteristic?.value?.size}")
+                }
+
                 characteristic?.value?.let {
 //                    Log.d(TAG, "Caracteristica leida: ${it.toHex()}, tamaño: ${it.size}")
-
-                    if(it.size > 15) ioScope.launch { _receivedDataBtFlow.emit(it.toByteBuffer()) }     // TODO: definir tamaño
+                    if(it.size > 2) ioScope.launch { _receivedDataBtFlow.emit(it.toByteBuffer()) }     // TODO: definir tamaño
                 }
             }
 
@@ -230,9 +228,7 @@ class BLEManager(private val context: Context): BluetoothManagerInterface {
     }
 
     override fun sendData(data: ByteArray) {                            // TODO: encolar envios
-        val serviceName = SERVICE_ID
-        val characteristicName = CHARACTERISTIC_WRITE
-        writeCharacteristic(serviceName, characteristicName, data)
+        writeCharacteristic(ROBOT_SERVICE_ID, CHARACTERISTIC_WRITE, data)
     }
 
     @SuppressLint("MissingPermission")                                  // TODO: manejar correctamente los permisos
@@ -263,8 +259,14 @@ class BLEManager(private val context: Context): BluetoothManagerInterface {
 private const val SCAN_PERIOD: Long = 10000
 private const val MTU_SIZE = 32
 
-private const val SERVICE_ID = "0000abf0-0000-1000-8000-00805f9b34fb"
-private const val CHARACTERISTIC_READ = "0000abf1-0000-1000-8000-00805f9b34fb"
-private const val CHARACTERISTIC_READ_NOTIFY = "0000abf2-0000-1000-8000-00805f9b34fb"
+private const val ROBOT_SERVICE_ID = "0000abf0-0000-1000-8000-00805f9b34fb"
+private const val ROBOT_SERVICE_DESCRIPTOR = "00002902-0000-1000-8000-00805F9B34FB"
+private const val ROBOT_SETTINGS_DESCRIPTOR = "0000ABCD-0000-1000-8000-00805F9B34FB"
+
+private const val CHARACTERISTIC_READ_NOTIFY_DYNAMIC_DATA = "0000abf2-0000-1000-8000-00805f9b34fb"
 private const val CHARACTERISTIC_WRITE = "0000abf3-0000-1000-8000-00805f9b34fb"
+
+private const val CHARACTERISTIC_SETTINGS_READ = "0000ABF9-0000-1000-8000-00805F9B34FB"
+
+private const val CHARACTERISTIC_READ_NOTIFY_SETTINGS = "0000abf4-0000-1000-8000-00805f9b34fb"
 //private const val CHARACTERISTIC_READ_NOTIFY = "0000abf4-0000-1000-8000-00805f9b34fb"
