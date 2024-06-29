@@ -79,6 +79,9 @@ dependencies {
     // Hilt
     implementation ("com.google.dagger:hilt-android:2.48")
     kapt ("com.google.dagger:hilt-compiler:2.48")
+
+    // Compass view
+    implementation("com.github.kix2902:CompassView:master-SNAPSHOT")
 }
 
 kapt {

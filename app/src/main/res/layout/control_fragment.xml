@@ -19,8 +19,22 @@
         app:JV_borderColor="@color/white"
         app:JV_backgroundColor="@color/transparent"
         app:JV_borderWidth="2dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/compass_view"
         app:layout_constraintEnd_toEndOf="parent"
         app:JV_fixedCenter="false"/>
+
+    <com.redinput.compassview.CompassView
+        android:id="@+id/compass_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:backgroundColor="@color/transparent"
+        app:showMarker="true"
+        app:markerColor="@color/red_80_percent"
+        app:lineColor="@color/white"
+        app:textColor="@color/white"
+        app:textSize="12sp"
+        app:rangeDegrees="50.0"
+        app:layout_constraintBottom_toBottomOf="parent"
+        />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
