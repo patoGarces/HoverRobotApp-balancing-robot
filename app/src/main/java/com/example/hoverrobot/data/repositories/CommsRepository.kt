@@ -78,8 +78,7 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
 
                 val byte0 = it.get(0).toInt() and 0xFF
                 val byte1 = it.get(1).toInt() and 0xFF
-                val headerPackage =
-                    ((byte1 shl 8) or byte0)              // shl es analogo a '<<' en C, es para desplazar bits a la izquierda
+                val headerPackage = ((byte1 shl 8) or byte0)        // shl es analogo a '<<' en C
 
                 when (headerPackage) {
                     HEADER_PACKAGE_STATUS -> {
@@ -87,8 +86,10 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
                     }
 
                     HEADER_PACKAGE_LOCAL_CONFIG -> {
-                        Log.d(TAG,"NewConfigs received")
-                        _robotLocalConfigFlow.emit(it.asRobotLocalConfig)
+                        if(it.remaining() >= 12) {
+                            val localConfig = it.asRobotLocalConfig
+                            _robotLocalConfigFlow.emit(localConfig)
+                        }
                     }
 
                     else -> Log.d(TAG, "Unrecognized package: $headerPackage")
@@ -112,11 +113,11 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
     override fun sendPidParams(pidParams: PidSettings) {
         val paramList = listOf(
             HEADER_PACKAGE_SETTINGS,
-            (pidParams.kp * 100).toInt().toShort(),
-            (pidParams.ki * 100).toInt().toShort(),
-            (pidParams.kd * 100).toInt().toShort(),
-            (pidParams.centerAngle * 100).toInt().toShort(),
-            (pidParams.safetyLimits * 100).toInt().toShort()
+            (pidParams.kp * PRECISION_DECIMALS_COMMS).toInt().toShort(),
+            (pidParams.ki * PRECISION_DECIMALS_COMMS).toInt().toShort(),
+            (pidParams.kd * PRECISION_DECIMALS_COMMS).toInt().toShort(),
+            (pidParams.centerAngle * PRECISION_DECIMALS_COMMS).toInt().toShort(),
+            (pidParams.safetyLimits * PRECISION_DECIMALS_COMMS).toInt().toShort()
         )
         val buffer =
             ByteBuffer.allocate(paramList.size * 2) // Float ocupa 4 bytes, int igual, short 2
@@ -170,5 +171,4 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
     }
 }
 
-const val PRECISION_DECIMALS_COMMS =
-    100    // Precision al convertir la data cruda del BLE a float, en este caso 100 = 0.01
+const val PRECISION_DECIMALS_COMMS = 100    // Precision al convertir a float, en este caso 100 = 0.01

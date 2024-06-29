@@ -1,14 +1,14 @@
 package com.example.hoverrobot.ui.controlFragment
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.example.hoverrobot.data.models.comms.AxisControl
 import com.example.hoverrobot.databinding.ControlFragmentBinding
-import io.github.controlwear.virtual.joystick.android.JoystickView
 
 class ControlFragment : Fragment() {
 
@@ -43,15 +43,14 @@ class ControlFragment : Fragment() {
     }
 
     private fun setupObserver(){
-        controlViewModel.joyVisible.observe(viewLifecycleOwner){
+        controlViewModel.joyVisible.observe(viewLifecycleOwner) {
             it?.let{
-                if(it){
-                    binding.joystickRight.visibility = View.VISIBLE
-                }
-                else{
-                    binding.joystickRight.visibility = View.GONE
-                }
+                binding.joystickRight.isVisible = it
             }
+        }
+
+        controlViewModel.dynamicData.observe(viewLifecycleOwner) {
+            binding.compassView.degrees = it.yawAngle
         }
     }
 }
