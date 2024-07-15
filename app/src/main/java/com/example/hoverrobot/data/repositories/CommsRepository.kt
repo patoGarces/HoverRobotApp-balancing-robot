@@ -3,13 +3,14 @@ package com.example.hoverrobot.data.repositories
 import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.util.Log
+import com.example.hoverrobot.bluetooth.BLEManager
 import com.example.hoverrobot.data.utils.ToolBox.Companion.ioScope
-import com.example.hoverrobot.bluetooth.BluetoothManager
 import com.example.hoverrobot.data.models.comms.AxisControl
-import com.example.hoverrobot.data.models.comms.MainBoardRobotStatus
 import com.example.hoverrobot.data.models.comms.PidSettings
-import com.example.hoverrobot.data.models.comms.asRobotStatus
-import com.example.hoverrobot.data.models.comms.calculateChecksum
+import com.example.hoverrobot.data.models.comms.RobotDynamicData
+import com.example.hoverrobot.data.models.comms.RobotLocalConfig
+import com.example.hoverrobot.data.models.comms.asRobotDynamicData
+import com.example.hoverrobot.data.models.comms.asRobotLocalConfig
 import com.example.hoverrobot.data.utils.ConnectionStatus
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -23,7 +24,9 @@ import javax.inject.Inject
 
 interface CommsRepository {
 
-    val statusRobotFlow: SharedFlow<MainBoardRobotStatus>
+    val dynamicDataRobotFlow: SharedFlow<RobotDynamicData>
+
+    val robotLocalConfigFlow: SharedFlow<RobotLocalConfig>
 
     val availableDevices: SharedFlow<List<BluetoothDevice>>
 
@@ -33,23 +36,27 @@ interface CommsRepository {
 
     fun sendJoystickUpdate(axisControl: AxisControl)
 
-    fun sendCommand(commandCode: Int)
+    fun sendCommand(commandCode: Short)
 
     fun connectDevice(device: BluetoothDevice)
 
-    fun getConnectedDeviceName(): String?
+    fun getConnectedDevice(): BluetoothDevice?
 
     fun startDiscoverBT()
 
     fun isBluetoothEnabled(): Boolean
 }
 
-class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val context: Context): CommsRepository {
+class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val context: Context) :
+    CommsRepository {
 
-    private var bluetoothManager: BluetoothManager = BluetoothManager(context)
+    private var bleManager = BLEManager(context)
 
-    private val _statusRobotFlow = MutableSharedFlow<MainBoardRobotStatus>()
-    override val statusRobotFlow: SharedFlow<MainBoardRobotStatus> = _statusRobotFlow
+    private val _dynamicDataRobotFlow = MutableSharedFlow<RobotDynamicData>()
+    override val dynamicDataRobotFlow: SharedFlow<RobotDynamicData> = _dynamicDataRobotFlow
+
+    private val _robotLocalConfigFlow = MutableSharedFlow<RobotLocalConfig>()
+    override val robotLocalConfigFlow: SharedFlow<RobotLocalConfig> = _robotLocalConfigFlow
 
     private val _availableDevices = MutableSharedFlow<List<BluetoothDevice>>()
     override val availableDevices: SharedFlow<List<BluetoothDevice>> = _availableDevices
@@ -65,26 +72,39 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
 
     private fun setupObservers() {
         ioScope.launch {
-            bluetoothManager.receivedDataBtFlow.collect {
-                val statusRobot = it.asRobotStatus
-                if (statusRobot.header == HEADER_RX_KEY_STATUS.toShort() &&
-                    statusRobot.checksum == statusRobot.calculateChecksum) {
-                    _statusRobotFlow.emit(statusRobot)                                             // El dia de mañana si se reciben otros tipos de datos, se deberia hacer el split aca
-                }
-                else {
-                    Log.d(TAG,"error paquete")
+            bleManager.receivedDataBtFlow.collect {
+//                Log.d(TAG,"SIZE COLLECT: ${ it.remaining()}")
+//                if(it.remaining() > 20) {
+
+                val byte0 = it.get(0).toInt() and 0xFF
+                val byte1 = it.get(1).toInt() and 0xFF
+                val headerPackage = ((byte1 shl 8) or byte0)        // shl es analogo a '<<' en C
+
+                when (headerPackage) {
+                    HEADER_PACKAGE_STATUS -> {
+                        _dynamicDataRobotFlow.emit(it.asRobotDynamicData)
+                    }
+
+                    HEADER_PACKAGE_LOCAL_CONFIG -> {
+                        if(it.remaining() >= 12) {
+                            val localConfig = it.asRobotLocalConfig
+                            _robotLocalConfigFlow.emit(localConfig)
+                        }
+                    }
+
+                    else -> Log.d(TAG, "Unrecognized package: $headerPackage")
                 }
             }
         }
 
         ioScope.launch {
-            bluetoothManager.connectionsStatus.collect {
+            bleManager.connectionsStatus.collect {
                 _connectionStateFlow.emit(it)
             }
         }
 
         ioScope.launch {
-            bluetoothManager.availableBtDevices.collect {
+            bleManager.availableBtDevices.collect {
                 ioScope.launch { _availableDevices.emit(it) }
             }
         }
@@ -92,79 +112,63 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
 
     override fun sendPidParams(pidParams: PidSettings) {
         val paramList = listOf(
-            HEADER_PACKET,
-            HEADER_TX_KEY_SETTINGS,
-            (pidParams.kp * 100).toInt(),
-            (pidParams.ki * 100).toInt(),
-            (pidParams.kd * 100).toInt(),
-            (pidParams.centerAngle * 100).toInt(),
-            (pidParams.safetyLimits * 100).toInt()
+            HEADER_PACKAGE_SETTINGS,
+            (pidParams.kp * PRECISION_DECIMALS_COMMS).toInt().toShort(),
+            (pidParams.ki * PRECISION_DECIMALS_COMMS).toInt().toShort(),
+            (pidParams.kd * PRECISION_DECIMALS_COMMS).toInt().toShort(),
+            (pidParams.centerAngle * PRECISION_DECIMALS_COMMS).toInt().toShort(),
+            (pidParams.safetyLimits * PRECISION_DECIMALS_COMMS).toInt().toShort()
         )
-        val buffer = ByteBuffer.allocate((paramList.size + 1) * 4) // Float ocupa 4 bytes, int igual, short 2, agrego 1 para el checksum
-
+        val buffer =
+            ByteBuffer.allocate(paramList.size * 2) // Float ocupa 4 bytes, int igual, short 2
         buffer.order(ByteOrder.LITTLE_ENDIAN)
-        paramList.forEach { buffer.putInt(it) }
+        paramList.forEach { buffer.putShort(it.toShort()) }
 
-        val checksum = (
-            HEADER_PACKET xor
-            HEADER_TX_KEY_SETTINGS xor
-            (pidParams.kp * 100).toInt() xor
-            (pidParams.ki * 100).toInt() xor
-            (pidParams.kd * 100).toInt() xor
-            (pidParams.centerAngle * 100).toInt() xor
-            (pidParams.safetyLimits * 100).toInt()
-        )
-
-        buffer.putInt(checksum)
-        bluetoothManager.sendDataBt(buffer)
+        bleManager.sendData(buffer.array())
     }
 
     override fun sendJoystickUpdate(axisControl: AxisControl) {
         val paramList =
-            listOf(HEADER_PACKET, HEADER_TX_KEY_CONTROL, axisControl.axisX, axisControl.axisY)
-        val buffer = ByteBuffer.allocate((paramList.size + 1) * 4)
+            listOf(HEADER_PACKAGE_CONTROL.toShort(), axisControl.axisX, axisControl.axisY)
+        val buffer = ByteBuffer.allocate(paramList.size * 2)
         buffer.order(ByteOrder.LITTLE_ENDIAN)
-        paramList.forEach { buffer.putInt(it) }
-
-        val checksum =
-            HEADER_PACKET xor HEADER_TX_KEY_CONTROL xor axisControl.axisX xor axisControl.axisY
-        buffer.putInt(checksum)
-        bluetoothManager.sendDataBt(buffer)
+        paramList.forEach { buffer.putShort(it) }
+        bleManager.sendData(buffer.array())
     }
 
-    override fun sendCommand(commandCode: Int) {
+    override fun sendCommand(commandCode: Short) {
         val paramList =
-            listOf(HEADER_PACKET, HEADER_TX_KEY_COMMAND, commandCode)
-        val buffer = ByteBuffer.allocate((paramList.size + 1) * 4)
+            listOf(HEADER_PACKAGE_COMMAND.toShort(), commandCode)
+        val buffer = ByteBuffer.allocate(paramList.size * 4)
         buffer.order(ByteOrder.LITTLE_ENDIAN)
-        paramList.forEach { buffer.putInt(it) }
+        paramList.forEach { buffer.putShort(it) }
 
-        val checksum = HEADER_PACKET xor HEADER_TX_KEY_COMMAND xor commandCode
-        buffer.putInt(checksum)
-        bluetoothManager.sendDataBt(buffer)
+        bleManager.sendData(buffer.array())
     }
 
     override fun connectDevice(device: BluetoothDevice) {
-        bluetoothManager.connectDevice(device)
+        bleManager.connectDevice(device)
     }
 
     override fun startDiscoverBT() {
-        bluetoothManager.startDiscoverBT()
+        bleManager.startScan()
     }
 
     override fun isBluetoothEnabled(): Boolean {
-        return bluetoothManager.isBluetoothEnabled()
+        return bleManager.isBluetoothEnabled()
     }
 
-    override fun getConnectedDeviceName(): String? {
-        return bluetoothManager.getDeviceConnectedName()
+    override fun getConnectedDevice(): BluetoothDevice? {
+        return bleManager.getDeviceConnected()
     }
 
     companion object {
-        const val HEADER_PACKET = 0xABC0
-        const val HEADER_RX_KEY_STATUS = 0xAB01     // key que indica que el paquete recibido es un status
-        const val HEADER_TX_KEY_CONTROL = 0xAB02    // key que indica que el paquete a enviar es de control
-        const val HEADER_TX_KEY_SETTINGS = 0xAB03   // key que indica que el paquete a enviar es de configuracion
-        const val HEADER_TX_KEY_COMMAND = 0xAB04    // key que indica que el paquete a enviar es un comando
+        const val HEADER_PACKAGE_STATUS: Int = 0xAB01       // Package recepcion
+        const val HEADER_PACKAGE_CONTROL: Int = 0xAB02      // Package transmision
+        const val HEADER_PACKAGE_SETTINGS: Int = 0xAB03     // Package transmision
+        const val HEADER_PACKAGE_COMMAND: Int = 0xAB04      // Package transmision
+        const val HEADER_PACKAGE_LOCAL_CONFIG: Int = 0xAB05 // Package recepcion
     }
 }
+
+const val PRECISION_DECIMALS_COMMS = 100    // Precision al convertir a float, en este caso 100 = 0.01
