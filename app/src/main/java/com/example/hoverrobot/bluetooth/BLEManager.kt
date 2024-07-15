@@ -90,6 +90,8 @@ class BLEManager(private val context: Context): BluetoothManagerInterface {
                         changeStatus(CONNECTED)
                         bluetoothGatt?.discoverServices()
 //                        bluetoothGatt?.requestMtu(MTU_SIZE)
+
+                        bluetoothGatt?.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_HIGH)
                     }
 
                     BluetoothGatt.STATE_CONNECTING -> { changeStatus(CONNECTING) }
