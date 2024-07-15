@@ -45,6 +45,11 @@
     <string name="imu_btn_calibrate">Calibrar</string>
     <string name="pid_center_front">Front</string>
     <string name="pid_center_back">Back</string>
+    <string-array name="sp_memory_items">
+        <item>Banco 1</item>
+        <item>Banco 2</item>
+        <item>Banco 3</item>
+    </string-array>
 
     <!--    Mapper status error-->
     <string name="status_normal">Normal</string>
@@ -66,7 +71,10 @@
     <string name="placeholder_kp">Kp: %s</string>
     <string name="placeholder_ki">Ki: %s</string>
     <string name="placeholder_kd">Kd: %s</string>
-    <string name="placeholder_center">Center: %s</string>
+    <string name="placeholder_center">Center: %.2f</string>
+    <string name="placeholder_roll">Roll:  %.2f</string>
+    <string name="placeholder_pitch">Pitch:  %.2f</string>
+    <string name="placeholder_yaw">Yaw:  %.2f</string>
 
     <!--    RadioGroup frame size-->
     <string name="window_size_5s">5 segundos</string>
@@ -83,7 +91,5 @@
     <string name="btn_clear_title">Clear data</string>
     <string name="btn_play_title">Play</string>
     <string name="btn_pause_title">Pause</string>
-
-
 
 </resources>

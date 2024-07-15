@@ -6,6 +6,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import com.example.hoverrobot.data.models.comms.AxisControl
 import com.example.hoverrobot.databinding.ControlFragmentBinding
@@ -50,17 +51,15 @@ class ControlFragment : Fragment() {
     }
 
     private fun setupObserver(){
-        controlViewModel.joyVisible.observe(viewLifecycleOwner){
+        controlViewModel.joyVisible.observe(viewLifecycleOwner) {
             it?.let{
-                if(it){
-                    binding.joystickThrottle.visibility = View.VISIBLE
-                    binding.joystickDirection.visibility = View.VISIBLE
-                }
-                else{
-                    binding.joystickThrottle.visibility = View.GONE
-                    binding.joystickDirection.visibility = View.GONE
-                }
+                binding.joystickThrottle.isVisible = it
+                binding.joystickDirection.isVisible = it
             }
+        }
+
+        controlViewModel.dynamicData.observe(viewLifecycleOwner) {
+            binding.compassView.degrees = it.yawAngle
         }
     }
 }

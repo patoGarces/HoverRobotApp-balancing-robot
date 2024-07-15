@@ -1,5 +1,6 @@
 package com.example.hoverrobot.ui.settingsFragment
 
+import android.bluetooth.BluetoothDevice
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -23,28 +24,26 @@ class SettingsFragmentViewModel @Inject constructor(
 
     init {
         _pidSettingFromRobot.value = null
-        ioScope.launch {
-            commsRepository.statusRobotFlow.collect {
-                _pidSettingFromRobot.postValue(it.pid)
-            }
-        }
+//        ioScope.launch {                                                                          // TODO: analizar que hacer con los parametros pid
+//            commsRepository.dynamicDataRobotFlow.collect {
+//                _pidSettingFromRobot.postValue(it.pid)
+//            }
+//        }
     }
 
     fun setPidTunningToRobot(newTunning : PidSettings){
         if (commsRepository.connectionStateFlow.value == ConnectionStatus.CONNECTED) {
             commsRepository.sendPidParams(newTunning)
-        } else {
-            Log.d("activity", "No se puede enviar configuración")
         }
     }
 
     fun sendCalibrateImu(){
         if (commsRepository.connectionStateFlow.value == ConnectionStatus.CONNECTED) {
-            commsRepository.sendCommand(CALIBRATE_IMU.ordinal)
+            commsRepository.sendCommand(CALIBRATE_IMU.ordinal.toShort())
         }
     }
 
-    fun getDeviceConnectedName(): String? {
-        return commsRepository.getConnectedDeviceName()
+    fun getDeviceConnectedMAC(): String? {
+        return commsRepository.getConnectedDevice()?.address
     }
 }

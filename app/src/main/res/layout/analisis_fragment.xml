@@ -58,6 +58,27 @@
                     android:layout_marginHorizontal="8dp"
                     tools:text="center: 3.0"
                     />
+                <TextView
+                    android:id="@+id/tv_angle_pitch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="8dp"
+                    tools:text="Pitch: 3.0"
+                    />
+                <TextView
+                    android:id="@+id/tv_angle_roll"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="8dp"
+                    tools:text="Roll: 3.0"
+                    />
+                <TextView
+                    android:id="@+id/tv_angle_yaw"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="8dp"
+                    tools:text="Yaw: 3.0"
+                    />
         </LinearLayout>
 
         <ScrollView

@@ -38,11 +38,11 @@ class StatusDataViewModel @Inject constructor(
         _batteryTemp.postValue(0F)
 
         ioScope.launch {
-            commsRepository.statusRobotFlow.collect {
-                _escsTemp.postValue(it.tempEsc.toFloat() / 10)
-                _imuTemp.postValue(it.tempImu.toFloat() / 10)
-                _batteryTemp.postValue(it.batTemp.toFloat() / 10)
-                _gralStatus.postValue(it.statusCode.toInt())
+            commsRepository.dynamicDataRobotFlow.collect {
+//                _escsTemp.postValue(it.tempEsc.toFloat() / 10)                                    // TODO: recibir datos de bateria y temp
+//                _imuTemp.postValue(it.tempImu.toFloat() / 10)
+//                _batteryTemp.postValue(it.batTemp.toFloat() / 10)
+                _gralStatus.postValue(it.statusCode)
 
             }
         }
