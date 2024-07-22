@@ -40,13 +40,13 @@ class ControlFragment : Fragment() {
         binding.joystickDirection.setOnMoveListener{ _, _ ->
             val y = 100 - (binding.joystickThrottle.normalizedY * 2)
             val x = (binding.joystickDirection.normalizedX * 2) -100
-            controlViewModel.newCoordinatesJoystick(AxisControl(x,y))
+            controlViewModel.newCoordinatesJoystick(AxisControl(x.toShort(),y.toShort()))
         }
 
         binding.joystickThrottle.setOnMoveListener{ _, _ ->
             val y = 100 - (binding.joystickThrottle.normalizedY * 2)
             val x = (binding.joystickDirection.normalizedX * 2) -100
-            controlViewModel.newCoordinatesJoystick(AxisControl(x,y))
+            controlViewModel.newCoordinatesJoystick(AxisControl(x.toShort(),y.toShort()))
         }
     }
 
