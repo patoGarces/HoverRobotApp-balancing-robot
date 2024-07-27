@@ -29,14 +29,10 @@ class StatusBarViewModel @Inject constructor(
     private var _connectionStatus = MutableLiveData<ConnectionStatus>()
     val connectionStatus : LiveData<ConnectionStatus> = _connectionStatus
 
-    private var _showDialogDevices = MutableLiveData<Boolean?>()
-    val showDialogDevices : LiveData<Boolean?> get() = _showDialogDevices
-
     private var _statusRobot = MutableLiveData<StatusEnumRobot?>()
     val statusRobot : LiveData<StatusEnumRobot?> get() = _statusRobot
 
     init {
-        _showDialogDevices.postValue(false)
         _battery.postValue(Battery(0,0F,0F))
         _fpsStatus.postValue(0.0F)
         _tempImu.postValue(0F)
@@ -62,9 +58,5 @@ class StatusBarViewModel @Inject constructor(
                 _connectionStatus.postValue(it)
             }
         }
-    }
-
-    fun setShowDialogDevices( show : Boolean ){
-        _showDialogDevices.postValue( show )
     }
 }

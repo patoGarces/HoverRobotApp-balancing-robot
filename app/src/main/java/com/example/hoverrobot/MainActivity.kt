@@ -1,42 +1,23 @@
 package com.example.hoverrobot
 
-import android.Manifest
-import android.Manifest.permission.ACCESS_COARSE_LOCATION
-import android.Manifest.permission.ACCESS_FINE_LOCATION
-import android.Manifest.permission.BLUETOOTH
-import android.Manifest.permission.BLUETOOTH_ADMIN
-import android.Manifest.permission.BLUETOOTH_SCAN
-import android.bluetooth.BluetoothAdapter
 import android.content.Context
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.view.WindowManager
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.viewpager2.adapter.FragmentStateAdapter
-import com.example.hoverrobot.data.utils.ToolBox.Companion.ioScope
 import com.example.hoverrobot.data.repositories.CommsRepository
-import com.example.hoverrobot.data.utils.ConnectionStatus
 import com.example.hoverrobot.databinding.ActivityMainBinding
 import com.example.hoverrobot.ui.analisisFragment.AnalisisFragment
 import com.example.hoverrobot.ui.analisisFragment.AnalisisViewModel
-import com.example.hoverrobot.ui.bottomSheetDevicesBT.BottomSheetDevicesFragment
-import com.example.hoverrobot.ui.bottomSheetDevicesBT.BottomSheetDevicesViewModel
 import com.example.hoverrobot.ui.controlFragment.ControlFragment
 import com.example.hoverrobot.ui.controlFragment.ControlViewModel
 import com.example.hoverrobot.ui.settingsFragment.SettingsFragment
@@ -45,7 +26,6 @@ import com.example.hoverrobot.ui.statusBarFragment.StatusBarViewModel
 import com.example.hoverrobot.ui.statusDataFragment.StatusDataViewModel
 import com.google.android.material.tabs.TabLayoutMediator
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
@@ -60,7 +40,6 @@ class MainActivity : AppCompatActivity() {
     private val controlViewModel: ControlViewModel by viewModels()
     private val analisisViewModel: AnalisisViewModel by viewModels()
     private val settingsFragmentViewModel: SettingsFragmentViewModel by viewModels()
-    private val bottomSheetDevicesViewModel: BottomSheetDevicesViewModel by viewModels()
 
     @Inject
     lateinit var commsRepository: CommsRepository
@@ -71,9 +50,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        getPermissions()
 //        webViewSetup()
-        setupObservers()
         setupViewPagerAndTabLayout()
     }
 
@@ -113,96 +90,18 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupObservers() {
-        ioScope.launch {
-            commsRepository.connectionStateFlow.collect {
-                when (it) {
-                    ConnectionStatus.INIT,
-                    ConnectionStatus.DISCONNECT -> {
-                        showDevicesToConnect()
-                    }
-                    ConnectionStatus.CONNECTED,
-                    ConnectionStatus.ERROR,
-                    ConnectionStatus.DISCOVERING,
-                    ConnectionStatus.CONNECTING -> {} // TODO()
-                }
-            }
-        }
-
-        statusBarViewModel.showDialogDevices.observe(this) {
-            if (it == true) showDevicesToConnect()
-        }
-    }
-
-    private fun showDevicesToConnect() {
-        val bottomSheetDevices =
-            supportFragmentManager.findFragmentByTag(BottomSheetDevicesFragment::javaClass.name)
-        val fragmentTransaction = supportFragmentManager.beginTransaction()
-        if (bottomSheetDevices == null) {
-            fragmentTransaction.add(
-                BottomSheetDevicesFragment(),
-                BottomSheetDevicesFragment::javaClass.name
-            )
-        }
-        fragmentTransaction.commit()
-    }
-
-
-    @RequiresApi(Build.VERSION_CODES.S)
-    private fun getPermissions() {
-
-        var btPermissions = true
-
-        val requestEnableBt =
-            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-                if (result.resultCode == RESULT_OK) {
-                    commsRepository.startDiscoverBT()
-                } else {
-                    Log.d("bluetooth", "El user rechazo el encendido del bluetooth")
-                }
-            }
-
-        val requestMultiplesPermissions =
-            registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
-
-                permissions.entries.forEach { permission ->
-                    if (!permission.value) {
-                        btPermissions = false
-                    }
-                }
-
-                if (btPermissions) {
-                    if (!commsRepository.isBluetoothEnabled()) {
-                        val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-                        requestEnableBt.launch(enableBtIntent)
-                    } else {
-                        Log.d("bluetooth", "ya esta encendido")
-                        commsRepository.startDiscoverBT()
-                    }
-                } else {
-                    Toast.makeText(this, "ERROR PERMISOS BLUETOOTH", Toast.LENGTH_LONG).show()
-                    Log.d("bluetooth", "NO SE OBTUVIERON LOS PERMISOS NECESARIOS")
-                }
-            }
-
-        ActivityCompat.requestPermissions(this, arrayOf(
-            ACCESS_COARSE_LOCATION,
-            ACCESS_FINE_LOCATION,
-            BLUETOOTH,
-            BLUETOOTH_ADMIN,
-            BLUETOOTH_SCAN
-            ), 1)
-
-        requestMultiplesPermissions.launch(
-            arrayOf(
-                ACCESS_COARSE_LOCATION,
-                ACCESS_FINE_LOCATION,
-                BLUETOOTH,
-                BLUETOOTH_ADMIN,
-                BLUETOOTH_SCAN
-            )
-        )
-    }
+//    private fun showDevicesToConnect() {
+//        val bottomSheetDevices =
+//            supportFragmentManager.findFragmentByTag(BottomSheetDevicesFragment::javaClass.name)
+//        val fragmentTransaction = supportFragmentManager.beginTransaction()
+//        if (bottomSheetDevices == null) {
+//            fragmentTransaction.add(
+//                BottomSheetDevicesFragment(),
+//                BottomSheetDevicesFragment::javaClass.name
+//            )
+//        }
+//        fragmentTransaction.commit()
+//    }
 
     private fun webViewSetup(){
 

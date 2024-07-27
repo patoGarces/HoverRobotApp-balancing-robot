@@ -44,6 +44,6 @@ class SettingsFragmentViewModel @Inject constructor(
     }
 
     fun getDeviceConnectedMAC(): String? {
-        return commsRepository.getConnectedDevice()?.address
+        return commsRepository.getConnectedClients()?.first()           // TODO: seleccionar cual cliente corresponde
     }
 }
