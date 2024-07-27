@@ -22,7 +22,7 @@ object StatusMapperBT {
     )
 
     private val mapStatusRobotString = mapOf(
-        StatusEnumRobot.ROBOT_INIT to "Iniciando",
+        StatusEnumRobot.ROBOT_INIT to "Inicializando",
         StatusEnumRobot.ROBOT_DISABLE to "Deshabilitado",
         StatusEnumRobot.ROBOT_ENABLE to "Armado",
         StatusEnumRobot.ROBOT_STABILIZED to "Estabilizado",
@@ -30,7 +30,7 @@ object StatusMapperBT {
     )
 
     private val mapStatusRobotColor = mapOf(
-        StatusEnumRobot.ROBOT_INIT to R.color.gray_80_percent,
+        StatusEnumRobot.ROBOT_INIT to R.color.status_orange,
         StatusEnumRobot.ROBOT_DISABLE to R.color.gray_80_percent,
         StatusEnumRobot.ROBOT_ENABLE to R.color.status_turquesa,
         StatusEnumRobot.ROBOT_STABILIZED to R.color.status_blue,

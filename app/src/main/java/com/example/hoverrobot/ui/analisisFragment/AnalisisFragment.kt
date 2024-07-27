@@ -8,9 +8,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.example.hoverrobot.R
-import com.example.hoverrobot.data.models.comms.PidSettings
 import com.example.hoverrobot.data.models.comms.RobotDynamicData
-import com.example.hoverrobot.data.models.comms.RobotDynamicDataRaw
 import com.example.hoverrobot.data.models.comms.RobotLocalConfig
 import com.example.hoverrobot.databinding.AnalisisFragmentBinding
 import com.github.mikephil.charting.components.Legend

@@ -47,8 +47,7 @@ interface BluetoothManagerInterface {
 
 class BLEManager(private val context: Context): BluetoothManagerInterface {
 
-    private val TAG = "" +
-            ""
+    private val TAG = ""
 
     private var bluetoothAdapter: BluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
 

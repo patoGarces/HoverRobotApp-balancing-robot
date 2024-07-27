@@ -11,7 +11,9 @@ import com.example.hoverrobot.data.models.comms.RobotDynamicData
 import com.example.hoverrobot.data.models.comms.RobotLocalConfig
 import com.example.hoverrobot.data.models.comms.asRobotDynamicData
 import com.example.hoverrobot.data.models.comms.asRobotLocalConfig
+import com.example.hoverrobot.data.utils.ByteArraysUtils.toByteBuffer
 import com.example.hoverrobot.data.utils.ConnectionStatus
+import com.example.hoverrobot.sockets.ServerTcp
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -50,13 +52,15 @@ interface CommsRepository {
 class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val context: Context) :
     CommsRepository {
 
-    private var bleManager = BLEManager(context)
+//    private var bleManager = BLEManager(context)
+
+    private val serverSocket = ServerTcp()
 
     private val _dynamicDataRobotFlow = MutableSharedFlow<RobotDynamicData>()
     override val dynamicDataRobotFlow: SharedFlow<RobotDynamicData> = _dynamicDataRobotFlow
 
-    private val _robotLocalConfigFlow = MutableSharedFlow<RobotLocalConfig>()
-    override val robotLocalConfigFlow: SharedFlow<RobotLocalConfig> = _robotLocalConfigFlow
+    private val _robotLocalConfigFlow = MutableStateFlow<RobotLocalConfig>(RobotLocalConfig(0f,0f,0f,0f,0f))
+    override val robotLocalConfigFlow: StateFlow<RobotLocalConfig> = _robotLocalConfigFlow
 
     private val _availableDevices = MutableSharedFlow<List<BluetoothDevice>>()
     override val availableDevices: SharedFlow<List<BluetoothDevice>> = _availableDevices
@@ -67,47 +71,64 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
     private val TAG = "CommsRepository"
 
     init {
-        setupObservers()
+        commsHandler()
     }
 
-    private fun setupObservers() {
+    private var contador = 0
+    private fun commsHandler() {
+        val bufferSize = 2048
+        val byteBuffer = ByteBuffer.allocate(bufferSize)
+
         ioScope.launch {
-            bleManager.receivedDataBtFlow.collect {
-//                Log.d(TAG,"SIZE COLLECT: ${ it.remaining()}")
-//                if(it.remaining() > 20) {
+            serverSocket.receivedDataFlow.collect { newPaquet ->
 
-                val byte0 = it.get(0).toInt() and 0xFF
-                val byte1 = it.get(1).toInt() and 0xFF
-                val headerPackage = ((byte1 shl 8) or byte0)        // shl es analogo a '<<' en C
+                byteBuffer.put(newPaquet)
+                byteBuffer.flip()
 
-                when (headerPackage) {
-                    HEADER_PACKAGE_STATUS -> {
-                        _dynamicDataRobotFlow.emit(it.asRobotDynamicData)
-                    }
+                while (byteBuffer.remaining() >= 20) {
 
-                    HEADER_PACKAGE_LOCAL_CONFIG -> {
-                        if(it.remaining() >= 12) {
-                            val localConfig = it.asRobotLocalConfig
-                            _robotLocalConfigFlow.emit(localConfig)
+                    val headerBytes = ByteArray(2)
+                    byteBuffer.get(headerBytes)
+
+                    val byte0 = headerBytes.get(0).toInt() and 0xFF
+                    val byte1 = headerBytes.get(1).toInt() and 0xFF
+                    val headerPackage = ((byte1 shl 8) or byte0)        // shl es analogo a '<<' en C
+
+                    when (headerPackage) {
+                        HEADER_PACKAGE_STATUS -> {
+                            val dynamicData = ByteArray(16)                 // TODO: Eliminar hardcode
+                            byteBuffer.get(dynamicData)
+                            _dynamicDataRobotFlow.emit(dynamicData.toByteBuffer().asRobotDynamicData)
+//                            contador++
+//                            Log.d(TAG,"paquetes recibidos: $contador")
+                        }
+
+                        HEADER_PACKAGE_LOCAL_CONFIG -> {
+                            val localConfig = ByteArray(10)                 // TODO: Eliminar hardcode
+                            byteBuffer.get(localConfig)
+                            _robotLocalConfigFlow.emit(localConfig.toByteBuffer().asRobotLocalConfig)
+                        }
+
+                        else -> {
+                            Log.d(TAG, "Unrecognized package: $headerPackage")
                         }
                     }
-
-                    else -> Log.d(TAG, "Unrecognized package: $headerPackage")
                 }
+                byteBuffer.compact()
             }
         }
 
         ioScope.launch {
-            bleManager.connectionsStatus.collect {
+            serverSocket.connectionsStatus.collect {
                 _connectionStateFlow.emit(it)
             }
         }
-
-        ioScope.launch {
-            bleManager.availableBtDevices.collect {
-                ioScope.launch { _availableDevices.emit(it) }
-            }
-        }
+//
+//        ioScope.launch {
+//            bleManager.availableBtDevices.collect {
+//                ioScope.launch { _availableDevices.emit(it) }
+//            }
+//        }
     }
 
     override fun sendPidParams(pidParams: PidSettings) {
@@ -124,7 +145,8 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
         buffer.order(ByteOrder.LITTLE_ENDIAN)
         paramList.forEach { buffer.putShort(it.toShort()) }
 
-        bleManager.sendData(buffer.array())
+//        bleManager.sendData(buffer.array())
+        serverSocket.sendData(buffer.array())
     }
 
     override fun sendJoystickUpdate(axisControl: AxisControl) {
@@ -133,7 +155,8 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
         val buffer = ByteBuffer.allocate(paramList.size * 2)
         buffer.order(ByteOrder.LITTLE_ENDIAN)
         paramList.forEach { buffer.putShort(it) }
-        bleManager.sendData(buffer.array())
+//        bleManager.sendData(buffer.array())
+        serverSocket.sendData(buffer.array())
     }
 
     override fun sendCommand(commandCode: Short) {
@@ -143,23 +166,26 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
         buffer.order(ByteOrder.LITTLE_ENDIAN)
         paramList.forEach { buffer.putShort(it) }
 
-        bleManager.sendData(buffer.array())
+//        bleManager.sendData(buffer.array())
+        serverSocket.sendData(buffer.array())
     }
 
     override fun connectDevice(device: BluetoothDevice) {
-        bleManager.connectDevice(device)
+//        bleManager.connectDevice(device)
     }
 
     override fun startDiscoverBT() {
-        bleManager.startScan()
+//        bleManager.startScan()
     }
 
     override fun isBluetoothEnabled(): Boolean {
-        return bleManager.isBluetoothEnabled()
+//        return bleManager.isBluetoothEnabled()
+        return false
     }
 
     override fun getConnectedDevice(): BluetoothDevice? {
-        return bleManager.getDeviceConnected()
+//        return bleManager.getDeviceConnected()
+        return null
     }
 
     companion object {
