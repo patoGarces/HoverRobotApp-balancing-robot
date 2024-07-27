@@ -1,9 +1,7 @@
 package com.example.hoverrobot.data.repositories
 
-import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.util.Log
-import com.example.hoverrobot.bluetooth.BLEManager
 import com.example.hoverrobot.data.utils.ToolBox.Companion.ioScope
 import com.example.hoverrobot.data.models.comms.AxisControl
 import com.example.hoverrobot.data.models.comms.PidSettings
@@ -13,7 +11,6 @@ import com.example.hoverrobot.data.models.comms.asRobotDynamicData
 import com.example.hoverrobot.data.models.comms.asRobotLocalConfig
 import com.example.hoverrobot.data.utils.ByteArraysUtils.toByteBuffer
 import com.example.hoverrobot.data.utils.ConnectionStatus
-import com.example.hoverrobot.sockets.ServerTcp
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,8 +27,6 @@ interface CommsRepository {
 
     val robotLocalConfigFlow: SharedFlow<RobotLocalConfig>
 
-    val availableDevices: SharedFlow<List<BluetoothDevice>>
-
     val connectionStateFlow: StateFlow<ConnectionStatus>
 
     fun sendPidParams(pidParams: PidSettings)
@@ -40,19 +35,12 @@ interface CommsRepository {
 
     fun sendCommand(commandCode: Short)
 
-    fun connectDevice(device: BluetoothDevice)
-
-    fun getConnectedDevice(): BluetoothDevice?
-
-    fun startDiscoverBT()
-
-    fun isBluetoothEnabled(): Boolean
+    fun getConnectedClients(): List<String>?
 }
 
 class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val context: Context) :
     CommsRepository {
 
-//    private var bleManager = BLEManager(context)
 
     private val serverSocket = ServerTcp()
 
@@ -62,8 +50,7 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
     private val _robotLocalConfigFlow = MutableStateFlow<RobotLocalConfig>(RobotLocalConfig(0f,0f,0f,0f,0f))
     override val robotLocalConfigFlow: StateFlow<RobotLocalConfig> = _robotLocalConfigFlow
 
-    private val _availableDevices = MutableSharedFlow<List<BluetoothDevice>>()
-    override val availableDevices: SharedFlow<List<BluetoothDevice>> = _availableDevices
+
 
     private val _connectionStateFlow = MutableStateFlow(ConnectionStatus.INIT)
     override val connectionStateFlow: StateFlow<ConnectionStatus> = _connectionStateFlow
@@ -123,12 +110,6 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
                 _connectionStateFlow.emit(it)
             }
         }
-//
-//        ioScope.launch {
-//            bleManager.availableBtDevices.collect {
-//                ioScope.launch { _availableDevices.emit(it) }
-//            }
-//        }
     }
 
     override fun sendPidParams(pidParams: PidSettings) {
@@ -145,7 +126,6 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
         buffer.order(ByteOrder.LITTLE_ENDIAN)
         paramList.forEach { buffer.putShort(it.toShort()) }
 
-//        bleManager.sendData(buffer.array())
         serverSocket.sendData(buffer.array())
     }
 
@@ -155,7 +135,7 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
         val buffer = ByteBuffer.allocate(paramList.size * 2)
         buffer.order(ByteOrder.LITTLE_ENDIAN)
         paramList.forEach { buffer.putShort(it) }
-//        bleManager.sendData(buffer.array())
+
         serverSocket.sendData(buffer.array())
     }
 
@@ -166,26 +146,10 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
         buffer.order(ByteOrder.LITTLE_ENDIAN)
         paramList.forEach { buffer.putShort(it) }
 
-//        bleManager.sendData(buffer.array())
         serverSocket.sendData(buffer.array())
     }
-
-    override fun connectDevice(device: BluetoothDevice) {
-//        bleManager.connectDevice(device)
-    }
-
-    override fun startDiscoverBT() {
-//        bleManager.startScan()
-    }
-
-    override fun isBluetoothEnabled(): Boolean {
-//        return bleManager.isBluetoothEnabled()
-        return false
-    }
-
-    override fun getConnectedDevice(): BluetoothDevice? {
-//        return bleManager.getDeviceConnected()
-        return null
+    override fun getConnectedClients(): List<String>? {
+        return serverSocket.clientsIp
     }
 
     companion object {

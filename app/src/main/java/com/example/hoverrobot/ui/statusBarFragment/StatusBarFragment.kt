@@ -98,11 +98,6 @@ class StatusBarFragment : Fragment() {
         binding.btnStatus.setOnClickListener {
             Navigation.findNavController(requireView()).navigate(R.id.statusDataFragment)
         }
-
-        binding.btnStatus.setOnLongClickListener {
-            statusBarViewModel.setShowDialogDevices( true )
-            true
-        }
     }
 
     companion object{
