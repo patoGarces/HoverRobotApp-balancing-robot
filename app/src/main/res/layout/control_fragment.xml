@@ -20,7 +20,7 @@
         app:JV_backgroundColor="@color/transparent"
         app:JV_borderWidth="2dp"
         app:JV_buttonDirection="vertical"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/compass_view"
         app:layout_constraintStart_toStartOf="parent"
         app:JV_fixedCenter="false"/>
 
