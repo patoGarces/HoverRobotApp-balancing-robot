@@ -12,11 +12,6 @@
     <string name="title_recyclerview_devices">Seleccione dispositivo:</string>
     <string name="title_recyclerview_refresh_btn">Buscar</string>
 
-    <!--    Bluetooth devices list-->
-    <string name="title_name_device">Nombre:</string>
-    <string name="title_mac_device">Mac:</string>
-    <string name="title_status_device">status:</string>
-
     <!--    Placeholders-->
     <string name="placeholder_battery_percent">%s %%</string>
     <string name="placeholder_battery_voltage">%.1fv</string>
@@ -25,6 +20,7 @@
     <string name="version_placeholder">HoverRobot V%s</string>
 
     <!--    tabsLayout-->
+    <string name="tab_status">Status</string>
     <string name="tab_transmision">Transmision</string>
     <string name="tab_analisis">Analisis</string>
     <string name="tab_settings">Configuracion</string>

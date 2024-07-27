@@ -8,12 +8,14 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.viewpager2.adapter.FragmentStateAdapter
+import androidx.viewpager2.widget.ViewPager2
 import com.example.hoverrobot.data.repositories.CommsRepository
 import com.example.hoverrobot.databinding.ActivityMainBinding
 import com.example.hoverrobot.ui.analisisFragment.AnalisisFragment
@@ -23,6 +25,7 @@ import com.example.hoverrobot.ui.controlFragment.ControlViewModel
 import com.example.hoverrobot.ui.settingsFragment.SettingsFragment
 import com.example.hoverrobot.ui.settingsFragment.SettingsFragmentViewModel
 import com.example.hoverrobot.ui.statusBarFragment.StatusBarViewModel
+import com.example.hoverrobot.ui.statusDataFragment.StatusDataFragment
 import com.example.hoverrobot.ui.statusDataFragment.StatusDataViewModel
 import com.google.android.material.tabs.TabLayoutMediator
 import dagger.hilt.android.AndroidEntryPoint
@@ -65,11 +68,30 @@ class MainActivity : AppCompatActivity() {
 
         TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
             when (position) {
-                0 -> tab.text = getString(R.string.tab_transmision)
-                1 -> tab.text = getString(R.string.tab_analisis)
-                2 -> tab.text = getString(R.string.tab_settings)
+                0 -> tab.text = getString(R.string.tab_status)
+                1 -> tab.text = getString(R.string.tab_transmision)
+                2 -> tab.text = getString(R.string.tab_analisis)
+                3 -> tab.text = getString(R.string.tab_settings)
             }
         }.attach()
+
+        // Configurar el callback para manejar la visibilidad del statusBar cuando cambia de pagina
+        binding.viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                super.onPageSelected(position)
+                // Controlar la visibilidad del FragmentContainerView basado en la posición
+                binding.statusBarContainer.isVisible = when (position) {
+                    0 -> false
+                    1 -> true
+                    2 -> true
+                    3 -> true
+                    else -> true
+                }
+            }
+        })
+
+        // Fragment default:
+        binding.viewPager.currentItem = 1
         binding.viewPager.isUserInputEnabled = false
 
     }
@@ -77,31 +99,19 @@ class MainActivity : AppCompatActivity() {
     private inner class ViewPagerAdapter(fragmentActivity: FragmentActivity) :
         FragmentStateAdapter(fragmentActivity) {
         override fun getItemCount(): Int {
-            return 3
+            return 4
         }
 
         override fun createFragment(position: Int): Fragment {
             return when (position) {
-                0 -> ControlFragment()
-                1 -> AnalisisFragment()
-                2 -> SettingsFragment()
+                0 -> StatusDataFragment()
+                1 -> ControlFragment()
+                2 -> AnalisisFragment()
+                3 -> SettingsFragment()
                 else -> throw IllegalArgumentException("Invalid position: $position")
             }
         }
     }
-
-//    private fun showDevicesToConnect() {
-//        val bottomSheetDevices =
-//            supportFragmentManager.findFragmentByTag(BottomSheetDevicesFragment::javaClass.name)
-//        val fragmentTransaction = supportFragmentManager.beginTransaction()
-//        if (bottomSheetDevices == null) {
-//            fragmentTransaction.add(
-//                BottomSheetDevicesFragment(),
-//                BottomSheetDevicesFragment::javaClass.name
-//            )
-//        }
-//        fragmentTransaction.commit()
-//    }
 
     private fun webViewSetup(){
 
@@ -124,9 +134,5 @@ class MainActivity : AppCompatActivity() {
             WindowManager.LayoutParams.FLAG_FULLSCREEN,
             WindowManager.LayoutParams.FLAG_FULLSCREEN
         )
-    }
-
-    companion object {
-        const val SKIP_BLUETOOTH = true
     }
 }

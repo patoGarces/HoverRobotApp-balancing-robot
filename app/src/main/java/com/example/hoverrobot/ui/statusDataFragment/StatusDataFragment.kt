@@ -36,7 +36,6 @@ class StatusDataFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         binding.tvAppVersion.text = getString(R.string.version_placeholder,BuildConfig.VERSION_NAME)
-        setupListener()
         setupObservables()
     }
 
@@ -96,16 +95,6 @@ class StatusDataFragment : Fragment() {
                     3
                 )
             }
-        }
-    }
-
-    private fun setupListener() {
-        binding.btnExit.setOnClickListener {
-            Navigation.findNavController(requireView()).popBackStack()
-        }
-
-        binding.btnBtStatus.setOnClickListener {
-            // TODO: abrir bottom sheet de devices desde aca
         }
     }
 }
