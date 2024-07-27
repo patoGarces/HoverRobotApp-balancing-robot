@@ -24,6 +24,7 @@ import com.example.hoverrobot.ui.controlFragment.ControlFragment
 import com.example.hoverrobot.ui.controlFragment.ControlViewModel
 import com.example.hoverrobot.ui.settingsFragment.SettingsFragment
 import com.example.hoverrobot.ui.settingsFragment.SettingsFragmentViewModel
+import com.example.hoverrobot.ui.statusBarFragment.StatusBarFragment
 import com.example.hoverrobot.ui.statusBarFragment.StatusBarViewModel
 import com.example.hoverrobot.ui.statusDataFragment.StatusDataFragment
 import com.example.hoverrobot.ui.statusDataFragment.StatusDataViewModel
@@ -55,6 +56,12 @@ class MainActivity : AppCompatActivity() {
 
 //        webViewSetup()
         setupViewPagerAndTabLayout()
+
+        if (savedInstanceState == null) {
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.statusBarContainer, StatusBarFragment())
+                .commit()
+        }
     }
 
     override fun onResume() {
@@ -75,18 +82,11 @@ class MainActivity : AppCompatActivity() {
             }
         }.attach()
 
-        // Configurar el callback para manejar la visibilidad del statusBar cuando cambia de pagina
         binding.viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
-                // Controlar la visibilidad del FragmentContainerView basado en la posición
-                binding.statusBarContainer.isVisible = when (position) {
-                    0 -> false
-                    1 -> true
-                    2 -> true
-                    3 -> true
-                    else -> true
-                }
+                // Controlar la visibilidad del StatusBarFragment
+                binding.statusBarContainer.isVisible = position != 0
             }
         })
 

@@ -86,15 +86,13 @@ class StatusDataFragment : Fragment() {
             }
         }
 
-        statusDataViewModel.batteryTemp.observe(viewLifecycleOwner) {
-            it?.let {
-                binding.tvBatteryTemp.text = getString(R.string.placeholder_temp).format(it)
-                ToolBox.changeStrokeColor(
-                    binding.tvBatteryTemp,
-                    requireContext().getColor(TempColorMapper.mapTempToColor(it)),
-                    3
-                )
-            }
+        statusDataViewModel.batteryStatus.observe(viewLifecycleOwner) {
+//            binding.tvBatteryTemp.text = getString(R.string.placeholder_temp).format(it.batTemp)
+//            ToolBox.changeStrokeColor(
+//                binding.tvBatteryTemp,
+//                requireContext().getColor(TempColorMapper.mapTempToColor(it.batTemp)),
+//                3
+//            )
         }
     }
 }

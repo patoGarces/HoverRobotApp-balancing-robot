@@ -35,7 +35,6 @@ class StatusBarFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        setupListener()
         setupObserver()
     }
 
@@ -90,13 +89,6 @@ class StatusBarFragment : Fragment() {
 
         statusBarViewModel.tempImu.observe(viewLifecycleOwner) {
             binding.tvTemperature.text =  String.format(getString(R.string.placeholder_temp), it)
-        }
-    }
-
-    private fun setupListener() {
-
-        binding.btnStatus.setOnClickListener {
-            Navigation.findNavController(requireView()).navigate(R.id.statusDataFragment)
         }
     }
 

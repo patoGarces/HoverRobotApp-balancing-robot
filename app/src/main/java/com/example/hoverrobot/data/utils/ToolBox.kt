@@ -19,5 +19,12 @@ class ToolBox {
             drawable.mutate()
             drawable.setStroke(width, color)
         }
+
+        fun Float.toPercentLevel(): Int {
+            return (((this/10) - MIN_VOLTAGE_PER_CELL_BATTERY) * 100 / (MAX_VOLTAGE_PER_CELL_BATTERY-MIN_VOLTAGE_PER_CELL_BATTERY)).toInt()
+        }
     }
 }
+
+const val MIN_VOLTAGE_PER_CELL_BATTERY = 3.7f
+const val MAX_VOLTAGE_PER_CELL_BATTERY = 4.2f

@@ -11,7 +11,7 @@
         android:id="@+id/title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
+        android:layout_margin="4dp"
         android:text="@string/title_status_fragment"
         android:textSize="24sp"
         android:textColor="@color/white"
@@ -24,7 +24,7 @@
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="@color/white"
-        android:layout_margin="16dp"
+        android:layout_margin="8dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/title"
@@ -34,7 +34,7 @@
         android:id="@+id/generalStatusTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="8dp"
         android:layout_marginStart="32dp"
         android:text="@string/title_status_fragment"
         android:textSize="16sp"
@@ -60,7 +60,7 @@
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="@color/white"
-        android:layout_margin="16dp"
+        android:layout_margin="8dp"
         app:layout_constraintTop_toBottomOf="@id/generalStatusTitle"
         app:layout_constraintEnd_toEndOf="parent"
         />
@@ -114,99 +114,108 @@
         app:layout_constraintEnd_toEndOf="parent"
         />
 
-    <TextView
-        android:id="@+id/tv_temp_title"
+
+    <LinearLayout
+        android:id="@+id/layoutBattery"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/title_temp"
-        android:textSize="16sp"
-        android:textColor="@color/white"
-        android:textStyle="bold"
+        android:orientation="vertical"
+        android:background="@drawable/background_settings_group"
+        android:layout_margin="8dp"
+        android:padding="8dp"
+        android:gravity="center_horizontal"
         app:layout_constraintTop_toBottomOf="@id/divider3"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toStartOf="@id/layoutImu"
+        >
 
-    <TextView
-        android:id="@+id/tv_battery_temp_title"
+        <TextView
+            android:id="@+id/tv_battery_temp_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/title_battery_temp"
+            android:textSize="16sp"
+            android:textColor="@color/white" />
+
+<!--        <TextView-->
+<!--            android:id="@+id/tv_battery_temp"-->
+<!--            android:layout_width="100dp"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_marginTop="8dp"-->
+<!--            android:textSize="16sp"-->
+<!--            android:textStyle="bold"-->
+<!--            style="@style/styleTvStatusData"-->
+<!--            tools:text="15.0ºC" />-->
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:id="@+id/layoutImu"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/title_battery_temp"
-        android:textSize="16sp"
-        android:textColor="@color/white"
-        app:layout_constraintTop_toBottomOf="@id/tv_temp_title"
-        app:layout_constraintStart_toStartOf="@id/tv_battery_temp"
-        app:layout_constraintEnd_toEndOf="@id/tv_battery_temp"
-        />
+        android:orientation="vertical"
+        android:background="@drawable/background_settings_group"
+        android:layout_margin="8dp"
+        android:padding="8dp"
+        android:gravity="center_horizontal"
+        app:layout_constraintTop_toBottomOf="@id/divider3"
+        app:layout_constraintStart_toEndOf="@id/layoutBattery"
+        app:layout_constraintEnd_toStartOf="@id/layoutMCB"
+        >
+        <TextView
+            android:id="@+id/tv_imuboard_temp_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/title_imu_temp"
+            android:textSize="16sp"
+            android:textColor="@color/white" />
 
-    <TextView
-        android:id="@+id/tv_battery_temp"
-        android:layout_width="100dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        style="@style/styleTvStatusData"
-        app:layout_constraintTop_toBottomOf="@id/tv_battery_temp_title"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/tv_imuboard_temp"
-        tools:text="15.0ºC"
-        />
+        <TextView
+            android:id="@+id/tv_imuboard_temp"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            style="@style/styleTvStatusData"
+            tools:text="15.0ºC" />
+    </LinearLayout>
 
-    <TextView
-        android:id="@+id/tv_imuboard_temp_title"
+    <LinearLayout
+        android:id="@+id/layoutMCB"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/title_imu_temp"
-        android:textSize="16sp"
-        android:textColor="@color/white"
-        app:layout_constraintTop_toBottomOf="@id/tv_temp_title"
-        app:layout_constraintStart_toStartOf="@id/tv_imuboard_temp"
-        app:layout_constraintEnd_toEndOf="@id/tv_imuboard_temp"
-        />
-
-    <TextView
-        android:id="@+id/tv_imuboard_temp"
-        android:layout_width="100dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        style="@style/styleTvStatusData"
-        app:layout_constraintTop_toBottomOf="@id/tv_imuboard_temp_title"
-        app:layout_constraintStart_toEndOf="@id/tv_battery_temp"
-        app:layout_constraintEnd_toStartOf="@id/tv_esc_temp"
-        tools:text="15.0ºC"
-        />
-
-    <TextView
-        android:id="@+id/tv_motorboard_temp_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/title_motorboard_temp"
-        android:textSize="16sp"
-        android:textColor="@color/white"
-        app:layout_constraintTop_toBottomOf="@id/tv_temp_title"
-        app:layout_constraintStart_toStartOf="@id/tv_esc_temp"
-        app:layout_constraintEnd_toEndOf="@id/tv_esc_temp"
-        />
-
-    <TextView
-        android:id="@+id/tv_esc_temp"
-        android:layout_width="100dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        style="@style/styleTvStatusData"
-        app:layout_constraintTop_toBottomOf="@id/tv_motorboard_temp_title"
-        app:layout_constraintStart_toEndOf="@id/tv_imuboard_temp"
+        android:orientation="vertical"
+        android:background="@drawable/background_settings_group"
+        android:layout_margin="8dp"
+        android:padding="8dp"
+        android:gravity="center_horizontal"
+        app:layout_constraintTop_toBottomOf="@id/divider3"
+        app:layout_constraintStart_toEndOf="@id/layoutImu"
         app:layout_constraintEnd_toEndOf="parent"
-        tools:text="19.5ºC"
-        />
+        >
+
+        <TextView
+            android:id="@+id/tv_motorboard_temp_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/title_motorboard_temp"
+            android:textSize="16sp"
+            android:textColor="@color/white" />
+
+        <TextView
+            android:id="@+id/tv_esc_temp"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            style="@style/styleTvStatusData"
+            tools:text="19.5ºC" />
+    </LinearLayout>
 
     <View
         android:id="@+id/divider4"
@@ -214,7 +223,7 @@
         android:layout_height="1dp"
         android:background="@color/white"
         android:layout_margin ="16dp"
-        app:layout_constraintTop_toBottomOf="@id/tv_esc_temp"
+        app:layout_constraintTop_toBottomOf="@id/layoutMCB"
         app:layout_constraintEnd_toEndOf="parent"
         />
 

@@ -18,14 +18,12 @@
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/statusBarContainer"
-        android:name="androidx.navigation.fragment.NavHostFragment"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:defaultNavHost="true"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:navGraph="@navigation/nav_graph"
         tools:layout="@layout/status_bar_fragment"
         />
 
