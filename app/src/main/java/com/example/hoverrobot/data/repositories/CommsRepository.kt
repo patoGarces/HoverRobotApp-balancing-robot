@@ -5,6 +5,7 @@ import android.util.Log
 import com.example.hoverrobot.data.utils.ToolBox.Companion.ioScope
 import com.example.hoverrobot.data.models.comms.AxisControl
 import com.example.hoverrobot.data.models.comms.PidSettings
+import com.example.hoverrobot.data.models.comms.ROBOT_DYNAMIC_DATA_SIZE
 import com.example.hoverrobot.data.models.comms.RobotDynamicData
 import com.example.hoverrobot.data.models.comms.RobotLocalConfig
 import com.example.hoverrobot.data.models.comms.asRobotDynamicData
@@ -83,7 +84,7 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
 
                     when (headerPackage) {
                         HEADER_PACKAGE_STATUS -> {
-                            val dynamicData = ByteArray(16)                 // TODO: Eliminar hardcode
+                            val dynamicData = ByteArray(ROBOT_DYNAMIC_DATA_SIZE)
                             byteBuffer.get(dynamicData)
                             _dynamicDataRobotFlow.emit(dynamicData.toByteBuffer().asRobotDynamicData)
 //                            contador++

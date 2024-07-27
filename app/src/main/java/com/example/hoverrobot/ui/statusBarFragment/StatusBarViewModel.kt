@@ -6,8 +6,10 @@ import androidx.lifecycle.ViewModel
 import com.example.hoverrobot.data.models.Battery
 import com.example.hoverrobot.data.utils.ToolBox.Companion.ioScope
 import com.example.hoverrobot.data.repositories.CommsRepository
+import com.example.hoverrobot.data.repositories.PRECISION_DECIMALS_COMMS
 import com.example.hoverrobot.data.utils.ConnectionStatus
 import com.example.hoverrobot.data.utils.StatusEnumRobot
+import com.example.hoverrobot.data.utils.ToolBox.Companion.toPercentLevel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -33,7 +35,7 @@ class StatusBarViewModel @Inject constructor(
     val statusRobot : LiveData<StatusEnumRobot?> get() = _statusRobot
 
     init {
-        _battery.postValue(Battery(0,0F,0F))
+        _battery.postValue(Battery(0,0F))
         _fpsStatus.postValue(0.0F)
         _tempImu.postValue(0F)
         _connectionStatus.postValue(ConnectionStatus.INIT)
@@ -41,14 +43,13 @@ class StatusBarViewModel @Inject constructor(
 
         ioScope.launch {
             commsRepository.dynamicDataRobotFlow.collect {                          // TODO: recibir datos de bateria
-//                _battery.postValue(
-//                    Battery(
-//                        it.batPercent.toInt(),
-//                        it.batVoltage.toFloat() / 10,
-//                        it.batTemp.toFloat() / 10
-//                    )
-//                )
-//                _tempImu.postValue((it.tempImu.toFloat() / 10))
+                _battery.postValue(
+                    Battery(
+                        it.batVoltage.toPercentLevel(),
+                        it.batVoltage
+                    )
+                )
+                _tempImu.postValue(it.tempImu)
                 _statusRobot.postValue(StatusEnumRobot.getStatusRobot(it.statusCode))
             }
         }
@@ -59,4 +60,5 @@ class StatusBarViewModel @Inject constructor(
             }
         }
     }
+
 }
