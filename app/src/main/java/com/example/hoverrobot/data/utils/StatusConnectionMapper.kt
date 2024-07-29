@@ -3,21 +3,18 @@ package com.example.hoverrobot.data.utils
 import com.example.hoverrobot.R
 
 object StatusMapperBT {
-    private val mapStatusBtString = mapOf(
-        ConnectionStatus.DISCONNECT to "Desconectado",
+    private val mapStatusString = mapOf(
         ConnectionStatus.INIT to "Iniciando",
-        ConnectionStatus.DISCOVERING to "Discovering",
-        ConnectionStatus.CONNECTING to "Conectando",
+        ConnectionStatus.WAITING to "Esp. conexion",
         ConnectionStatus.CONNECTED to "Conectado",
         ConnectionStatus.ERROR to "Reintentar"
     )
 
-    private val mapStatusBtColor = mapOf(
-        ConnectionStatus.DISCONNECT to R.color.status_red,
+    private val mapStatusColor = mapOf(
         ConnectionStatus.INIT to R.color.status_orange,
-        ConnectionStatus.DISCOVERING to R.color.status_turquesa,
-        ConnectionStatus.CONNECTING to R.color.status_blue,
-        ConnectionStatus.CONNECTED to R.color.gray_80_percent,
+
+        ConnectionStatus.WAITING to R.color.status_turquesa,
+        ConnectionStatus.CONNECTED to R.color.status_blue,
         ConnectionStatus.ERROR to R.color.status_red
     )
 
@@ -41,7 +38,7 @@ object StatusMapperBT {
         return if (statusBt == ConnectionStatus.CONNECTED && statusRobot != null) {
             if (mapStatusRobotString.containsKey(statusRobot)) mapStatusRobotString[statusRobot]!! else "XXX"
         } else {
-            if (mapStatusBtString.containsKey(statusBt)) mapStatusBtString[statusBt]!! else "XXX"
+            if (mapStatusString.containsKey(statusBt)) mapStatusString[statusBt]!! else "XXX"
         }
     }
 
@@ -49,17 +46,15 @@ object StatusMapperBT {
         return if (statusBt == ConnectionStatus.CONNECTED) {
             if (mapStatusRobotColor.containsKey(statusRobot)) mapStatusRobotColor[statusRobot]!! else R.color.gray_80_percent
         } else {
-            if (mapStatusBtColor.containsKey(statusBt)) mapStatusBtColor[statusBt]!! else R.color.gray_80_percent
+            if (mapStatusColor.containsKey(statusBt)) mapStatusColor[statusBt]!! else R.color.gray_80_percent
         }
     }
 }
 
 enum class ConnectionStatus {
     INIT,
-    DISCOVERING,
-    CONNECTING,
+    WAITING,
     CONNECTED,
-    DISCONNECT,
     ERROR
 }
 

@@ -77,19 +77,17 @@
         app:layout_constraintTop_toBottomOf="@id/divider2"
         app:layout_constraintStart_toStartOf="parent"/>
 
-<!--    <TextView-->
-<!--        android:id="@+id/tv_bt_status"-->
-<!--        android:layout_width="100dp"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:layout_marginTop="8dp"-->
-<!--        android:layout_marginEnd="32dp"-->
-<!--        style="@style/styleTvStatusData"-->
-<!--        android:visibility="gone"-->
-<!--        app:layout_constraintTop_toTopOf="@id/tv_bt_status_title"-->
-<!--        app:layout_constraintBottom_toBottomOf="@id/tv_bt_status_title"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        tools:text="Desconectado"-->
-<!--        />-->
+    <TextView
+        android:id="@+id/tv_local_ip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="32dp"
+        android:textSize="14sp"
+        app:layout_constraintTop_toTopOf="@id/tv_bt_status_title"
+        app:layout_constraintBottom_toBottomOf="@id/tv_bt_status_title"
+        app:layout_constraintEnd_toStartOf="@id/btn_bt_status"
+        tools:text="Local ip: 255.255.255.255"
+        />
 
     <Button
         android:id="@+id/btn_bt_status"

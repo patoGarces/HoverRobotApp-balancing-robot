@@ -1,5 +1,6 @@
 package com.example.hoverrobot.ui.settingsFragment
 
+import android.app.LocaleConfig
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -17,6 +18,8 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.example.hoverrobot.data.models.comms.PidSettings
 import com.example.hoverrobot.R
+import com.example.hoverrobot.data.models.comms.PidTarget
+import com.example.hoverrobot.data.models.comms.RobotLocalConfig
 import com.example.hoverrobot.dataStore
 import com.example.hoverrobot.databinding.SettingsFragmentBinding
 import com.google.android.material.slider.Slider
@@ -31,7 +34,7 @@ import kotlin.math.truncate
 
 class SettingsFragment : Fragment() {
 
-    private var lastPidSettings : PidSettings? = null
+    private var lastPidSettings : RobotLocalConfig? = null
 
     private lateinit var _binding : SettingsFragmentBinding
     private val binding get()= _binding
@@ -198,9 +201,9 @@ class SettingsFragment : Fragment() {
         settingsFragmentViewModel.pidSettingFromRobot.observe(viewLifecycleOwner) {
             it?.let {
                 if (it != lastPidSettings) {
-                    binding.sbPidP.inRange(it.kp)
-                    binding.sbPidI.inRange(it.ki)
-                    binding.sbPidD.inRange(it.kd)
+                    binding.sbPidP.inRange(it.pids[PidTarget.PID_ANGLE.ordinal].kp)             // TODO: manejar los distintos PID PARAMS
+                    binding.sbPidI.inRange(it.pids[PidTarget.PID_ANGLE.ordinal].ki)
+                    binding.sbPidD.inRange(it.pids[PidTarget.PID_ANGLE.ordinal].kd)
                     binding.sbCenterAngle.inRange(it.centerAngle)
                     binding.sbSafetyLimits.inRange(it.safetyLimits)
                     lastPidSettings = settingsFragmentViewModel.pidSettingFromRobot.value
@@ -269,7 +272,7 @@ class SettingsFragment : Fragment() {
 
     private fun Slider.inRange(value: Float) {
         val safeValue = (value * 100).toInt() / 100.00
-        this.value = if( value in valueFrom..valueTo) { safeValue.toFloat() } else { valueFrom }
+        this.value = if( value in valueFrom..valueTo) { safeValue.toFloat() } else { valueTo }
     }
 
     private val String.getDeviceParams: String

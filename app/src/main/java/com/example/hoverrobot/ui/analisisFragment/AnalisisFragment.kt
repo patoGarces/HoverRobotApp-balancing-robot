@@ -261,12 +261,6 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
                 entrySetPoint.removeFirst()
             }
 
-            robotConfig?.let {
-                tvParamKp.text = getString(R.string.placeholder_kp, it.kp.toString())
-                tvParamKi.text = getString(R.string.placeholder_ki, it.ki.toString())
-                tvParamKd.text = getString(R.string.placeholder_kd, it.kd.toString())
-            }
-
             dataSet = when (viewDataset) {
                 DatasetView.DATASET_IMU -> {
                     setImuMode(newFrame)

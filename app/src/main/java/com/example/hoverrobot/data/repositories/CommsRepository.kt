@@ -6,6 +6,7 @@ import com.example.hoverrobot.data.utils.ToolBox.Companion.ioScope
 import com.example.hoverrobot.data.models.comms.AxisControl
 import com.example.hoverrobot.data.models.comms.PidSettings
 import com.example.hoverrobot.data.models.comms.ROBOT_DYNAMIC_DATA_SIZE
+import com.example.hoverrobot.data.models.comms.ROBOT_LOCAL_CONFIG_SIZE
 import com.example.hoverrobot.data.models.comms.RobotDynamicData
 import com.example.hoverrobot.data.models.comms.RobotLocalConfig
 import com.example.hoverrobot.data.models.comms.asRobotDynamicData
@@ -26,7 +27,7 @@ interface CommsRepository {
 
     val dynamicDataRobotFlow: SharedFlow<RobotDynamicData>
 
-    val robotLocalConfigFlow: SharedFlow<RobotLocalConfig>
+    val robotLocalConfigFlow: SharedFlow<RobotLocalConfig?>
 
     val connectionStateFlow: StateFlow<ConnectionStatus>
 
@@ -36,22 +37,21 @@ interface CommsRepository {
 
     fun sendCommand(commandCode: Short)
 
-    fun getConnectedClients(): List<String>?
+    fun getConnectedClient(): String?
+
+    fun getLocalIp(): String
 }
 
 class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val context: Context) :
     CommsRepository {
-
 
     private val serverSocket = ServerTcp()
 
     private val _dynamicDataRobotFlow = MutableSharedFlow<RobotDynamicData>()
     override val dynamicDataRobotFlow: SharedFlow<RobotDynamicData> = _dynamicDataRobotFlow
 
-    private val _robotLocalConfigFlow = MutableStateFlow<RobotLocalConfig>(RobotLocalConfig(0f,0f,0f,0f,0f))
-    override val robotLocalConfigFlow: StateFlow<RobotLocalConfig> = _robotLocalConfigFlow
-
-
+    private val _robotLocalConfigFlow = MutableStateFlow<RobotLocalConfig?>(null)
+    override val robotLocalConfigFlow: StateFlow<RobotLocalConfig?> = _robotLocalConfigFlow
 
     private val _connectionStateFlow = MutableStateFlow(ConnectionStatus.INIT)
     override val connectionStateFlow: StateFlow<ConnectionStatus> = _connectionStateFlow
@@ -62,7 +62,6 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
         commsHandler()
     }
 
-    private var contador = 0
     private fun commsHandler() {
         val bufferSize = 2048
         val byteBuffer = ByteBuffer.allocate(bufferSize)
@@ -78,8 +77,8 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
                     val headerBytes = ByteArray(2)
                     byteBuffer.get(headerBytes)
 
-                    val byte0 = headerBytes.get(0).toInt() and 0xFF
-                    val byte1 = headerBytes.get(1).toInt() and 0xFF
+                    val byte0 = headerBytes[0].toInt() and 0xFF
+                    val byte1 = headerBytes[1].toInt() and 0xFF
                     val headerPackage = ((byte1 shl 8) or byte0)        // shl es analogo a '<<' en C
 
                     when (headerPackage) {
@@ -87,12 +86,10 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
                             val dynamicData = ByteArray(ROBOT_DYNAMIC_DATA_SIZE)
                             byteBuffer.get(dynamicData)
                             _dynamicDataRobotFlow.emit(dynamicData.toByteBuffer().asRobotDynamicData)
-//                            contador++
-//                            Log.d(TAG,"paquetes recibidos: $contador")
                         }
 
                         HEADER_PACKAGE_LOCAL_CONFIG -> {
-                            val localConfig = ByteArray(10)                 // TODO: Eliminar hardcode
+                            val localConfig = ByteArray(ROBOT_LOCAL_CONFIG_SIZE)
                             byteBuffer.get(localConfig)
                             _robotLocalConfigFlow.emit(localConfig.toByteBuffer().asRobotLocalConfig)
                         }
@@ -149,8 +146,12 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
 
         serverSocket.sendData(buffer.array())
     }
-    override fun getConnectedClients(): List<String>? {
+    override fun getConnectedClient(): String? {
         return serverSocket.clientsIp
+    }
+
+    override fun getLocalIp(): String {
+        return serverSocket.localIp
     }
 
     companion object {

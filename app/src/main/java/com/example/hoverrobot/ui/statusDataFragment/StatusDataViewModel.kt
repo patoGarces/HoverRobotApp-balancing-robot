@@ -32,6 +32,9 @@ class StatusDataViewModel @Inject constructor(
     private var _connectionStatus = MutableLiveData<ConnectionStatus>()
     val connectionStatus : LiveData<ConnectionStatus> = _connectionStatus
 
+    private var _localIp = MutableLiveData<String>()
+    val localIp : LiveData<String> = _localIp
+
     init{
         _gralStatus.postValue(StatusEnumGral.UNKNOWN.ordinal)
         _escsTemp.postValue(0F)
@@ -42,7 +45,6 @@ class StatusDataViewModel @Inject constructor(
             commsRepository.dynamicDataRobotFlow.collect {
 //                _escsTemp.postValue(it.tempEsc.toFloat() / 10)                                    // TODO: recibir datos de bateria y temp
                 _imuTemp.postValue(it.tempImu)
-//                _batteryTemp.postValue(it.batTemp.toFloat() / 10)
                 _gralStatus.postValue(it.statusCode)
 
             }
@@ -51,6 +53,8 @@ class StatusDataViewModel @Inject constructor(
         ioScope.launch {
             commsRepository.connectionStateFlow.collect {
                 _connectionStatus.postValue(it)
+
+                _localIp.postValue(commsRepository.getLocalIp())    // TODO: mover de aca, solo provisorio.
             }
         }
     }

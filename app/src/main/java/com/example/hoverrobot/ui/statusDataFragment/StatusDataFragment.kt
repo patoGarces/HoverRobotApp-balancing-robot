@@ -86,6 +86,10 @@ class StatusDataFragment : Fragment() {
             }
         }
 
+        statusDataViewModel.localIp.observe(viewLifecycleOwner) {
+            binding.tvLocalIp.text = getString(R.string.placeholder_local_ip,it)
+        }
+
         statusDataViewModel.batteryStatus.observe(viewLifecycleOwner) {
 //            binding.tvBatteryTemp.text = getString(R.string.placeholder_temp).format(it.batTemp)
 //            ToolBox.changeStrokeColor(

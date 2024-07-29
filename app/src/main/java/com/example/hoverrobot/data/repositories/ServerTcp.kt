@@ -4,7 +4,6 @@ import android.util.Log
 import com.example.hoverrobot.data.utils.ByteArraysUtils.toByteBuffer
 import com.example.hoverrobot.data.utils.ConnectionStatus
 import com.example.hoverrobot.data.utils.ToolBox.Companion.ioScope
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -15,9 +14,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.InputStream
 import java.io.OutputStream
+import java.net.InetAddress
+import java.net.NetworkInterface
 import java.net.ServerSocket
 import java.net.Socket
+import java.net.SocketException
 import java.nio.ByteBuffer
+import java.util.Collections
+import java.util.Locale
 
 
 class ServerTcp {
@@ -34,54 +38,46 @@ class ServerTcp {
 
     private val port = 8080
 
-    private var contPackets: Long = 0
+    private lateinit var socket: Socket
 
     var localIp = ""
         internal set
 
-    var clientsIp: MutableList<String>? = null
+    var clientsIp: String? = null
         internal set
 
-    var paquetsPerSecond: Long = 0
+    var paquetsPerSecond: Int = 0
         internal set
 
-    private lateinit var socket: Socket
+    private var contPackets = 0
+    private var contFailReception = 0
 
     init {
         setNewConnectStatus(ConnectionStatus.INIT)
-
         tcpSocket = ServerSocket(port)
+        socketHandler()
+    }
 
-        CoroutineScope(Dispatchers.Default).launch {
-            while (true) {
-                paquetsPerSecond = contPackets
-                contPackets = 0
-                delay(1000)
-            }
-        }
+    private fun socketHandler() {
         ioScope.launch {
             while (true) {
-                Log.d(TAG, "Server started, waiting clients")
-                setNewConnectStatus(ConnectionStatus.DISCOVERING)
+                localIp = getIPAddress()
+                Log.d(TAG, "Server started, local IP: $localIp, port: $port")
+                setNewConnectStatus(ConnectionStatus.WAITING)
                 socket = tcpSocket.accept()
 
                 val remoteIp = socket.inetAddress
                 remoteIp.hostAddress?.let { clientIp ->
-                    clientsIp?.add(clientIp)
+                    clientsIp = clientIp
                     Log.d(TAG, "remote ip: $clientIp, name: ${remoteIp.hostName}")
                 }
 
-                localIp = socket.localAddress.hostAddress
-                Log.d(TAG, "local ip: $localIp, name ${socket.localAddress.hostName}")
+                ioScope.launch { socketAlive() }
 
                 setNewConnectStatus(ConnectionStatus.CONNECTED)
 
-                val input: InputStream = socket.getInputStream()
+                if (!socket.isClosed) socket.getInputStream().handleReception()
 
-                input.handleReception()
-
-                Log.e(TAG, "Error close socket and input")
-                input.close()
                 socket.close()
             }
         }
@@ -92,12 +88,13 @@ class ServerTcp {
         var bytesRead: Int
 
         while (true) {
-            bytesRead = withContext(Dispatchers.IO) {
-                read(buffer)
+            try {
+                bytesRead = withContext(Dispatchers.IO) {
+                    read(buffer)
+                }
             }
-
-            if (bytesRead == -1) {
-                Log.e(TAG, "Error bytesRead")
+            catch (e: SocketException) {
+                Log.e(TAG, "Error socket: $e")
                 break
             }
 
@@ -105,8 +102,30 @@ class ServerTcp {
                 contPackets++
                 val receivedData = buffer.copyOf(bytesRead)
                 _receivedDataFlow.emit(receivedData.toByteBuffer())
-//                Log.d(TAG, "Received len: $bytesRead, paquet: ${receivedData.contentToString()}")
             }
+            else if(bytesRead < 0) {
+                Log.e(TAG, "Error bytesRead")
+                break
+            }
+        }
+    }
+
+    private suspend fun socketAlive() {
+        while (socket.isConnected) {
+            if (contPackets != 0) {
+                paquetsPerSecond = contPackets
+                contPackets = 0
+            }
+            else {
+                contFailReception++
+                if(contFailReception > 3) {
+                    Log.e(TAG,"Force close socket because contFailReception")
+                    contFailReception = 0
+                    socket.close()
+                    break
+                }
+            }
+            delay(1000)
         }
     }
 
@@ -116,20 +135,46 @@ class ServerTcp {
         }
     }
 
+    private fun getIPAddress(useIPv4: Boolean = true): String {
+        try {
+            val interfaces: List<NetworkInterface> =
+                Collections.list(NetworkInterface.getNetworkInterfaces())
+            for (intf in interfaces) {
+                val addrs: List<InetAddress> = Collections.list(intf.inetAddresses)
+                for (addr in addrs) {
+                    if (!addr.isLoopbackAddress) {
+                        val sAddr = addr.hostAddress
+                        //boolean isIPv4 = InetAddressUtils.isIPv4Address(sAddr);
+                        val isIPv4 = sAddr.indexOf(':') < 0
+                        if (useIPv4) {
+                            if (isIPv4) return sAddr
+                        } else {
+                            if (!isIPv4) {
+                                val delim = sAddr.indexOf('%') // drop ip6 zone suffix
+                                return if (delim < 0) sAddr.uppercase(Locale.getDefault()) else sAddr.substring(
+                                    0,
+                                    delim
+                                ).uppercase(
+                                    Locale.getDefault()
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG,"Error getting IP: $e")
+        }
+        return ""
+    }
 
     fun sendData(data: ByteArray) {
-        Log.d(TAG, "Data a enviar: ${String(data)}")
-
         ioScope.launch {
             socket.let {
                 val outputStream: OutputStream = socket.getOutputStream()
-
-                // Enviar datos al cliente
                 outputStream.write(data)
                 outputStream.flush()
-
             }
         }
     }
-
 }

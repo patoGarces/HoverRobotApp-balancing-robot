@@ -31,7 +31,9 @@ class AnalisisViewModel @Inject constructor(
 
         ioScope.launch {
             commsRepository.robotLocalConfigFlow.collect {
-                _newRobotConfig.postValue(it)
+                it?.let {
+                    _newRobotConfig.postValue(it)
+                }
             }
         }
     }
