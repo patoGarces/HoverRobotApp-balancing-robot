@@ -21,7 +21,8 @@ class ToolBox {
         }
 
         fun Float.toPercentLevel(): Int {
-            return (((this/10) - MIN_VOLTAGE_PER_CELL_BATTERY) * 100 / (MAX_VOLTAGE_PER_CELL_BATTERY-MIN_VOLTAGE_PER_CELL_BATTERY)).toInt()
+            return if (this == 0f) 0
+            else (((this/10) - MIN_VOLTAGE_PER_CELL_BATTERY) * 100 / (MAX_VOLTAGE_PER_CELL_BATTERY-MIN_VOLTAGE_PER_CELL_BATTERY)).toInt()
         }
     }
 }

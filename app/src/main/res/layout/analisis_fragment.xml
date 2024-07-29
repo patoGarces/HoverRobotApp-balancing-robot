@@ -31,27 +31,6 @@
             app:layout_constraintBottom_toBottomOf="parent">
 
                 <TextView
-                    android:id="@+id/tv_param_kp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="8dp"
-                    tools:text="kp: 3.0"
-                    />
-                <TextView
-                    android:id="@+id/tv_param_ki"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="8dp"
-                    tools:text="ki: 3.0"
-                    />
-                <TextView
-                    android:id="@+id/tv_param_kd"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="8dp"
-                    tools:text="kd: 3.0"
-                    />
-                <TextView
                     android:id="@+id/tv_param_center"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

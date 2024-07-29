@@ -33,6 +33,33 @@
             />
 
         <TextView
+            android:id="@+id/tv_stream_fps"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="@string/placeholder_fps"
+            android:layout_marginStart="4dp"
+            style="@style/styleTvStatusBar"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/ib_stream"
+            tools:text = "17.1 fps"
+            />
+
+        <ImageButton
+            android:id="@+id/ib_stream"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:src="@drawable/ic_stream"
+            android:layout_marginStart="16dp"
+            android:background="@color/transparent"
+            android:adjustViewBounds="true"
+            android:scaleType="fitCenter"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            />
+
+        <TextView
             android:id="@+id/tv_battery_percent"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
@@ -72,52 +99,13 @@
             />
 
         <View
-            android:id="@+id/divider2"
-            android:layout_width="1dp"
-            android:layout_height="match_parent"
-            android:background="@color/red_80_percent"
-            android:layout_marginHorizontal="8dp"
-            android:layout_marginVertical="8dp"
-            app:layout_constraintEnd_toStartOf="@id/tv_battery_voltage"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            />
-
-        <TextView
-            android:id="@+id/tv_stream_fps"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:text="@string/placeholder_fps"
-            android:layout_marginEnd="8dp"
-            style="@style/styleTvStatusBar"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/divider2"
-            tools:text = "17.1 fps"
-            />
-
-        <ImageButton
-            android:id="@+id/ib_stream"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:src="@drawable/ic_stream"
-            android:layout_marginEnd="4dp"
-            android:background="@color/transparent"
-            android:adjustViewBounds="true"
-            android:scaleType="fitCenter"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/tv_stream_fps"
-            />
-
-        <View
             android:id="@+id/divider3"
             android:layout_width="1dp"
             android:layout_height="match_parent"
             android:background="@color/red_80_percent"
             android:layout_marginHorizontal="8dp"
             android:layout_marginVertical="8dp"
-            app:layout_constraintEnd_toStartOf="@id/ib_stream"
+            app:layout_constraintEnd_toStartOf="@id/tv_battery_voltage"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             />

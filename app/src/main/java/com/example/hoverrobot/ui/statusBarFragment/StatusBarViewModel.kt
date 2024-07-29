@@ -42,7 +42,7 @@ class StatusBarViewModel @Inject constructor(
         _statusRobot.postValue(null)
 
         ioScope.launch {
-            commsRepository.dynamicDataRobotFlow.collect {                          // TODO: recibir datos de bateria
+            commsRepository.dynamicDataRobotFlow.collect {
                 _battery.postValue(
                     Battery(
                         it.batVoltage.toPercentLevel(),

@@ -32,5 +32,4 @@ val ByteBuffer.asRobotDynamicData: RobotDynamicData
         this.short.toInt()
     )
 
-
 const val ROBOT_DYNAMIC_DATA_SIZE = 20
