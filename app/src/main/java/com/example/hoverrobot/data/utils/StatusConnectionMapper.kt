@@ -5,14 +5,13 @@ import com.example.hoverrobot.R
 object StatusMapperBT {
     private val mapStatusString = mapOf(
         ConnectionStatus.INIT to "Iniciando",
-        ConnectionStatus.WAITING to "Esp. conexion",
+        ConnectionStatus.WAITING to "Esperando conexion",
         ConnectionStatus.CONNECTED to "Conectado",
         ConnectionStatus.ERROR to "Reintentar"
     )
 
     private val mapStatusColor = mapOf(
         ConnectionStatus.INIT to R.color.status_orange,
-
         ConnectionStatus.WAITING to R.color.status_turquesa,
         ConnectionStatus.CONNECTED to R.color.status_blue,
         ConnectionStatus.ERROR to R.color.status_red

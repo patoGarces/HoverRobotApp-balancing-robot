@@ -3,9 +3,8 @@ package com.example.hoverrobot.ui.settingsFragment
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.hoverrobot.data.models.comms.CommandsToRobot.CALIBRATE_IMU
+import com.example.hoverrobot.data.models.comms.CommandsRobot
 import com.example.hoverrobot.data.models.comms.PidSettings
-import com.example.hoverrobot.data.models.comms.PidTarget
 import com.example.hoverrobot.data.models.comms.RobotLocalConfig
 import com.example.hoverrobot.data.repositories.CommsRepository
 import com.example.hoverrobot.data.utils.ConnectionStatus
@@ -19,34 +18,34 @@ class SettingsFragmentViewModel @Inject constructor(
     private val commsRepository: CommsRepository
 ): ViewModel(){
 
-    private var _pidSettingFromRobot: MutableLiveData<RobotLocalConfig?> = MutableLiveData()
-    val pidSettingFromRobot : LiveData<RobotLocalConfig?> get() = _pidSettingFromRobot
+    private var _localConfigFromRobot: MutableLiveData<RobotLocalConfig?> = MutableLiveData()
+    val localConfigFromRobot : LiveData<RobotLocalConfig?> get() = _localConfigFromRobot
 
     init {
-        _pidSettingFromRobot.value = null
+        _localConfigFromRobot.value = null
 
         ioScope.launch {
             commsRepository.robotLocalConfigFlow.collect {
                 it.let {
-                    _pidSettingFromRobot.postValue(it)
+                    _localConfigFromRobot.postValue(it)
                 }
             }
         }
     }
 
-    fun setPidTunningToRobot(newTunning : PidSettings){
-        if (commsRepository.connectionStateFlow.value == ConnectionStatus.CONNECTED) {
+    fun sendNewPidTunning(newTunning : PidSettings): Boolean {
+        return if (commsRepository.connectionStateFlow.value == ConnectionStatus.CONNECTED) {
             commsRepository.sendPidParams(newTunning)
+            true
         }
+        else false
     }
 
-    fun sendCalibrateImu(){
-        if (commsRepository.connectionStateFlow.value == ConnectionStatus.CONNECTED) {
-            commsRepository.sendCommand(CALIBRATE_IMU.ordinal.toShort())
+    fun sendCommand(command: CommandsRobot): Boolean {
+        return if (commsRepository.connectionStateFlow.value == ConnectionStatus.CONNECTED) {
+            commsRepository.sendCommand(command)
+            true
         }
-    }
-
-    fun getDeviceConnectedMAC(): String? {
-        return commsRepository.getConnectedClient()
+        else false
     }
 }

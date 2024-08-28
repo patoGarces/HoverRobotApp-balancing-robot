@@ -25,10 +25,5 @@ val ByteBuffer.asRobotLocalConfig: RobotLocalConfig
     }
 
 
-enum class PidTarget {
-    PID_ANGLE,
-    PID_POS,
-    PID_SPEED
-}
-const val CANT_PIDS = 3                     // OJO: en sync con el firmware
-const val ROBOT_LOCAL_CONFIG_SIZE = 22
+const val CANT_PIDS = 4                     // OJO: en sync con el firmware
+const val ROBOT_LOCAL_CONFIG_SIZE = 28//22

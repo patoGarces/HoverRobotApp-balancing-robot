@@ -3,7 +3,8 @@ package com.example.hoverrobot.ui.controlFragment
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.hoverrobot.data.models.comms.AxisControl
+import com.example.hoverrobot.data.models.comms.CommandsRobot
+import com.example.hoverrobot.data.models.comms.DirectionControl
 import com.example.hoverrobot.data.models.comms.RobotDynamicData
 import com.example.hoverrobot.data.repositories.CommsRepository
 import com.example.hoverrobot.data.utils.ConnectionStatus
@@ -41,9 +42,17 @@ class ControlViewModel @Inject constructor(
             }
         }
     }
-    fun newCoordinatesJoystick(newAxisControl: AxisControl){
+    fun newCoordinatesJoystick(newDirectionControl: DirectionControl){
         if (commsRepository.connectionStateFlow.value == ConnectionStatus.CONNECTED) {
-            commsRepository.sendJoystickUpdate(newAxisControl)
+            commsRepository.sendDirectionControl(newDirectionControl)
+        }
+    }
+
+    fun sendMoveCommand(distanceInMts: Float, isBackward: Boolean = false) {
+        val command = if(isBackward) CommandsRobot.COMMAND_MOVE_BACKWARD else CommandsRobot.COMMAND_MOVE_FORWARD
+
+        if (commsRepository.connectionStateFlow.value == ConnectionStatus.CONNECTED) {
+            commsRepository.sendCommand(command, distanceInMts)
         }
     }
 }
