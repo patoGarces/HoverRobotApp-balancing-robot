@@ -1,6 +1,5 @@
 package com.example.hoverrobot.ui.settingsFragment
 
-import android.app.LocaleConfig
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -10,52 +9,35 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.core.view.isVisible
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import com.example.hoverrobot.data.models.comms.PidSettings
 import com.example.hoverrobot.R
-import com.example.hoverrobot.data.models.comms.PidTarget
+import com.example.hoverrobot.data.models.comms.CommandsRobot
 import com.example.hoverrobot.data.models.comms.RobotLocalConfig
-import com.example.hoverrobot.dataStore
 import com.example.hoverrobot.databinding.SettingsFragmentBinding
 import com.google.android.material.slider.Slider
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import java.lang.Math.round
-import kotlin.math.truncate
 
 
 class SettingsFragment : Fragment() {
 
-    private var lastPidSettings : RobotLocalConfig? = null
+    private lateinit var _binding: SettingsFragmentBinding
+    private val binding get() = _binding
 
-    private lateinit var _binding : SettingsFragmentBinding
-    private val binding get()= _binding
+    private val settingsFragmentViewModel: SettingsFragmentViewModel by activityViewModels()
 
-    private val settingsFragmentViewModel : SettingsFragmentViewModel by activityViewModels()
-
+    private var indexPidTarget = 0
     private var kpValue: Float = 0f
     private var kiValue: Float = 0f
     private var kdValue: Float = 0f
     private var centerValue: Float = 0f
     private var safetyLimitsValue: Float = 10f
 
-    private var actualValueSaved: PidSettings? = null
-
-    private var selectedBankMemory: Int = 0
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = SettingsFragmentBinding.inflate(inflater,container,false)
+        _binding = SettingsFragmentBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -65,33 +47,31 @@ class SettingsFragment : Fragment() {
         setupSpinner()
         setupListener()
         setupObserver()
-        lifecycleScope.launch(Dispatchers.IO) {
-            getParametersFromStore()
-        }
     }
 
     private fun setupSpinner() {
-        binding.spBankMemory.adapter = ArrayAdapter(
+        binding.spTargetPid.adapter = ArrayAdapter(
             requireContext(),
             android.R.layout.simple_spinner_dropdown_item,
             resources.getStringArray(R.array.sp_memory_items)
         )
 
-        binding.spBankMemory.onItemSelectedListener = object :
+        binding.spTargetPid.onItemSelectedListener = object :
             AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>,
-                                        view: View, position: Int, id: Long) {
-                selectedBankMemory = position
-                lifecycleScope.launch { getParametersFromStore() }
+            override fun onItemSelected(
+                parent: AdapterView<*>,
+                view: View, position: Int, id: Long
+            ) {
+                indexPidTarget = position
+                Log.d("pidYaw","index: $position")
+                loadSpinnersConfig()
             }
 
-            override fun onNothingSelected(parent: AdapterView<*>) {
-                // write code to perform some action
-            }
+            override fun onNothingSelected(parent: AdapterView<*>) {}
         }
     }
 
-    private fun setupListener(){
+    private fun setupListener() {
 
         binding.sbPidP.addOnChangeListener { _, progressP, _ ->
             kpValue = progressP
@@ -99,7 +79,7 @@ class SettingsFragment : Fragment() {
         }
 
         binding.sbPidP.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
-            override fun onStartTrackingTouch(slider: Slider) { }
+            override fun onStartTrackingTouch(slider: Slider) {}
             override fun onStopTrackingTouch(slider: Slider) {
                 sendNewSetting()
             }
@@ -111,7 +91,7 @@ class SettingsFragment : Fragment() {
         }
 
         binding.sbPidI.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
-            override fun onStartTrackingTouch(slider: Slider) { }
+            override fun onStartTrackingTouch(slider: Slider) {}
             override fun onStopTrackingTouch(slider: Slider) {
                 sendNewSetting()
             }
@@ -123,7 +103,7 @@ class SettingsFragment : Fragment() {
         }
 
         binding.sbPidD.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
-            override fun onStartTrackingTouch(slider: Slider) { }
+            override fun onStartTrackingTouch(slider: Slider) {}
             override fun onStopTrackingTouch(slider: Slider) {
                 sendNewSetting()
             }
@@ -135,7 +115,7 @@ class SettingsFragment : Fragment() {
         }
 
         binding.sbCenterAngle.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
-            override fun onStartTrackingTouch(slider: Slider) { }
+            override fun onStartTrackingTouch(slider: Slider) {}
             override fun onStopTrackingTouch(slider: Slider) {
                 sendNewSetting()
             }
@@ -147,140 +127,91 @@ class SettingsFragment : Fragment() {
         }
 
         binding.sbSafetyLimits.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
-            override fun onStartTrackingTouch(slider: Slider) { }
+            override fun onStartTrackingTouch(slider: Slider) {}
             override fun onStopTrackingTouch(slider: Slider) {
                 sendNewSetting()
             }
         })
 
-        binding.btnSavePid.setOnClickListener {
-            Toast.makeText(requireContext(),"Guardando parametros",Toast.LENGTH_LONG).show()
-            runBlocking {
-                saveParameters(
-                    PidSettings(
-                        kpValue,
-                        kiValue,
-                        kdValue,
-                        centerValue,
-                        safetyLimitsValue
-                    )
-                )
-            }
-            sendNewSetting()
-        }
-
-        binding.btnGetPid.setOnClickListener {
-            Toast.makeText(requireContext(),"Obteniendo parametros",Toast.LENGTH_LONG).show()
-            runBlocking {
-                getParametersFromStore()
-            }
-            sendNewSetting()
-        }
-
         binding.btnSyncPid.setOnClickListener {
-            Toast.makeText(requireContext(),"Sincronizando parametros",Toast.LENGTH_LONG).show()
+            Toast.makeText(requireContext(), "Sincronizando parametros", Toast.LENGTH_LONG).show()
+            sendNewSetting()
+        }
+
+        binding.btnSavePid.setOnClickListener {
+            saveLocalSettings()
+        }
+
+        binding.btnResetPid.setOnClickListener {
+            loadSpinnersConfig()
             sendNewSetting()
         }
 
         binding.btnCalibrateImu.setOnClickListener {
-            settingsFragmentViewModel.sendCalibrateImu()            // TODO: crear dialog,esperar callback de confirmacion
+            settingsFragmentViewModel.sendCommand(CommandsRobot.CALIBRATE_IMU)
         }
     }
+
+    private fun setupObserver() {
+        settingsFragmentViewModel.localConfigFromRobot.observe(viewLifecycleOwner) {
+            it?.updateSpinners()
+        }
+    }
+
+    private fun loadSpinnersConfig() {
+        settingsFragmentViewModel.localConfigFromRobot.value?.updateSpinners()
+    }
+
+    private fun RobotLocalConfig.updateSpinners() {
+        kpValue = this.pids[indexPidTarget].kp
+        binding.sbPidP.inRange(kpValue)
+        kiValue = this.pids[indexPidTarget].ki
+        binding.sbPidI.inRange(kiValue)
+        kdValue = this.pids[indexPidTarget].kd
+        binding.sbPidD.inRange(kdValue)
+        centerValue = this.centerAngle
+        binding.sbCenterAngle.inRange(centerValue)
+        safetyLimitsValue = this.safetyLimits
+        binding.sbSafetyLimits.inRange(safetyLimitsValue)
+        binding.btnSavePid.isEnabled = false
+        binding.btnResetPid.isVisible = false
+    }
+
+    private fun saveLocalSettings() {
+        sendNewSetting()
+        val isSend = settingsFragmentViewModel.sendCommand(CommandsRobot.SAVE_PARAMS_SETTINGS)
+        binding.btnSavePid.isEnabled = !isSend
+        binding.btnResetPid.isVisible = !isSend
+    }
+
 
     private fun sendNewSetting() {
-        val newSetting = PidSettings(kpValue,kiValue,kdValue,centerValue,safetyLimitsValue)
-        settingsFragmentViewModel.setPidTunningToRobot(newSetting)
-//        binding.btnSyncPid.isEnabled = false
-//        binding.pbSyncLoading.isVisible = true
-        binding.btnSavePid.isEnabled = newSetting != actualValueSaved
-        binding.btnGetPid.isEnabled = newSetting != actualValueSaved
-        lastPidSettings = null
-    }
-
-    private fun setupObserver(){
-        settingsFragmentViewModel.pidSettingFromRobot.observe(viewLifecycleOwner) {
-            it?.let {
-                if (it != lastPidSettings) {
-                    binding.sbPidP.inRange(it.pids[PidTarget.PID_ANGLE.ordinal].kp)             // TODO: manejar los distintos PID PARAMS
-                    binding.sbPidI.inRange(it.pids[PidTarget.PID_ANGLE.ordinal].ki)
-                    binding.sbPidD.inRange(it.pids[PidTarget.PID_ANGLE.ordinal].kd)
-                    binding.sbCenterAngle.inRange(it.centerAngle)
-                    binding.sbSafetyLimits.inRange(it.safetyLimits)
-                    lastPidSettings = settingsFragmentViewModel.pidSettingFromRobot.value
-                    binding.btnSyncPid.isEnabled = true
-                    binding.pbSyncLoading.isVisible = false
-                }
-            }
-        }
-    }
-
-    private suspend fun saveParameters(pidSettings: PidSettings) {
-        Log.d("SettingsFragment", KEY_PID_PARAM_CENTER.getDeviceParams)
-        context?.dataStore?.edit { settingsKey ->
-            settingsKey[floatPreferencesKey(KEY_PID_PARAM_P.getDeviceParams)] = pidSettings.kp
-            settingsKey[floatPreferencesKey(KEY_PID_PARAM_I.getDeviceParams)] = pidSettings.ki
-            settingsKey[floatPreferencesKey(KEY_PID_PARAM_D.getDeviceParams)] = pidSettings.kd
-            settingsKey[floatPreferencesKey(KEY_PID_PARAM_CENTER.getDeviceParams)] = pidSettings.centerAngle
-            settingsKey[floatPreferencesKey(KEY_PID_PARAM_SAFETY_LIM.getDeviceParams)] = pidSettings.safetyLimits
-        }
-        actualValueSaved = pidSettings
-    }
-
-    private suspend fun getParametersFromStore() {
-        with(context?.dataStore?.data) {
-            val paramP = this?.map { it[floatPreferencesKey(KEY_PID_PARAM_P.getDeviceParams)] }?.first()
-            val paramI = this?.map { it[floatPreferencesKey(KEY_PID_PARAM_I.getDeviceParams)] }?.first()
-            val paramD = this?.map { it[floatPreferencesKey(KEY_PID_PARAM_D.getDeviceParams)] }?.first()
-            val paramCenter = this?.map { it[floatPreferencesKey(KEY_PID_PARAM_CENTER.getDeviceParams)] }?.first()
-            val safetyLimits =
-                this?.map { it[floatPreferencesKey(KEY_PID_PARAM_SAFETY_LIM.getDeviceParams)] }?.first()
-
-            paramP?.let {
-                kpValue = it
-                binding.sbPidP.inRange(it)
-            }
-            paramI?.let {
-                kiValue = it
-                binding.sbPidI.inRange(it)
-            }
-            paramD?.let {
-                kdValue = it
-                binding.sbPidD.inRange(it)
-            }
-            paramCenter?.let {
-                centerValue = it
-                binding.sbCenterAngle.inRange(it)
-            }
-            safetyLimits?.let {
-                safetyLimitsValue = it
-                binding.sbSafetyLimits.inRange(it)
-            }
-
-            actualValueSaved = PidSettings(
-                kpValue,
-                kiValue,
-                kdValue,
-                centerValue,
-                safetyLimitsValue
-            )
-            lifecycleScope.launch(Dispatchers.Main) {
-                binding.btnGetPid.isEnabled = false
-                binding.btnSavePid.isEnabled = false
-            }
+        val newSetting =
+            PidSettings(indexPidTarget, kpValue, kiValue, kdValue, centerValue, safetyLimitsValue)
+        val isSend = settingsFragmentViewModel.sendNewPidTunning(newSetting)
+        if (isSend) {
+            val isDiff = newSetting.isDiffWithLastLocalConfig()
+            binding.btnResetPid.isVisible = isDiff
+            binding.btnSavePid.isEnabled = isDiff
         }
     }
 
     private fun Slider.inRange(value: Float) {
         val safeValue = (value * 100).toInt() / 100.00
-        this.value = if( value in valueFrom..valueTo) { safeValue.toFloat() } else { valueTo }
+        this.value = if (value in valueFrom..valueTo) {
+            safeValue.toFloat()
+        } else {
+            valueTo
+        }
     }
 
-    private val String.getDeviceParams: String
-        get() = "${settingsFragmentViewModel.getDeviceConnectedMAC()}_BANK${selectedBankMemory}_${this}"
-}
+    private fun PidSettings.isDiffWithLastLocalConfig(): Boolean =
+        settingsFragmentViewModel.localConfigFromRobot.value?.let { localConfig ->
+            this.kp != localConfig.pids[this.indexPid].kp ||
+                    this.ki != localConfig.pids[this.indexPid].ki ||
+                    this.kd != localConfig.pids[this.indexPid].kd ||
+                    this.centerAngle != localConfig.centerAngle ||
+                    this.safetyLimits != localConfig.safetyLimits
+        } ?: true
 
-private const val KEY_PID_PARAM_P = "KEY_PID_P"
-private const val KEY_PID_PARAM_I = "KEY_PID_I"
-private const val KEY_PID_PARAM_D = "KEY_PID_D"
-private const val KEY_PID_PARAM_CENTER = "KEY_PID_CENTER"
-private const val KEY_PID_PARAM_SAFETY_LIM = "KEY_PID_SAFETY"
+}

@@ -2,8 +2,9 @@ package com.example.hoverrobot.data.repositories
 
 import android.content.Context
 import android.util.Log
+import com.example.hoverrobot.data.models.comms.CommandsRobot
 import com.example.hoverrobot.data.utils.ToolBox.Companion.ioScope
-import com.example.hoverrobot.data.models.comms.AxisControl
+import com.example.hoverrobot.data.models.comms.DirectionControl
 import com.example.hoverrobot.data.models.comms.PidSettings
 import com.example.hoverrobot.data.models.comms.ROBOT_DYNAMIC_DATA_SIZE
 import com.example.hoverrobot.data.models.comms.ROBOT_LOCAL_CONFIG_SIZE
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.nio.BufferUnderflowException
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import javax.inject.Inject
@@ -33,9 +35,9 @@ interface CommsRepository {
 
     fun sendPidParams(pidParams: PidSettings)
 
-    fun sendJoystickUpdate(axisControl: AxisControl)
+    fun sendDirectionControl(directionControl: DirectionControl)
 
-    fun sendCommand(commandCode: Short)
+    fun sendCommand(commandCode: CommandsRobot, value: Float = 0f)
 
     fun getConnectedClient(): String?
 
@@ -83,9 +85,14 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
 
                     when (headerPackage) {
                         HEADER_PACKAGE_STATUS -> {
-                            val dynamicData = ByteArray(ROBOT_DYNAMIC_DATA_SIZE)
-                            byteBuffer.get(dynamicData)
-                            _dynamicDataRobotFlow.emit(dynamicData.toByteBuffer().asRobotDynamicData)
+                            try {
+                                val dynamicData = ByteArray(ROBOT_DYNAMIC_DATA_SIZE)
+                                byteBuffer.get(dynamicData)
+                                _dynamicDataRobotFlow.emit(dynamicData.toByteBuffer().asRobotDynamicData)
+                            }
+                            catch (e: BufferUnderflowException) {
+                                Log.e(TAG,"error: $e")
+                            }
                         }
 
                         HEADER_PACKAGE_LOCAL_CONFIG -> {
@@ -106,6 +113,10 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
         ioScope.launch {
             serverSocket.connectionsStatus.collect {
                 _connectionStateFlow.emit(it)
+
+                if (it == ConnectionStatus.WAITING) {
+                    _robotLocalConfigFlow.emit(null)                                            // Para forzar el collect al reconectar
+                }
             }
         }
     }
@@ -113,6 +124,7 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
     override fun sendPidParams(pidParams: PidSettings) {
         val paramList = listOf(
             HEADER_PACKAGE_SETTINGS,
+            pidParams.indexPid.toShort(),
             (pidParams.kp * PRECISION_DECIMALS_COMMS).toInt().toShort(),
             (pidParams.ki * PRECISION_DECIMALS_COMMS).toInt().toShort(),
             (pidParams.kd * PRECISION_DECIMALS_COMMS).toInt().toShort(),
@@ -127,9 +139,9 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
         serverSocket.sendData(buffer.array())
     }
 
-    override fun sendJoystickUpdate(axisControl: AxisControl) {
+    override fun sendDirectionControl(directionControl: DirectionControl) {
         val paramList =
-            listOf(HEADER_PACKAGE_CONTROL.toShort(), axisControl.axisX, axisControl.axisY)
+            listOf(HEADER_PACKAGE_CONTROL.toShort(), directionControl.joyAxisX, directionControl.joyAxisY,directionControl.compassYaw)
         val buffer = ByteBuffer.allocate(paramList.size * 2)
         buffer.order(ByteOrder.LITTLE_ENDIAN)
         paramList.forEach { buffer.putShort(it) }
@@ -137,10 +149,16 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
         serverSocket.sendData(buffer.array())
     }
 
-    override fun sendCommand(commandCode: Short) {
+    override fun sendCommand(commandCode: CommandsRobot, value: Float) {
+
+        val valueCommand = value * PRECISION_DECIMALS_COMMS
         val paramList =
-            listOf(HEADER_PACKAGE_COMMAND.toShort(), commandCode)
-        val buffer = ByteBuffer.allocate(paramList.size * 4)
+            listOf(
+                HEADER_PACKAGE_COMMAND.toShort(),
+                commandCode.ordinal.toShort(),
+                valueCommand.toInt().toShort()
+            )
+        val buffer = ByteBuffer.allocate(paramList.size * 2)
         buffer.order(ByteOrder.LITTLE_ENDIAN)
         paramList.forEach { buffer.putShort(it) }
 

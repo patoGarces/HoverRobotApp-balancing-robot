@@ -82,6 +82,10 @@ dependencies {
 
     // Compass view
     implementation("com.github.kix2902:CompassView:master-SNAPSHOT")
+
+    // seekbar
+//    implementation("com.github.Triggertrap:SeekArc:v1.1")
+    implementation("com.github.marcinmoskala:ArcSeekBar:0.31")
 }
 
 kapt {

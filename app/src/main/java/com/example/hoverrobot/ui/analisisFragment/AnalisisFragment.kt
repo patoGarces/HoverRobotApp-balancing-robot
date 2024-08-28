@@ -38,7 +38,11 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
     private var entryAngleYaw: ArrayList<Entry> = ArrayList()
     private var entryMotorL: ArrayList<Entry> = ArrayList()
     private var entryMotorR: ArrayList<Entry> = ArrayList()
-    private var entrySetPoint: ArrayList<Entry> = ArrayList()
+    private var entrySetPointAngle: ArrayList<Entry> = ArrayList()
+    private var entrySetPointPos: ArrayList<Entry> = ArrayList()
+    private var entrySetPointYaw: ArrayList<Entry> = ArrayList()
+    private var entryOutputYaw: ArrayList<Entry> = ArrayList()
+    private var entryPosInMeters: ArrayList<Entry> = ArrayList()
 
     private var actualLimitScale = 90F
 
@@ -94,7 +98,9 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
             viewDataset = when (checkedId) {
                 R.id.rb_dataset_imu -> DatasetView.DATASET_IMU
                 R.id.rb_dataset_motor -> DatasetView.DATASET_MOTOR
-                R.id.rb_dataset_pid -> DatasetView.DATASET_PID
+                R.id.rb_dataset_pid_angle -> DatasetView.DATASET_PID_ANGLE
+                R.id.rb_dataset_pid_pos -> DatasetView.DATASET_PID_POS
+                R.id.rb_dataset_pid_yaw -> DatasetView.DATASET_PID_YAW
                 else -> DatasetView.DATASET_IMU
             }
         }
@@ -111,7 +117,11 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
             entryAngleYaw.clear()
             entryMotorL.clear()
             entryMotorR.clear()
-            entrySetPoint.clear()
+            entrySetPointAngle.clear()
+            entrySetPointPos.clear()
+            entrySetPointYaw.clear()
+            entryOutputYaw.clear()
+            entryPosInMeters.clear()
         }
 
         binding.btnGenerateDataset.setOnClickListener {
@@ -125,7 +135,11 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
                     pitchAngle = ((Math.random() - 0.5) * 180).toFloat(),
                     rollAngle = ((Math.random() - 0.5) * 180).toFloat(),
                     yawAngle = ((Math.random() - 0.5) * 180).toFloat(),
-                    setPoint = ((Math.random() - 0.5) * 180).toFloat(),
+                    posInMeters = ((Math.random() - 0.5) * 180).toFloat(),
+                    outputYawControl = ((Math.random() - 0.5) * 180).toFloat(),
+                    setPointAngle = ((Math.random() - 0.5) * 180).toFloat(),
+                    setPointPos = ((Math.random() - 0.5) * 180).toFloat(),
+                    setPointYaw = ((Math.random() - 0.5) * 180).toFloat(),
                     centerAngle = ((Math.random() - 0.5) * 180).toFloat(),
                     statusCode = 0,
                 )
@@ -201,7 +215,7 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
             }
 
             val lineDataAnglePitch =
-                LineDataSet(entryAnglePitch.takeLast(frameSize), "Pitch Angle").also {
+                LineDataSet(entryAnglePitch.takeLast(frameSize), getString(R.string.dataset_angle_pitch)).also {
                     it.lineWidth = 2.5f
                     it.circleRadius = 1f
                     it.color = requireContext().getColor(R.color.red_80_percent)
@@ -209,7 +223,7 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
                 }                                                                                           // Agrego nuevo dataset que es el conjunto de puntos relacionados entre si, con su label
 
             val lineDataAngleRoll =
-                LineDataSet(entryAngleRoll.takeLast(frameSize), "Roll Angle").also {
+                LineDataSet(entryAngleRoll.takeLast(frameSize), getString(R.string.dataset_angle_roll)).also {
                     it.lineWidth = 2.5f
                     it.circleRadius = 1f
                     it.color = requireContext().getColor(R.color.green_80_percent)
@@ -217,48 +231,85 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
                 }                                                                                           // Agrego nuevo dataset que es el conjunto de puntos relacionados entre si, con su label
 
             val lineDataAngleYaw =
-                LineDataSet(entryAngleYaw.takeLast(frameSize), "Yaw Angle").also {
+                LineDataSet(entryAngleYaw.takeLast(frameSize), getString(R.string.dataset_angle_yaw)).also {
                     it.lineWidth = 2.5f
                     it.circleRadius = 1f
                     it.color = requireContext().getColor(R.color.yellow_80_percent)
                     it.setCircleColor(it.color)
                 }                                                                                           // Agrego nuevo dataset que es el conjunto de puntos relacionados entre si, con su label
 
-            val lineDataMotorL = LineDataSet(entryMotorL.takeLast(frameSize), "Motor L x100").also {
+            val lineDataMotorL = LineDataSet(entryMotorL.takeLast(frameSize), getString(R.string.dataset_motor_l)).also {
                 it.lineWidth = 2.5f
                 it.circleRadius = 1f
                 it.color = requireContext().getColor(R.color.blue_80_percent)
                 it.setCircleColor(it.color)
             }
 
-            val lineDataMotorR = LineDataSet(entryMotorR.takeLast(frameSize), "Motor R x100").also {
+            val lineDataMotorR = LineDataSet(entryMotorR.takeLast(frameSize),  getString(R.string.dataset_motor_r)).also {
                 it.lineWidth = 2.5f
                 it.circleRadius = 1f
                 it.color = requireContext().getColor(R.color.red_80_percent)
                 it.setCircleColor(it.color)
             }
 
-            val lineDataSetPoint = LineDataSet(entrySetPoint.takeLast(frameSize), "setPoint").also {
+            val lineDataSetPointAngle = LineDataSet(entrySetPointAngle.takeLast(frameSize), getString(R.string.dataset_set_point_angle)).also {
                 it.lineWidth = 2.5f
                 it.circleRadius = 1f
                 it.color = requireContext().getColor(R.color.status_turquesa)
                 it.setCircleColor(it.color)
             }
+
+            val lineDataSetPointPos = LineDataSet(entrySetPointPos.takeLast(frameSize), getString(R.string.dataset_set_point_pos)).also {
+                it.lineWidth = 2.5f
+                it.circleRadius = 1f
+                it.color = requireContext().getColor(R.color.status_green)
+                it.setCircleColor(it.color)
+            }
+
+            val lineDataSetPointYaw = LineDataSet(entrySetPointYaw.takeLast(frameSize), getString(R.string.dataset_set_point_yaw)).also {
+                it.lineWidth = 2.5f
+                it.circleRadius = 1f
+                it.color = requireContext().getColor(R.color.status_turquesa)
+                it.setCircleColor(it.color)
+            }
+
+            val lineDataSetOutputYaw = LineDataSet(entryOutputYaw.takeLast(frameSize), getString(R.string.dataset_output_yaw)).also {
+                it.lineWidth = 2.5f
+                it.circleRadius = 1f
+                it.color = requireContext().getColor(R.color.red_80_percent)
+                it.setCircleColor(it.color)
+            }
+
+            val lineDataSetPosInMeteers = LineDataSet(entryPosInMeters.takeLast(frameSize), getString(R.string.dataset_position_meters)).also {
+                it.lineWidth = 2.5f
+                it.circleRadius = 1f
+                it.color = requireContext().getColor(R.color.red_80_percent)
+                it.setCircleColor(it.color)
+            }
+
             val actualTimeInSec = ((System.currentTimeMillis() - initTimeStamp).toFloat()) / 1000
             entryAnglePitch.add(Entry(actualTimeInSec, newFrame.pitchAngle))
             entryAngleRoll.add(Entry(actualTimeInSec, newFrame.rollAngle))
             entryAngleYaw.add(Entry(actualTimeInSec, newFrame.yawAngle))
-            entryMotorL.add(Entry(actualTimeInSec, newFrame.speedL.toFloat() / 100))
-            entryMotorR.add(Entry(actualTimeInSec, newFrame.speedR.toFloat() / 100))
-            entrySetPoint.add(Entry(actualTimeInSec, newFrame.setPoint))
+            entryMotorL.add(Entry(actualTimeInSec, newFrame.speedL.toFloat()))
+            entryMotorR.add(Entry(actualTimeInSec, newFrame.speedR.toFloat()))
+            entrySetPointAngle.add(Entry(actualTimeInSec, newFrame.setPointAngle))
+            entrySetPointPos.add(Entry(actualTimeInSec, newFrame.setPointPos))
+            entrySetPointYaw.add(Entry(actualTimeInSec, newFrame.setPointYaw))
+            entryPosInMeters.add(Entry(actualTimeInSec, newFrame.posInMeters))
+            entryOutputYaw.add(Entry(actualTimeInSec, newFrame.outputYawControl))
 
-            if (entrySetPoint.size >= frameSize) {
+            if (entrySetPointAngle.size >= frameSize) {
                 entryAnglePitch.removeFirst()
                 entryAngleRoll.removeFirst()
                 entryAngleYaw.removeFirst()
                 entryMotorL.removeFirst()
                 entryMotorR.removeFirst()
-                entrySetPoint.removeFirst()
+                entrySetPointAngle.removeFirst()
+                entrySetPointPos.removeFirst()
+                entrySetPointYaw.removeFirst()
+                entryPosInMeters.removeFirst()
+                entryOutputYaw.removeFirst()
             }
 
             dataSet = when (viewDataset) {
@@ -281,14 +332,34 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
                     LineData(arrayMotorDataset)
                 }
 
-                DatasetView.DATASET_PID -> {
-                    setPidMode(newFrame)
+                DatasetView.DATASET_PID_ANGLE -> {
+                    setPidAngleMode(newFrame)
+                    val arrayPidDatasetAngle = ArrayList<ILineDataSet>()
+                    arrayPidDatasetAngle.clear()
+                    arrayPidDatasetAngle.add(lineDataSetPointAngle)
+                    arrayPidDatasetAngle.add(lineDataAnglePitch)
+                    arrayPidDatasetAngle.add(lineDataAngleRoll)
+                    arrayPidDatasetAngle.add(lineDataMotorL)
+                    LineData(arrayPidDatasetAngle)
+                }
+
+                DatasetView.DATASET_PID_POS -> {
+                    setPidPosMode()
+                    val arrayPidDatasetPos = ArrayList<ILineDataSet>()
+                    arrayPidDatasetPos.clear()
+                    arrayPidDatasetPos.add(lineDataSetPointPos)
+                    arrayPidDatasetPos.add(lineDataSetPosInMeteers)
+                    arrayPidDatasetPos.add(lineDataSetPointAngle)
+                    LineData(arrayPidDatasetPos)
+                }
+
+                DatasetView.DATASET_PID_YAW -> {
+                    setPidYawMode()
                     val arrayPidDataset = ArrayList<ILineDataSet>()
                     arrayPidDataset.clear()
-                    arrayPidDataset.add(lineDataSetPoint)
-                    arrayPidDataset.add(lineDataAnglePitch)
-                    arrayPidDataset.add(lineDataAngleRoll)
-                    arrayPidDataset.add(lineDataMotorL)
+                    arrayPidDataset.add(lineDataSetPointYaw)
+                    arrayPidDataset.add(lineDataSetOutputYaw)
+                    arrayPidDataset.add(lineDataAngleYaw)
                     LineData(arrayPidDataset)
                 }
             }
@@ -297,112 +368,6 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
             chart.invalidate()
         }
     }
-
-//    private fun newAngle(newFrame: MainBoardRobotStatus) {
-//
-//        with(binding) {
-//            tvParamKp.text = getString(R.string.placeholder_kp, newFrame.pid.kp.toString())
-//            tvParamKi.text = getString(R.string.placeholder_ki, newFrame.pid.ki.toString())
-//            tvParamKd.text = getString(R.string.placeholder_kd, newFrame.pid.kd.toString())
-//            tvParamCenter.text = getString(R.string.placeholder_center, newFrame.pid.centerAngle.toString())
-//
-//            val lineDataAnglePitch =
-//                LineDataSet(entryAnglePitch.takeLast(frameSize), "Pitch Angle").also {
-//                    it.lineWidth = 2.5f
-//                    it.circleRadius = 1f
-//                    it.color = requireContext().getColor(R.color.red_80_percent)
-//                    it.setCircleColor(it.color)
-//                }                                                                                           // Agrego nuevo dataset que es el conjunto de puntos relacionados entre si, con su label
-//
-//            val lineDataAngleRoll =
-//                LineDataSet(entryAngleRoll.takeLast(frameSize), "Roll Angle").also {
-//                    it.lineWidth = 2.5f
-//                    it.circleRadius = 1f
-//                    it.color = requireContext().getColor(R.color.green_80_percent)
-//                    it.setCircleColor(it.color)
-//                }                                                                                           // Agrego nuevo dataset que es el conjunto de puntos relacionados entre si, con su label
-//
-//            val lineDataAngleYaw =
-//                LineDataSet(entryAngleYaw.takeLast(frameSize), "Yaw Angle").also {
-//                    it.lineWidth = 2.5f
-//                    it.circleRadius = 1f
-//                    it.color = requireContext().getColor(R.color.yellow_80_percent)
-//                    it.setCircleColor(it.color)
-//                }                                                                                           // Agrego nuevo dataset que es el conjunto de puntos relacionados entre si, con su label
-//
-//            val lineDataMotorL = LineDataSet(entryMotorL.takeLast(frameSize), "Motor L x100").also {
-//                it.lineWidth = 2.5f
-//                it.circleRadius = 1f
-//                it.color = requireContext().getColor(R.color.blue_80_percent)
-//                it.setCircleColor(it.color)
-//            }
-//
-//            val lineDataMotorR = LineDataSet(entryMotorR.takeLast(frameSize), "Motor R x100").also {
-//                it.lineWidth = 2.5f
-//                it.circleRadius = 1f
-//                it.color = requireContext().getColor(R.color.red_80_percent)
-//                it.setCircleColor(it.color)
-//            }
-//
-//            val lineDataSetPoint = LineDataSet(entrySetPoint.takeLast(frameSize), "setPoint").also {
-//                it.lineWidth = 2.5f
-//                it.circleRadius = 1f
-//                it.color = requireContext().getColor(R.color.status_turquesa)
-//                it.setCircleColor(it.color)
-//            }
-//            val actualTimeInSec = ((System.currentTimeMillis() - initTimeStamp).toFloat()) / 1000
-//            entryAnglePitch.add(Entry(actualTimeInSec, newFrame.pitchAngle))
-//            entryAngleRoll.add(Entry(actualTimeInSec, newFrame.rollAngle))
-//            entryAngleYaw.add(Entry(actualTimeInSec, newFrame.yawAngle))
-//            entryMotorL.add(Entry(actualTimeInSec, newFrame.speedL.toFloat() / 100))
-//            entryMotorR.add(Entry(actualTimeInSec, newFrame.speedR.toFloat() / 100))
-//            entrySetPoint.add(Entry(actualTimeInSec, newFrame.setPoint))
-//
-//            if (entrySetPoint.size >= frameSize) {
-//                entryAnglePitch.removeFirst()
-//                entryAngleRoll.removeFirst()
-//                entryAngleYaw.removeFirst()
-//                entryMotorL.removeFirst()
-//                entryMotorR.removeFirst()
-//                entrySetPoint.removeFirst()
-//            }
-//
-//            dataSet = when (viewDataset) {
-//                DatasetView.DATASET_IMU -> {
-//                    setImuMode(newFrame)
-//                    val arrayImuDataset = ArrayList<ILineDataSet>()
-//                    arrayImuDataset.clear()
-//                    arrayImuDataset.add(lineDataAnglePitch)
-//                    arrayImuDataset.add(lineDataAngleRoll)
-//                    arrayImuDataset.add(lineDataAngleYaw)
-//                    LineData(arrayImuDataset)
-//                }
-//
-//                DatasetView.DATASET_MOTOR -> {
-//                    setMotorControlMode()
-//                    val arrayMotorDataset = ArrayList<ILineDataSet>()
-//                    arrayMotorDataset.clear()
-//                    arrayMotorDataset.add(lineDataMotorL)
-//                    arrayMotorDataset.add(lineDataMotorR)
-//                    LineData(arrayMotorDataset)
-//                }
-//
-//                DatasetView.DATASET_PID -> {
-//                    setPidMode(newFrame)
-//                    val arrayPidDataset = ArrayList<ILineDataSet>()
-//                    arrayPidDataset.clear()
-//                    arrayPidDataset.add(lineDataSetPoint)
-//                    arrayPidDataset.add(lineDataAnglePitch)
-//                    arrayPidDataset.add(lineDataMotorL)
-//                    LineData(arrayPidDataset)
-//                }
-//            }
-//
-//            chart.data = dataSet
-//            chart.invalidate()
-//        }
-//    }
-
 
     override fun onValueSelected(e: Entry?, h: Highlight?) {
         Log.i(
@@ -416,14 +381,14 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
     }
 
     private fun setMotorControlMode() {
-        actualLimitScale = 12F
+        actualLimitScale = 1000F
         setAutoScale(binding.switchAutoscale.isChecked)
         binding.chart.axisLeft.removeAllLimitLines()
     }
 
     private fun setImuMode(actualLineLimits: RobotDynamicData) {
 
-        actualLimitScale = 100F
+        actualLimitScale = 180F
         setAutoScale(binding.switchAutoscale.isChecked)
 
         binding.chart.axisLeft.removeAllLimitLines()
@@ -464,19 +429,40 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
         }
     }
 
-    private fun setPidMode(newFrame: RobotDynamicData) {
+    private fun setPidAngleMode(newFrame: RobotDynamicData) {
         actualLimitScale = 15F
         setAutoScale(binding.switchAutoscale.isChecked)
 
         binding.chart.axisLeft.removeAllLimitLines()
 
-        val centerAngleLimitLine = LimitLine(newFrame.centerAngle, "Centro de gravedad")
+        val centerAngleLimitLine = LimitLine(newFrame.centerAngle, "center Angle")
         centerAngleLimitLine.lineWidth = 2f
         centerAngleLimitLine.enableDashedLine(20f, 10f, 10f)
         centerAngleLimitLine.labelPosition = LimitLine.LimitLabelPosition.LEFT_TOP
         centerAngleLimitLine.textSize = 10f
         centerAngleLimitLine.lineColor = requireContext().getColor(R.color.status_blue)
         binding.chart.axisLeft.addLimitLine(centerAngleLimitLine)
+    }
+
+    private fun setPidPosMode() {
+        actualLimitScale = 5F
+        setAutoScale(binding.switchAutoscale.isChecked)
+
+        binding.chart.axisLeft.removeAllLimitLines()
+
+//        val centerAngleLimitLine = LimitLine(newFrame.centerAngle, "center Angle")
+//        centerAngleLimitLine.lineWidth = 2f
+//        centerAngleLimitLine.enableDashedLine(20f, 10f, 10f)
+//        centerAngleLimitLine.labelPosition = LimitLine.LimitLabelPosition.LEFT_TOP
+//        centerAngleLimitLine.textSize = 10f
+//        centerAngleLimitLine.lineColor = requireContext().getColor(R.color.status_blue)
+//        binding.chart.axisLeft.addLimitLine(centerAngleLimitLine)
+    }
+
+    private fun setPidYawMode() {
+
+        actualLimitScale = 180F
+        setAutoScale(binding.switchAutoscale.isChecked)
     }
 }
 
@@ -485,5 +471,7 @@ private const val FRAME_PERIOD = 0.05 // frecuencia de muestras en segundos
 enum class DatasetView {
     DATASET_IMU,
     DATASET_MOTOR,
-    DATASET_PID
+    DATASET_PID_ANGLE,
+    DATASET_PID_POS,
+    DATASET_PID_YAW,
 }

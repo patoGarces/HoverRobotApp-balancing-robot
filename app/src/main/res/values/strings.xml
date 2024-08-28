@@ -35,17 +35,18 @@
     <string name="pid_parameter_center_title">Angulo de equilibrio:</string>
     <string name="pid_parameter_limits_title">Limites de seguridad:</string>
     <string name="pid_value_default">0.00</string>
-    <string name="pid_btn_save">Guardar</string>
-    <string name="pid_btn_get">Traer</string>
-    <string name="pid_btn_sync">Sync</string>
+    <string name="btn_pid_sync">Sync</string>
+    <string name="btn_pid_save">Guardar</string>
+    <string name="btn_pid_reset">Deshacer</string>
     <string name="value_slider_format">%.2f</string>
     <string name="imu_btn_calibrate">Calibrar</string>
     <string name="pid_center_front">Front</string>
     <string name="pid_center_back">Back</string>
     <string-array name="sp_memory_items">
-        <item>Banco 1</item>
-        <item>Banco 2</item>
-        <item>Banco 3</item>
+        <item>PID ANGLE</item>
+        <item>PID POS</item>
+        <item>PID SPEED</item>
+        <item>PID YAW</item>
     </string-array>
 
     <!--    Mapper status error-->
@@ -53,13 +54,16 @@
     <string name="status_initializing_imu">Init IMU</string>
     <string name="status_error_imu">Error IMU</string>
     <string name="status_init_motorboard">Init ESCs</string>
-    <string name="status_error_motorboard_comms">Error comms ESCs</string>
+    <string name="status_error_motorboard_comms">Error MCB</string>
     <string name="status_error_motors_hall">Error motors hall</string>
     <string name="status_error_motors_hardware">Error ESCs</string>
     <string name="status_error_motors_battery">Error battery</string>
     <string name="status_error_critical">Critical error</string>
     <string name="status_unknown">Unknown error</string>
 
+    <!--    Control Fragment-->
+    <string name="control_move_placeholder_forward">%.02fmts forward</string>
+    <string name="control_move_placeholder_backward">%.02fmts backward</string>
 
     <!--    Analisis Fragment-->
     <string name="dataset_title">Datasets</string>
@@ -77,7 +81,9 @@
     <!--    RadioGroup dataset select-->
     <string name="dataset_imu_data">IMU Data</string>
     <string name="dataset_motor_output">Motor Control Data</string>
-    <string name="dataset_pid">Pid attitude</string>
+    <string name="dataset_pid_angle">PID Angle</string>
+    <string name="dataset_pid_pos">PID Pos</string>
+    <string name="dataset_pid_yaw">PID Yaw</string>
 
     <!--    general config -->
     <string name="general_config_title">General</string>
@@ -87,4 +93,15 @@
     <string name="btn_play_title">Play</string>
     <string name="btn_pause_title">Pause</string>
 
+    <!--    Name datasets analisis fragment-->
+    <string name="dataset_angle_pitch">"Pitch Angle"</string>
+    <string name="dataset_angle_yaw">"Yaw Angle"</string>
+    <string name="dataset_angle_roll">"Roll Angle"</string>
+    <string name="dataset_motor_l">"motorL x100"</string>
+    <string name="dataset_motor_r">"motorR x100"</string>
+    <string name="dataset_set_point_angle">"setPoint Angle"</string>
+    <string name="dataset_set_point_pos">"setPoint Pos"</string>
+    <string name="dataset_set_point_yaw">"setPoint Yaw"</string>
+    <string name="dataset_output_yaw">"Output Yaw"</string>
+    <string name="dataset_position_meters">"Pos in mts"</string>
 </resources>
