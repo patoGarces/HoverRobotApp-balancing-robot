@@ -22,7 +22,7 @@
 
     <!--    tabsLayout-->
     <string name="tab_status">Status</string>
-    <string name="tab_transmision">Transmision</string>
+    <string name="tab_navigation">Navegacion</string>
     <string name="tab_analisis">Analisis</string>
     <string name="tab_settings">Configuracion</string>
 
@@ -70,6 +70,7 @@
     <string name="config_title">Configuracion</string>
     <string name="frame_size_title">Frame size</string>
     <string name="placeholder_center">Center: %.2f</string>
+    <string name="placeholder_position">Pos: %.2fmts</string>
     <string name="placeholder_roll">Roll:  %.2f</string>
     <string name="placeholder_pitch">Pitch:  %.2f</string>
     <string name="placeholder_yaw">Yaw:  %.2f</string>

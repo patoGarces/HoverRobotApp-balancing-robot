@@ -141,7 +141,7 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
 
     override fun sendDirectionControl(directionControl: DirectionControl) {
         val paramList =
-            listOf(HEADER_PACKAGE_CONTROL.toShort(), directionControl.joyAxisX, directionControl.joyAxisY,directionControl.compassYaw)
+            listOf(HEADER_PACKAGE_CONTROL.toShort(), directionControl.joyAxisX, directionControl.joyAxisY)
         val buffer = ByteBuffer.allocate(paramList.size * 2)
         buffer.order(ByteOrder.LITTLE_ENDIAN)
         paramList.forEach { buffer.putShort(it) }

@@ -1,20 +1,17 @@
 package com.example.hoverrobot.ui.statusBarFragment
 
+import android.content.Intent
 import android.os.Bundle
-import android.util.Log
+import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.viewModels
-import androidx.navigation.Navigation
-import com.example.hoverrobot.MainActivity
 import com.example.hoverrobot.R
+import com.example.hoverrobot.data.utils.StatusMapperBT
 import com.example.hoverrobot.data.utils.ToolBox
 import com.example.hoverrobot.databinding.StatusBarFragmentBinding
-import com.example.hoverrobot.data.utils.StatusMapperBT
-import java.io.IOException
 
 
 class StatusBarFragment : Fragment() {
@@ -36,11 +33,14 @@ class StatusBarFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         setupObserver()
+
+        binding.btnStatus.setOnClickListener {
+            startActivity(Intent(Settings.ACTION_WIFI_SETTINGS))
+        }
     }
 
     private fun setupObserver() {
 
-        // TODO: revisar color en changeStrokeColor
         statusBarViewModel.connectionStatus.observe(viewLifecycleOwner){
             it?.let {
                 binding.btnStatus.text = StatusMapperBT.mapStatusTostring(it,statusBarViewModel.statusRobot.value)
