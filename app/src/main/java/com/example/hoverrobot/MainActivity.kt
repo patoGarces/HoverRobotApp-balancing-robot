@@ -20,8 +20,8 @@ import com.example.hoverrobot.data.repositories.CommsRepository
 import com.example.hoverrobot.databinding.ActivityMainBinding
 import com.example.hoverrobot.ui.analisisFragment.AnalisisFragment
 import com.example.hoverrobot.ui.analisisFragment.AnalisisViewModel
-import com.example.hoverrobot.ui.controlFragment.ControlFragment
-import com.example.hoverrobot.ui.controlFragment.ControlViewModel
+import com.example.hoverrobot.ui.navigationFragment.NavigationFragment
+import com.example.hoverrobot.ui.navigationFragment.NavigationViewModel
 import com.example.hoverrobot.ui.settingsFragment.SettingsFragment
 import com.example.hoverrobot.ui.settingsFragment.SettingsFragmentViewModel
 import com.example.hoverrobot.ui.statusBarFragment.StatusBarFragment
@@ -41,7 +41,7 @@ class MainActivity : AppCompatActivity() {
 
     private val statusBarViewModel: StatusBarViewModel by viewModels()
     private val statusDataViewModel: StatusDataViewModel by viewModels()
-    private val controlViewModel: ControlViewModel by viewModels()
+    private val navigationViewModel: NavigationViewModel by viewModels()
     private val analisisViewModel: AnalisisViewModel by viewModels()
     private val settingsFragmentViewModel: SettingsFragmentViewModel by viewModels()
 
@@ -73,13 +73,15 @@ class MainActivity : AppCompatActivity() {
 
         binding.viewPager.adapter = ViewPagerAdapter(this)
 
+        val tabTitles = arrayOf(
+            getString(R.string.tab_status),
+            getString(R.string.tab_navigation),
+            getString(R.string.tab_analisis),
+            getString(R.string.tab_settings)
+        )
+
         TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
-            when (position) {
-                0 -> tab.text = getString(R.string.tab_status)
-                1 -> tab.text = getString(R.string.tab_transmision)
-                2 -> tab.text = getString(R.string.tab_analisis)
-                3 -> tab.text = getString(R.string.tab_settings)
-            }
+            tab.text = tabTitles[position]
         }.attach()
 
         binding.viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
@@ -105,7 +107,7 @@ class MainActivity : AppCompatActivity() {
         override fun createFragment(position: Int): Fragment {
             return when (position) {
                 0 -> StatusDataFragment()
-                1 -> ControlFragment()
+                1 -> NavigationFragment()
                 2 -> AnalisisFragment()
                 3 -> SettingsFragment()
                 else -> throw IllegalArgumentException("Invalid position: $position")

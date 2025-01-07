@@ -58,6 +58,13 @@
                     android:layout_marginHorizontal="8dp"
                     tools:text="Yaw: 3.0"
                     />
+                <TextView
+                    android:id="@+id/tv_position"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="8dp"
+                    tools:text="Dist: 0.22mts"
+                    />
         </LinearLayout>
 
         <ScrollView
@@ -162,68 +169,6 @@
                                             android:text="@string/dataset_pid_yaw"
                                             />
                                 </RadioGroup>
-                        </androidx.constraintlayout.widget.ConstraintLayout>
-
-                        <androidx.constraintlayout.widget.ConstraintLayout
-                            android:id="@+id/constraint_2"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:background="@drawable/background_settings_group"
-                            app:layout_constraintEnd_toEndOf="parent"
-                            app:layout_constraintTop_toBottomOf="@id/constraint_1"
-                            >
-
-                                <TextView
-                                    android:id="@+id/frame_size_title"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:layout_margin="8dp"
-                                    android:gravity="center"
-                                    android:textAppearance="@style/style_text_14sp_bold"
-                                    android:text="@string/frame_size_title"
-                                    app:layout_constraintStart_toStartOf="parent"
-                                    app:layout_constraintEnd_toEndOf="parent"
-                                    app:layout_constraintTop_toTopOf="parent"
-                                    />
-
-                                <RadioGroup
-                                    android:id="@+id/rg_size_samples"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:checkedButton="@id/rb_samples_5s"
-                                    app:layout_constraintTop_toBottomOf="@id/frame_size_title"
-                                    app:layout_constraintStart_toStartOf="parent"
-                                    app:layout_constraintEnd_toEndOf="parent"
-                                    >
-
-                                        <RadioButton
-                                            android:id="@+id/rb_samples_5s"
-                                            android:layout_width="match_parent"
-                                            android:layout_height="wrap_content"
-                                            android:checked="false"
-                                            android:buttonTint="@color/red_80_percent"
-                                            android:text="@string/window_size_5s" />
-
-                                        <RadioButton
-                                            android:id="@+id/rb_samples_15s"
-                                            android:layout_width="match_parent"
-                                            android:layout_height="wrap_content"
-                                            android:checked="true"
-                                            android:buttonTint="@color/red_80_percent"
-                                            android:text="@string/window_size_15s"
-                                            />
-
-                                        <RadioButton
-                                            android:id="@+id/rb_samples_30s"
-                                            android:layout_width="match_parent"
-                                            android:layout_height="wrap_content"
-                                            android:checked="false"
-                                            android:buttonTint="@color/red_80_percent"
-                                            android:text="@string/window_size_30s"
-                                            />
-                                </RadioGroup>
-
                         </androidx.constraintlayout.widget.ConstraintLayout>
 
                         <androidx.constraintlayout.widget.ConstraintLayout

@@ -1,6 +1,7 @@
-package com.example.hoverrobot.ui.controlFragment
+package com.example.hoverrobot.ui.navigationFragment
 
 import android.annotation.SuppressLint
+import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -12,19 +13,26 @@ import androidx.fragment.app.viewModels
 import com.example.hoverrobot.R
 import com.example.hoverrobot.data.models.comms.DirectionControl
 import com.example.hoverrobot.data.utils.ToolBox.Companion.ioScope
-import com.example.hoverrobot.databinding.ControlFragmentBinding
+import com.example.hoverrobot.databinding.NavigationFragmentBinding
+import com.github.mikephil.charting.charts.ScatterChart
+import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.data.ScatterData
+import com.github.mikephil.charting.data.ScatterDataSet
+import com.github.mikephil.charting.utils.EntryXComparator
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import com.marcinmoskala.arcseekbar.ProgressListener;
 import java.lang.Math.round
+import java.util.Collections
 
-class ControlFragment : Fragment() {
+class NavigationFragment : Fragment() {
 
-    private val controlViewModel : ControlViewModel by viewModels(ownerProducer = { requireActivity() })
+    private val navigationViewModel : NavigationViewModel by viewModels(ownerProducer = { requireActivity() })
 
-    private lateinit var _binding : ControlFragmentBinding
+    private lateinit var _binding : NavigationFragmentBinding
     private val binding get() = _binding
 
     private var directionYaw: Int = 0
@@ -38,13 +46,16 @@ class ControlFragment : Fragment() {
     private var distanceBackward: Float = MIN_DISTANCE
     private var distanceForward: Float = MIN_DISTANCE
 
+    private var entryDataPoints: ArrayList<Entry> = ArrayList()
+    private lateinit var scatterDataset: ScatterDataSet
+
     private val TAG = "ControlFragment"
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = ControlFragmentBinding.inflate(inflater,container,false)
+        _binding = NavigationFragmentBinding.inflate(inflater,container,false)
         return binding.root
     }
 
@@ -57,6 +68,7 @@ class ControlFragment : Fragment() {
         binding.btnForward.text = getString(R.string.control_move_placeholder_forward).format(MIN_DISTANCE)
         setupListener()
         setupObserver()
+        initGraph()
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -66,26 +78,23 @@ class ControlFragment : Fragment() {
             joyAxisY = 100 - (binding.joystickThrottle.normalizedY * 2)
             joyAxisX = (binding.joystickDirection.normalizedX * 2) -100
 
-            controlViewModel.newCoordinatesJoystick(DirectionControl(joyAxisX.toShort(),joyAxisY.toShort(),365))
+            navigationViewModel.newCoordinatesJoystick(DirectionControl(joyAxisX.toShort(),joyAxisY.toShort()))
         }
 
         binding.joystickThrottle.setOnMoveListener{ _, _ ->
             joyAxisY = 100 - (binding.joystickThrottle.normalizedY * 2)
             joyAxisX = (binding.joystickDirection.normalizedX * 2) -100
-            controlViewModel.newCoordinatesJoystick(DirectionControl(joyAxisX.toShort(),joyAxisY.toShort(),365))
+            navigationViewModel.newCoordinatesJoystick(DirectionControl(joyAxisX.toShort(),joyAxisY.toShort()))
         }
 
         binding.compassView.setOnCompassDragListener {
             disableCompassSet = true
             jobSendYawCommand?.cancel()
-
-            directionYaw = it.roundToInt()
             jobSendYawCommand = ioScope.launch {
+                navigationViewModel.sendNewMoveYaw(it)
                 delay(200)
                 disableCompassSet = false
-                Log.d("compassView",directionYaw.toString())
-                controlViewModel.newCoordinatesJoystick(DirectionControl(joyAxisX.toShort(),joyAxisY.toShort(),directionYaw.toShort()))
-            }
+           }
         }
 
 //        binding.compassView.setOnTouchListener { view, event ->
@@ -116,29 +125,80 @@ class ControlFragment : Fragment() {
             }
 
         binding.btnForward.setOnClickListener {
-            controlViewModel.sendMoveCommand(distanceForward)
+            navigationViewModel.sendNewMovePosition(distanceForward)
         }
 
         binding.btnBackward.setOnClickListener {
-            controlViewModel.sendMoveCommand(distanceBackward,true)
+            navigationViewModel.sendNewMovePosition(distanceBackward,true)
+        }
+
+        binding.btnYawLeft.setOnClickListener {
+            navigationViewModel.sendNewMoveYaw(175f)
+        }
+
+        binding.btnYawRight.setOnClickListener {
+            navigationViewModel.sendNewMoveYaw(185f)
         }
     }
 
     private fun setupObserver(){
-        controlViewModel.joyVisible.observe(viewLifecycleOwner) {
-            it?.let{
-                binding.joystickThrottle.isVisible = it
-                binding.joystickDirection.isVisible = it
-                binding.btnForward.isVisible = it
-                binding.btnBackward.isVisible = it
-                binding.seekbarForward.isVisible = it
-                binding.seekbarBackward.isVisible = it
-            }
+        navigationViewModel.joyVisible.observe(viewLifecycleOwner) {
+            binding.navigationVisible.isVisible = it ?: false
         }
 
-        controlViewModel.dynamicData.observe(viewLifecycleOwner) {
-            if(!disableCompassSet) binding.compassView.degrees = it.yawAngle
+        navigationViewModel.dynamicData.observe(viewLifecycleOwner) {
+            if(!disableCompassSet) binding.compassView.degrees = it.yawAngle.toInt().toFloat()
         }
+
+        navigationViewModel.pointCloud.observe(viewLifecycleOwner) {
+
+            Log.d(TAG,"Nuevo punto: [${it.last().x},${it.last().y}]")
+            entryDataPoints.add(Entry(it.last().x, it.last().y))
+
+            Collections.sort(entryDataPoints, EntryXComparator())
+
+            val dataSet = ScatterDataSet(entryDataPoints, "").apply {
+//            color = Color.BLUE
+                color = Color.RED
+                scatterShapeSize = 10f
+                setScatterShape(ScatterChart.ScatterShape.CIRCLE)
+            }
+
+            scatterDataset.notifyDataSetChanged()
+            binding.scatterChart.data = ScatterData(dataSet)
+            binding.scatterChart.notifyDataSetChanged()
+            binding.scatterChart.invalidate()
+        }
+    }
+
+    private fun initGraph() {
+//        val entries = mutableListOf<Entry>()
+
+//        for (i in 0..100) {
+//            val x = ((Math.random()-0.5) * 10).toFloat()
+//            val y = ((Math.random()-0.5) * 10).toFloat()
+//            entries.add(Entry(x, y))
+//        }
+
+//        val dataSet = ScatterDataSet(entries, "").apply {
+////            color = Color.BLUE
+//            color = Color.RED
+//            scatterShapeSize = 10f
+//            setScatterShape(ScatterChart.ScatterShape.CIRCLE)
+//        }
+
+        scatterDataset = ScatterDataSet(entryDataPoints, "").apply {
+//            color = Color.BLUE
+            color = Color.RED
+            scatterShapeSize = 10f
+            setScatterShape(ScatterChart.ScatterShape.CIRCLE)
+        }
+
+        binding.scatterChart.setTouchEnabled(false)
+        binding.scatterChart.description.isEnabled = false
+        binding.scatterChart.legend.isEnabled = false
+//        binding.scatterChart.data = ScatterData(dataSet)
+        binding.scatterChart.invalidate()
     }
 
     private fun Float.round(decimals: Int = 2): Float = "%.${decimals}f".format(this).toFloat()

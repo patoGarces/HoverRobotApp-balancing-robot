@@ -7,5 +7,6 @@ enum class CommandsRobot {        // En sync con el codigo del esp!
     DISARMED_ROBOT,
     VIBRATION_TEST,
     COMMAND_MOVE_FORWARD,
-    COMMAND_MOVE_BACKWARD
+    COMMAND_MOVE_BACKWARD,
+    COMMAND_MOVE_YAW
 }

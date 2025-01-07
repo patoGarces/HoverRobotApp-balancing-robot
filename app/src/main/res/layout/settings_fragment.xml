@@ -118,7 +118,7 @@
                     style="@style/styleSliderPid"
                     android:valueFrom="0.00"
                     android:stepSize="0.01"
-                    android:valueTo="2.00"
+                    android:valueTo="3.00"
                     app:trackHeight="4dp"
                     app:thumbRadius="8dp"
                     app:layout_constraintStart_toStartOf="parent"
