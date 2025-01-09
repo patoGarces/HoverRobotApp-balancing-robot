@@ -65,6 +65,8 @@
     <string name="control_move_placeholder_forward">%.02fmts forward</string>
     <string name="control_move_placeholder_backward">%.02fmts backward</string>
 
+    <string name="control_move_placeholder_direction">%d°</string>
+
     <!--    Analisis Fragment-->
     <string name="dataset_title">Datasets</string>
     <string name="config_title">Configuracion</string>

@@ -78,9 +78,15 @@ class NavigationViewModel @Inject constructor(
         }
     }
 
-    fun sendNewMoveYaw(desiredAngle: Float) {
+    fun sendNewMoveAbsYaw(desiredAngle: Float) {
         if (commsRepository.connectionStateFlow.value == ConnectionStatus.CONNECTED) {
-            commsRepository.sendCommand(CommandsRobot.COMMAND_MOVE_YAW, desiredAngle)
+            commsRepository.sendCommand(CommandsRobot.COMMAND_MOVE_ABS_YAW, desiredAngle)
+        }
+    }
+
+    fun sendNewMoveRelYaw(angle: Float) {
+        if (commsRepository.connectionStateFlow.value == ConnectionStatus.CONNECTED) {
+            commsRepository.sendCommand(CommandsRobot.COMMAND_MOVE_REL_YAW, angle)
         }
     }
 }
