@@ -43,8 +43,11 @@ class NavigationFragment : Fragment() {
 
     private var jobSendYawCommand: Job? = null
 
-    private var distanceBackward: Float = MIN_DISTANCE
-    private var distanceForward: Float = MIN_DISTANCE
+    private var distanceBackward: Float = 0.5f
+    private var distanceForward: Float = 0.5f
+
+    private var leftDirection: Int = 1
+    private var rightDirection: Int = 1
 
     private var entryDataPoints: ArrayList<Entry> = ArrayList()
     private lateinit var scatterDataset: ScatterDataSet
@@ -64,8 +67,8 @@ class NavigationFragment : Fragment() {
 
         binding.joystickThrottle.setFixedCenter(true)
         binding.joystickDirection.setFixedCenter(true)
-        binding.btnBackward.text = getString(R.string.control_move_placeholder_backward).format(MIN_DISTANCE)
-        binding.btnForward.text = getString(R.string.control_move_placeholder_forward).format(MIN_DISTANCE)
+        binding.btnBackward.text = getString(R.string.control_move_placeholder_backward).format(0.5f)
+        binding.btnForward.text = getString(R.string.control_move_placeholder_forward).format(0.5f)
         setupListener()
         setupObserver()
         initGraph()
@@ -91,7 +94,7 @@ class NavigationFragment : Fragment() {
             disableCompassSet = true
             jobSendYawCommand?.cancel()
             jobSendYawCommand = ioScope.launch {
-                navigationViewModel.sendNewMoveYaw(it)
+                navigationViewModel.sendNewMoveAbsYaw(it)
                 delay(200)
                 disableCompassSet = false
            }
@@ -112,16 +115,26 @@ class NavigationFragment : Fragment() {
 //            true
 //        }
 
-        binding.seekbarBackward.onProgressChangedListener =
+        binding.sliderBackward.addOnChangeListener { _,progress,_ ->
+            distanceBackward = (MIN_DISTANCE + ((progress / 100f) * (MAX_DISTANCE - MIN_DISTANCE))).round(2)
+            binding.btnBackward.text = getString(R.string.control_move_placeholder_backward).format(distanceBackward)
+        }
+
+        binding.sliderForward.addOnChangeListener { _,progress,_ ->
+            distanceForward = (MIN_DISTANCE + ((progress / 100f) * (MAX_DISTANCE - MIN_DISTANCE))).round(2)
+            binding.btnForward.text = getString(R.string.control_move_placeholder_forward).format(distanceForward)
+        }
+
+        binding.seekbarLeft.onProgressChangedListener =
             ProgressListener { progress ->
-                distanceBackward = (MIN_DISTANCE + ((progress / 100f) * (MAX_DISTANCE - MIN_DISTANCE))).round(2)
-                binding.btnBackward.text = getString(R.string.control_move_placeholder_backward).format(distanceBackward)
+                leftDirection = -(MIN_DIR + ((progress / 100f) * (MAX_DIR - MIN_DIR))).toInt()
+                binding.btnYawLeft.text = getString(R.string.control_move_placeholder_direction).format(leftDirection)
             }
 
-        binding.seekbarForward.onProgressChangedListener =
+        binding.seekbarRight.onProgressChangedListener =
             ProgressListener { progress ->
-                distanceForward = (MIN_DISTANCE + ((progress / 100f) * (MAX_DISTANCE - MIN_DISTANCE))).round(2)
-                binding.btnForward.text = getString(R.string.control_move_placeholder_forward).format(distanceForward)
+                rightDirection = (MIN_DIR + ((progress / 100f) * (MAX_DIR - MIN_DIR))).toInt()
+                binding.btnYawRight.text = getString(R.string.control_move_placeholder_direction).format(rightDirection)
             }
 
         binding.btnForward.setOnClickListener {
@@ -133,11 +146,11 @@ class NavigationFragment : Fragment() {
         }
 
         binding.btnYawLeft.setOnClickListener {
-            navigationViewModel.sendNewMoveYaw(175f)
+            navigationViewModel.sendNewMoveRelYaw(leftDirection.toFloat())
         }
 
         binding.btnYawRight.setOnClickListener {
-            navigationViewModel.sendNewMoveYaw(185f)
+            navigationViewModel.sendNewMoveRelYaw(rightDirection.toFloat())
         }
     }
 
@@ -206,3 +219,6 @@ class NavigationFragment : Fragment() {
 
 private const val MIN_DISTANCE = 0.1f
 private const val MAX_DISTANCE = 1f
+
+private const val MIN_DIR = 1f
+private const val MAX_DIR = 180f
