@@ -64,9 +64,9 @@ class NavigationViewModel @Inject constructor(
 //            }
 //        }
     }
-    fun newCoordinatesJoystick(newDirectionControl: DirectionControl){
+    fun newCoordinatesJoystick(axisX: Int,axisY: Int){
         if (commsRepository.connectionStateFlow.value == ConnectionStatus.CONNECTED) {
-            commsRepository.sendDirectionControl(newDirectionControl)
+            commsRepository.sendDirectionControl(DirectionControl(axisX.toShort(),axisY.toShort()))
         }
     }
 

@@ -86,6 +86,9 @@ dependencies {
     // seekbar
 //    implementation("com.github.Triggertrap:SeekArc:v1.1")
     implementation("com.github.marcinmoskala:ArcSeekBar:0.31")
+
+    implementation(libs.material.v190)
+
 }
 
 kapt {

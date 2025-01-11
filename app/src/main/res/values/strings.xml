@@ -87,6 +87,7 @@
     <string name="dataset_pid_angle">PID Angle</string>
     <string name="dataset_pid_pos">PID Pos</string>
     <string name="dataset_pid_yaw">PID Yaw</string>
+    <string name="dataset_pid_speed">PID Speed</string>
 
     <!--    general config -->
     <string name="general_config_title">General</string>
@@ -105,6 +106,8 @@
     <string name="dataset_set_point_angle">"setPoint Angle"</string>
     <string name="dataset_set_point_pos">"setPoint Pos"</string>
     <string name="dataset_set_point_yaw">"setPoint Yaw"</string>
+    <string name="dataset_set_point_speed">"setPoint Speed"</string>
     <string name="dataset_output_yaw">"Output Yaw"</string>
     <string name="dataset_position_meters">"Pos in mts"</string>
+    <string name="dataset_speed">"Actual Speed"</string>
 </resources>
