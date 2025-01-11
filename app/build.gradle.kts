@@ -38,12 +38,14 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
+
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "17"
     }
+
     buildFeatures {
         viewBinding = true
         buildConfig = true
@@ -67,8 +69,23 @@ dependencies {
 
     implementation(libs.kotlinx.serialization.json)
 
+//    implementation(libs.virtualjoystick)
+//    implementation(libs.virtual.joystick.android)
+
+//    implementation("com.github.controlwear:virtual-joystick-android:")
+//    implementation("com.github.controlwear:virtualjoystick:1.10.1")
+    implementation("com.github.controlwear:virtual-joystick-android:master-SNAPSHOT")
+
+
+
+
     // Joystick
-    implementation(libs.virtualjoystick)
+//    implementation(libs.virtualjoystick)
+//    implementation("io.github.controlwear:virtualjoystick")
+//    implementation("io.github.controlwear:virtualjoystick:1.9.0")
+
+//    implementation("com.github.manalkaff:JetStick:1.2")
+
 
     // Plotter
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
