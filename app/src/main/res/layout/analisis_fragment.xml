@@ -161,6 +161,15 @@
                                             />
 
                                         <RadioButton
+                                            android:id="@+id/rb_dataset_pid_speed"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:buttonTint="@color/red_80_percent"
+                                            android:textAppearance="@style/style_text_14sp"
+                                            android:text="@string/dataset_pid_speed"
+                                            />
+
+                                        <RadioButton
                                             android:id="@+id/rb_dataset_pid_yaw"
                                             android:layout_width="match_parent"
                                             android:layout_height="wrap_content"

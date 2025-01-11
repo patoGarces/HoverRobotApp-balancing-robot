@@ -38,8 +38,10 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
     private var entrySetPointAngle: ArrayList<Entry> = ArrayList()
     private var entrySetPointPos: ArrayList<Entry> = ArrayList()
     private var entrySetPointYaw: ArrayList<Entry> = ArrayList()
+    private var entrySetPointSpeed: ArrayList<Entry> = ArrayList()
     private var entryOutputYaw: ArrayList<Entry> = ArrayList()
     private var entryPosInMeters: ArrayList<Entry> = ArrayList()
+    private var entryActualSpeed: ArrayList<Entry> = ArrayList()
 
     private lateinit var lineDataAnglePitch: LineDataSet
     private lateinit var lineDataAngleRoll: LineDataSet
@@ -49,8 +51,10 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
     private lateinit var lineDataSetPointAngle: LineDataSet
     private lateinit var lineDataSetPointPos: LineDataSet
     private lateinit var lineDataSetPointYaw: LineDataSet
+    private lateinit var lineDataSetPointSpeed: LineDataSet
     private lateinit var lineDataSetOutputYaw: LineDataSet
     private lateinit var lineDataSetPosInMeters: LineDataSet
+    private lateinit var lineDataSetSpeed: LineDataSet
 
     private var actualLimitScale = 90F
 
@@ -100,6 +104,7 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
                 R.id.rb_dataset_pid_angle -> SelectedDataset.DATASET_PID_ANGLE
                 R.id.rb_dataset_pid_pos -> SelectedDataset.DATASET_PID_POS
                 R.id.rb_dataset_pid_yaw -> SelectedDataset.DATASET_PID_YAW
+                R.id.rb_dataset_pid_speed -> SelectedDataset.DATASET_PID_SPEED
                 else -> SelectedDataset.DATASET_IMU
             }
         }
@@ -118,8 +123,10 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
             entrySetPointAngle.clear()
             entrySetPointPos.clear()
             entrySetPointYaw.clear()
+            entrySetPointSpeed.clear()
             entryOutputYaw.clear()
             entryPosInMeters.clear()
+            entryActualSpeed.clear()
         }
 
         binding.btnGenerateDataset.setOnClickListener {
@@ -138,6 +145,7 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
                     setPointAngle = ((Math.random() - 0.5) * 180).toFloat(),
                     setPointPos = ((Math.random() - 0.5) * 180).toFloat(),
                     setPointYaw = ((Math.random() - 0.5) * 180).toFloat(),
+                    setPointSpeed = ((Math.random() - 0.5) * 180).toFloat(),
                     centerAngle = ((Math.random() - 0.5) * 180).toFloat(),
                     statusCode = 0,
                 )
@@ -191,8 +199,10 @@ private fun initGraph() {
         lineDataSetPointAngle = createLineDataSet(entrySetPointAngle,R.string.dataset_set_point_angle,R.color.status_turquesa)
         lineDataSetPointPos = createLineDataSet(entrySetPointPos,R.string.dataset_set_point_pos,R.color.status_green)
         lineDataSetPointYaw = createLineDataSet(entrySetPointYaw,R.string.dataset_set_point_yaw,R.color.status_turquesa)
+        lineDataSetPointSpeed = createLineDataSet(entrySetPointSpeed,R.string.dataset_set_point_speed,R.color.blue_80_percent)
         lineDataSetOutputYaw = createLineDataSet(entryOutputYaw,R.string.dataset_output_yaw,R.color.red_80_percent)
         lineDataSetPosInMeters = createLineDataSet(entryPosInMeters,R.string.dataset_position_meters,R.color.red_80_percent)
+        lineDataSetSpeed = createLineDataSet(entryActualSpeed,R.string.dataset_speed,R.color.red_80_percent)
 
         initTimeStamp = System.currentTimeMillis()
     }
@@ -241,8 +251,10 @@ private fun initGraph() {
             entrySetPointAngle.add(Entry(actualTimeInSec, newFrame.setPointAngle))
             entrySetPointPos.add(Entry(actualTimeInSec, newFrame.setPointPos))
             entrySetPointYaw.add(Entry(actualTimeInSec, newFrame.setPointYaw))
+            entrySetPointSpeed.add(Entry(actualTimeInSec, newFrame.setPointSpeed))
             entryPosInMeters.add(Entry(actualTimeInSec, newFrame.posInMeters))
             entryOutputYaw.add(Entry(actualTimeInSec, newFrame.outputYawControl))
+            entryActualSpeed.add(Entry(actualTimeInSec, newFrame.speedL.toFloat()))           // TODO: tomar velocidad promedio
 
             lineDataAnglePitch.notifyDataSetChanged()
             lineDataAngleRoll.notifyDataSetChanged()
@@ -252,8 +264,10 @@ private fun initGraph() {
             lineDataSetPointAngle.notifyDataSetChanged()
             lineDataSetPointPos.notifyDataSetChanged()
             lineDataSetPointYaw.notifyDataSetChanged()
+            lineDataSetPointSpeed.notifyDataSetChanged()
             lineDataSetOutputYaw.notifyDataSetChanged()
             lineDataSetPosInMeters.notifyDataSetChanged()
+            lineDataSetSpeed.notifyDataSetChanged()
 
             updateDataset(selectedDataset)
         }
@@ -277,13 +291,18 @@ private fun initGraph() {
             }
 
             SelectedDataset.DATASET_PID_POS -> {
-                setPidPosMode()
+                setPidMode(10F)
                 LineData(lineDataSetPointPos,lineDataSetPosInMeters,lineDataSetPointAngle)
             }
 
             SelectedDataset.DATASET_PID_YAW -> {
-                setPidYawMode()
+                setPidMode(190F)
                 LineData(lineDataSetPointYaw,lineDataSetOutputYaw,lineDataAngleYaw)
+            }
+
+            SelectedDataset.DATASET_PID_SPEED -> {
+                setPidMode(1050F)
+                LineData(lineDataSetPointSpeed,lineDataSetSpeed,lineDataSetPointAngle)
             }
         }
         binding.chart.notifyDataSetChanged()
@@ -366,17 +385,10 @@ private fun initGraph() {
         }
     }
 
-    private fun setPidPosMode() {
-        actualLimitScale = 10F
+    private fun setPidMode(limit: Float) {
+        actualLimitScale = limit
         setAutoScale(binding.switchAutoscale.isChecked)
-
         binding.chart.axisLeft.removeAllLimitLines()
-    }
-
-    private fun setPidYawMode() {
-
-        actualLimitScale = 190F
-        setAutoScale(binding.switchAutoscale.isChecked)
     }
 }
 
@@ -388,4 +400,5 @@ enum class SelectedDataset {
     DATASET_PID_ANGLE,
     DATASET_PID_POS,
     DATASET_PID_YAW,
+    DATASET_PID_SPEED,
 }

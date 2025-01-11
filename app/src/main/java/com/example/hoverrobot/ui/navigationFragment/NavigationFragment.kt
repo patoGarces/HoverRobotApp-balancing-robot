@@ -27,6 +27,7 @@ import kotlin.math.roundToInt
 import com.marcinmoskala.arcseekbar.ProgressListener;
 import java.lang.Math.round
 import java.util.Collections
+import kotlin.math.sign
 
 class NavigationFragment : Fragment() {
 
@@ -77,17 +78,16 @@ class NavigationFragment : Fragment() {
     @SuppressLint("ClickableViewAccessibility")
     private fun setupListener(){
 
-        binding.joystickDirection.setOnMoveListener{ _, _ ->
-            joyAxisY = 100 - (binding.joystickThrottle.normalizedY * 2)
-            joyAxisX = (binding.joystickDirection.normalizedX * 2) -100
-
-            navigationViewModel.newCoordinatesJoystick(DirectionControl(joyAxisX.toShort(),joyAxisY.toShort()))
+        binding.joystickDirection.setOnMoveListener{ angle, relValue ->
+            joyAxisX = relValue * (90 - angle).sign
+            navigationViewModel.newCoordinatesJoystick(joyAxisX,joyAxisY)
+            Log.i("calibrate","Y: $joyAxisX")
         }
 
-        binding.joystickThrottle.setOnMoveListener{ _, _ ->
-            joyAxisY = 100 - (binding.joystickThrottle.normalizedY * 2)
-            joyAxisX = (binding.joystickDirection.normalizedX * 2) -100
-            navigationViewModel.newCoordinatesJoystick(DirectionControl(joyAxisX.toShort(),joyAxisY.toShort()))
+        binding.joystickThrottle.setOnMoveListener{ angle, relValue ->
+            joyAxisY = relValue * (180 - angle).sign
+            navigationViewModel.newCoordinatesJoystick(joyAxisX,joyAxisY)
+            Log.i("calibrate","Y: $joyAxisY")
         }
 
         binding.compassView.setOnCompassDragListener {
