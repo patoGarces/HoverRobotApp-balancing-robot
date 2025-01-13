@@ -8,17 +8,17 @@ import com.example.hoverrobot.data.models.comms.DirectionControl
 import com.example.hoverrobot.data.models.comms.PointCloudItem
 import com.example.hoverrobot.data.models.comms.RobotDynamicData
 import com.example.hoverrobot.data.repositories.CommsRepository
+import com.example.hoverrobot.data.repositories.StoreSettings
 import com.example.hoverrobot.data.utils.ConnectionStatus
 import com.example.hoverrobot.data.utils.ToolBox.Companion.ioScope
-import com.github.mikephil.charting.data.Entry
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class NavigationViewModel @Inject constructor(
-    private val commsRepository: CommsRepository
+    private val commsRepository: CommsRepository,
+    private val storeSettings: StoreSettings
 ): ViewModel() {
 
     private var _joyVisible: MutableLiveData<Boolean?> = MutableLiveData()
@@ -29,6 +29,9 @@ class NavigationViewModel @Inject constructor(
 
     private var _pointCloud:  MutableLiveData<List<PointCloudItem>> = MutableLiveData()
     val pointCloud: LiveData<List<PointCloudItem>> = _pointCloud
+
+    private var _aggressivenessLevel: MutableLiveData<Int> = MutableLiveData(0)
+    val aggressivenessLevel: LiveData<Int> = _aggressivenessLevel
 
     init {
         ioScope.launch {
@@ -48,6 +51,10 @@ class NavigationViewModel @Inject constructor(
             }
         }
 
+        ioScope.launch {
+            _aggressivenessLevel.postValue(storeSettings.getAggressiveness())
+        }
+
         // TODO: aca recibo cada punto de la nube
 //        ioScope.launch {
 //            for (i in 0..10000) {
@@ -64,6 +71,12 @@ class NavigationViewModel @Inject constructor(
 //            }
 //        }
     }
+
+    fun setLevelAggressiveness(level: Int) {
+        _aggressivenessLevel.value = level
+        ioScope.launch { storeSettings.saveAggressiveness(level) }
+    }
+
     fun newCoordinatesJoystick(axisX: Int,axisY: Int){
         if (commsRepository.connectionStateFlow.value == ConnectionStatus.CONNECTED) {
             commsRepository.sendDirectionControl(DirectionControl(axisX.toShort(),axisY.toShort()))

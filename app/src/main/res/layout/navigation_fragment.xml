@@ -50,7 +50,7 @@
         android:layout_height="200dp"
         android:layout_gravity="center"
         android:orientation="vertical"
-        android:layout_marginLeft="8dp"
+        android:layout_marginStart="8dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent">
@@ -64,6 +64,9 @@
             android:value="50"
             android:valueFrom="0.1"
             android:valueTo="100"
+            style="@style/styleSlider"
+            app:trackHeight="5dp"
+            app:thumbHeight="14dp"
             app:progressColor="@color/red"
             app:labelBehavior="gone"
             app:thumb="@drawable/seek_bar_thumb"/>
@@ -120,7 +123,7 @@
         android:layout_height="200dp"
         android:layout_gravity="center"
         android:orientation="vertical"
-        android:layout_marginRight="8dp"
+        android:layout_marginEnd="8dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -134,6 +137,9 @@
             android:value="50"
             android:valueFrom="0.1"
             android:valueTo="100"
+            style="@style/styleSlider"
+            app:trackHeight="5dp"
+            app:thumbHeight="14dp"
             app:progressColor="@color/red"
             app:labelBehavior="gone"
             app:thumb="@drawable/seek_bar_thumb"/>
@@ -176,7 +182,6 @@
         android:layout_height="wrap_content"
         android:padding="8dp"
         android:layout_margin="32dp"
-        android:text="force left"
         android:textColor="@color/white"
         android:textStyle="bold"
         android:backgroundTint="@color/red"
@@ -190,9 +195,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:padding="8dp"
-
         android:layout_margin="32dp"
-        android:text="force right"
         android:textColor="@color/white"
         android:textStyle="bold"
         android:backgroundTint="@color/red"
@@ -206,7 +209,7 @@
         android:id="@+id/navigation_visible"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:constraint_referenced_ids="btn_backward,btn_forward,joystick_direction,joystick_throttle,seekbar_left,seekbar_right,btn_yaw_left,btn_yaw_right"
+        app:constraint_referenced_ids="btn_backward,btn_forward,joystick_direction,joystick_throttle,seekbar_left,seekbar_right,btn_yaw_left,btn_yaw_right,frame_backward,frame_forward"
         />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

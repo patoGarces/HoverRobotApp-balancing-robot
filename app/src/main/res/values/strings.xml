@@ -4,14 +4,13 @@
 
     <!--    Status Data fragment-->
     <string name="title_status_fragment">Estado general</string>
-    <string name="title_bt_status">Conexion</string>
+    <string name="title_aggressiveness">Agresividad:</string>
+    <string name="title_status_robot">Estado robot:</string>
+    <string name="title_connection_status">Estado conexion:</string>
     <string name="placeholder_local_ip">Local IP: %s</string>
-
-    <string name="title_imu_status">status IMU</string>
-    <string name="title_temp">Temperaturas</string>
     <string name="title_battery_temp">Bateria</string>
-    <string name="title_motorboard_temp">ESC</string>
-    <string name="title_imu_temp">IMU</string>
+    <string name="title_motorboard_temp">Motor controller</string>
+    <string name="title_mainboard_temp">Mainboard</string>
 
     <!--    Placeholders-->
     <string name="placeholder_battery_percent">%s %%</string>
@@ -59,12 +58,11 @@
     <string name="status_error_motors_hardware">Error ESCs</string>
     <string name="status_error_motors_battery">Error battery</string>
     <string name="status_error_critical">Critical error</string>
-    <string name="status_unknown">Unknown error</string>
+    <string name="status_unknown">Desconectado</string>
 
-    <!--    Control Fragment-->
+    <!--    Navigation Fragment-->
     <string name="control_move_placeholder_forward">%.02fmts forward</string>
     <string name="control_move_placeholder_backward">%.02fmts backward</string>
-
     <string name="control_move_placeholder_direction">%d°</string>
 
     <!--    Analisis Fragment-->
@@ -81,6 +79,7 @@
     <string name="window_size_5s">5 segundos</string>
     <string name="window_size_15s">15 segundos</string>
     <string name="window_size_30s">30 segundos</string>
+
     <!--    RadioGroup dataset select-->
     <string name="dataset_imu_data">IMU Data</string>
     <string name="dataset_motor_output">Motor Control Data</string>

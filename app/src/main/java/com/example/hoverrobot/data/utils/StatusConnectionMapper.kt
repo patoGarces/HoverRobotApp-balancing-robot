@@ -2,7 +2,7 @@ package com.example.hoverrobot.data.utils
 
 import com.example.hoverrobot.R
 
-object StatusMapperBT {
+object StatusMapper {
     private val mapStatusString = mapOf(
         ConnectionStatus.INIT to "Iniciando",
         ConnectionStatus.WAITING to "Esperando conexion",
@@ -18,22 +18,22 @@ object StatusMapperBT {
     )
 
     private val mapStatusRobotString = mapOf(
-        StatusEnumRobot.ROBOT_INIT to "Inicializando",
-        StatusEnumRobot.ROBOT_DISABLE to "Deshabilitado",
-        StatusEnumRobot.ROBOT_ENABLE to "Armado",
-        StatusEnumRobot.ROBOT_STABILIZED to "Estabilizado",
-        StatusEnumRobot.ROBOT_ERROR to "Error"
+        StatusRobot.ROBOT_INIT to "Inicializando",
+        StatusRobot.ROBOT_DISABLE to "Deshabilitado",
+        StatusRobot.ROBOT_ENABLE to "Armado",
+        StatusRobot.ROBOT_STABILIZED to "Estabilizado",
+        StatusRobot.ROBOT_ERROR to "Error"
     )
 
     private val mapStatusRobotColor = mapOf(
-        StatusEnumRobot.ROBOT_INIT to R.color.status_orange,
-        StatusEnumRobot.ROBOT_DISABLE to R.color.gray_80_percent,
-        StatusEnumRobot.ROBOT_ENABLE to R.color.status_turquesa,
-        StatusEnumRobot.ROBOT_STABILIZED to R.color.status_blue,
-        StatusEnumRobot.ROBOT_ERROR to R.color.status_red
+        StatusRobot.ROBOT_INIT to R.color.status_orange,
+        StatusRobot.ROBOT_DISABLE to R.color.gray_80_percent,
+        StatusRobot.ROBOT_ENABLE to R.color.status_turquesa,
+        StatusRobot.ROBOT_STABILIZED to R.color.status_blue,
+        StatusRobot.ROBOT_ERROR to R.color.status_red
     )
 
-    fun mapStatusTostring(statusBt: ConnectionStatus, statusRobot: StatusEnumRobot?): String {
+    fun statusToString(statusBt: ConnectionStatus, statusRobot: StatusRobot? = null): String {
         return if (statusBt == ConnectionStatus.CONNECTED && statusRobot != null) {
             if (mapStatusRobotString.containsKey(statusRobot)) mapStatusRobotString[statusRobot]!! else "XXX"
         } else {
@@ -41,7 +41,7 @@ object StatusMapperBT {
         }
     }
 
-    fun mapStatusToColor(statusBt: ConnectionStatus, statusRobot: StatusEnumRobot?): Int {
+    fun statusToColor(statusBt: ConnectionStatus, statusRobot: StatusRobot? = null): Int {
         return if (statusBt == ConnectionStatus.CONNECTED) {
             if (mapStatusRobotColor.containsKey(statusRobot)) mapStatusRobotColor[statusRobot]!! else R.color.gray_80_percent
         } else {
@@ -57,7 +57,7 @@ enum class ConnectionStatus {
     ERROR
 }
 
-enum class StatusEnumRobot {
+enum class StatusRobot {
     ROBOT_INIT,
     ROBOT_DISABLE,
     ROBOT_ENABLE,
@@ -65,7 +65,7 @@ enum class StatusEnumRobot {
     ROBOT_ERROR;
 
     companion object {
-        fun getStatusRobot(code: Int): StatusEnumRobot? {
+        fun getStatusRobot(code: Int): StatusRobot? {
             val codeMap = entries.associateBy { it.ordinal }
             return codeMap[code]
         }

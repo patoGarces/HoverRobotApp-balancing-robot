@@ -9,7 +9,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.example.hoverrobot.R
-import com.example.hoverrobot.data.utils.StatusMapperBT
+import com.example.hoverrobot.data.utils.StatusMapper
 import com.example.hoverrobot.data.utils.ToolBox
 import com.example.hoverrobot.databinding.StatusBarFragmentBinding
 
@@ -43,16 +43,16 @@ class StatusBarFragment : Fragment() {
 
         statusBarViewModel.connectionStatus.observe(viewLifecycleOwner){
             it?.let {
-                binding.btnStatus.text = StatusMapperBT.mapStatusTostring(it,statusBarViewModel.statusRobot.value)
+                binding.btnStatus.text = StatusMapper.statusToString(it,statusBarViewModel.statusRobot.value)
                 ToolBox.changeStrokeColor(binding.btnStatus,
-                    requireContext().getColor(StatusMapperBT.mapStatusToColor(it,statusBarViewModel.statusRobot.value)),3)
+                    requireContext().getColor(StatusMapper.statusToColor(it,statusBarViewModel.statusRobot.value)),3)
             }
         }
 
         statusBarViewModel.statusRobot.observe(viewLifecycleOwner){
-            binding.btnStatus.text = StatusMapperBT.mapStatusTostring(statusBarViewModel.connectionStatus.value!!,it)
+            binding.btnStatus.text = StatusMapper.statusToString(statusBarViewModel.connectionStatus.value!!,it)
             ToolBox.changeStrokeColor(binding.btnStatus,
-                requireContext().getColor(StatusMapperBT.mapStatusToColor(statusBarViewModel.connectionStatus.value!!,it)),3)
+                requireContext().getColor(StatusMapper.statusToColor(statusBarViewModel.connectionStatus.value!!,it)),3)
         }
 
         statusBarViewModel.battery.observe(viewLifecycleOwner) {

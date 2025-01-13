@@ -1,102 +1,52 @@
 package com.example.hoverrobot.ui.statusDataFragment
 
+import android.content.Intent
 import android.os.Bundle
-import android.util.Log
+import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.navigation.Navigation
 import com.example.hoverrobot.BuildConfig
 import com.example.hoverrobot.R
-import com.example.hoverrobot.data.utils.MapperGralStatus
-import com.example.hoverrobot.data.utils.ToolBox
-import com.example.hoverrobot.data.utils.StatusMapperBT
-import com.example.hoverrobot.data.utils.TempColorMapper
-import com.example.hoverrobot.databinding.StatusDataFragmentBinding
+import com.example.hoverrobot.data.utils.ConnectionStatus
+import com.example.hoverrobot.data.utils.StatusEnumGral
+import com.example.hoverrobot.ui.navigationFragment.NavigationViewModel
+import com.example.hoverrobot.ui.statusDataFragment.compose.OnActionStatusDataScreen
+import com.example.hoverrobot.ui.statusDataFragment.compose.StatusDataScreen
 
 class StatusDataFragment : Fragment() {
 
-    private lateinit var _binding: StatusDataFragmentBinding
-    private val binding get() = _binding
-
     private val statusDataViewModel: StatusDataViewModel by viewModels(ownerProducer = { requireActivity() })
+    private val navigationViewModel: NavigationViewModel by viewModels(ownerProducer = { requireActivity() })
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
-
-        _binding = StatusDataFragmentBinding.inflate(inflater, container, false)
-        return binding.root
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        binding.tvAppVersion.text = getString(R.string.version_placeholder,BuildConfig.VERSION_NAME)
-        setupObservables()
-    }
-
-    private fun setupObservables() {
-        statusDataViewModel.connectionStatus.observe(viewLifecycleOwner) {
-            it?.let {
-                binding.btnBtStatus.text = StatusMapperBT.mapStatusTostring(it, null)
-                ToolBox.changeStrokeColor(
-                    binding.btnBtStatus,
-                    requireContext().getColor(StatusMapperBT.mapStatusToColor(it, null)),
-                    3
-                )
+    ): View = ComposeView(requireContext()).apply {
+            setContent {
+            MaterialTheme {
+                StatusDataScreen(
+                    robotStatus = statusDataViewModel.gralStatus.observeAsState().value ?: StatusEnumGral.DISCONNECTED,
+                    connectionStatus = statusDataViewModel.connectionStatus.observeAsState().value ?: ConnectionStatus.ERROR,
+                    defaultAggressiveness = navigationViewModel.aggressivenessLevel.observeAsState().value ?: 0,
+                    mainboardTemp = statusDataViewModel.mainboardTemp.observeAsState().value ?: 0F,
+                    motorControllerTemp =  statusDataViewModel.motorControllerTemp.observeAsState().value ?: 0F,
+                    version = getString(R.string.version_placeholder,BuildConfig.VERSION_NAME),
+                    localIp = statusDataViewModel.localIp.observeAsState().value,
+                ) {
+                    when(it) {
+                        is OnActionStatusDataScreen.OnAggressivenessChange -> navigationViewModel.setLevelAggressiveness(it.level)
+                        is OnActionStatusDataScreen.OnActionOpenNetworkSettings -> startActivity(
+                            Intent(Settings.ACTION_WIFI_SETTINGS)
+                        )
+                    }
+                }
             }
-        }
-
-        statusDataViewModel.gralStatus.observe(viewLifecycleOwner) {
-            it?.let {
-                binding.tvGralStatus.text = MapperGralStatus(requireContext()).mapGralStatusText(it)
-                ToolBox.changeStrokeColor(
-                    binding.tvGralStatus,
-                    requireContext().getColor(
-                        MapperGralStatus(requireContext()).mapGralStatusToColor(it)
-                    ),
-                    3
-                )
-            }
-        }
-
-        statusDataViewModel.escsTemp.observe(viewLifecycleOwner) {
-            it?.let {
-                binding.tvEscTemp.text = getString(R.string.placeholder_temp).format(it)
-                ToolBox.changeStrokeColor(
-                    binding.tvEscTemp,
-                    requireContext().getColor(TempColorMapper.mapTempToColor(it)),
-                    3
-                )
-            }
-        }
-
-        statusDataViewModel.imuTemp.observe(viewLifecycleOwner) {
-            it?.let {
-                binding.tvImuboardTemp.text = getString(R.string.placeholder_temp).format(it)
-                ToolBox.changeStrokeColor(
-                    binding.tvImuboardTemp,
-                    requireContext().getColor(TempColorMapper.mapTempToColor(it)),
-                    3
-                )
-            }
-        }
-
-        statusDataViewModel.localIp.observe(viewLifecycleOwner) {
-            binding.tvLocalIp.text = getString(R.string.placeholder_local_ip,it)
-        }
-
-        statusDataViewModel.batteryStatus.observe(viewLifecycleOwner) {
-//            binding.tvBatteryTemp.text = getString(R.string.placeholder_temp).format(it.batTemp)
-//            ToolBox.changeStrokeColor(
-//                binding.tvBatteryTemp,
-//                requireContext().getColor(TempColorMapper.mapTempToColor(it.batTemp)),
-//                3
-//            )
         }
     }
 }

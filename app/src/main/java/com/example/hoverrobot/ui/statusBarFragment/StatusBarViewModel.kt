@@ -6,9 +6,8 @@ import androidx.lifecycle.ViewModel
 import com.example.hoverrobot.data.models.Battery
 import com.example.hoverrobot.data.utils.ToolBox.Companion.ioScope
 import com.example.hoverrobot.data.repositories.CommsRepository
-import com.example.hoverrobot.data.repositories.PRECISION_DECIMALS_COMMS
 import com.example.hoverrobot.data.utils.ConnectionStatus
-import com.example.hoverrobot.data.utils.StatusEnumRobot
+import com.example.hoverrobot.data.utils.StatusRobot
 import com.example.hoverrobot.data.utils.ToolBox.Companion.toPercentLevel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -31,8 +30,8 @@ class StatusBarViewModel @Inject constructor(
     private var _connectionStatus = MutableLiveData<ConnectionStatus>()
     val connectionStatus : LiveData<ConnectionStatus> = _connectionStatus
 
-    private var _statusRobot = MutableLiveData<StatusEnumRobot?>()
-    val statusRobot : LiveData<StatusEnumRobot?> get() = _statusRobot
+    private var _statusRobot = MutableLiveData<StatusRobot?>()
+    val statusRobot : LiveData<StatusRobot?> get() = _statusRobot
 
     init {
         _battery.postValue(Battery(0,0F))
@@ -50,7 +49,7 @@ class StatusBarViewModel @Inject constructor(
                     )
                 )
                 _tempImu.postValue(it.tempImu)
-                _statusRobot.postValue(StatusEnumRobot.getStatusRobot(it.statusCode))
+                _statusRobot.postValue(StatusRobot.getStatusRobot(it.statusCode))
             }
         }
 
