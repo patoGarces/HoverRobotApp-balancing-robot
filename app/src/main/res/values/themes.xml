@@ -1,4 +1,4 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
     <!-- Base application theme. -->
     <style name="Base.Theme.HoverRobot" parent="Theme.Material3.DayNight.NoActionBar">
     </style>
@@ -28,12 +28,9 @@
     </style>
 
     <!--    Estilo sliders de configuracion-->
-    <style name="styleSliderPid" parent="Widget.MaterialComponents.Slider">
+    <style name="styleSlider" parent="Widget.MaterialComponents.Slider">
         <item name="android:layout_marginHorizontal">16dp</item>
-        <!--        <item name="android:progressTint">@color/blue_80_percent</item>-->
-        <!--        <item name="android:progressBackgroundTint">@color/gray_80_percent</item>-->
     </style>
-
 
     <!--    Estilos textview general-->
     <style name="style_text_14sp_bold" parent="Widget.AppCompat.TextView">

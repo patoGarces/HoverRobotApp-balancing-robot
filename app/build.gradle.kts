@@ -1,17 +1,19 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
+    alias(libs.plugins.compose.compiler)
     kotlin("kapt")
     id("dagger.hilt.android.plugin")
+
 }
 
 android {
     namespace = "com.example.hoverrobot"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.hoverrobot"
-        minSdk = 26
+        minSdk = 29
         targetSdk = 34
         versionCode = 1
         versionName = "1.0.0"
@@ -47,6 +49,7 @@ android {
     }
 
     buildFeatures {
+        compose = true
         viewBinding = true
         buildConfig = true
     }
@@ -60,6 +63,27 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
+    implementation(libs.androidx.ui)
+
+    // Dependencias de Jetpack Compose
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.material)
+    implementation(libs.androidx.material3)
+    implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.activity.compose)
+
+    // Dependencias adicionales de Compose
+    implementation(libs.androidx.runtime.livedata)
+    implementation(libs.androidx.foundation)
+
+    // Dependencias para la integración con ViewModel y otras herramientas
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.material.icons.core)
+
+    implementation(libs.androidx.ui.tooling.preview.android)
+    implementation(libs.androidx.runtime)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -69,23 +93,7 @@ dependencies {
 
     implementation(libs.kotlinx.serialization.json)
 
-//    implementation(libs.virtualjoystick)
-//    implementation(libs.virtual.joystick.android)
-
-//    implementation("com.github.controlwear:virtual-joystick-android:")
-//    implementation("com.github.controlwear:virtualjoystick:1.10.1")
     implementation("com.github.controlwear:virtual-joystick-android:master-SNAPSHOT")
-
-
-
-
-    // Joystick
-//    implementation(libs.virtualjoystick)
-//    implementation("io.github.controlwear:virtualjoystick")
-//    implementation("io.github.controlwear:virtualjoystick:1.9.0")
-
-//    implementation("com.github.manalkaff:JetStick:1.2")
-
 
     // Plotter
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
@@ -94,18 +102,15 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
 
     // Hilt
-    implementation ("com.google.dagger:hilt-android:2.48")
-    kapt ("com.google.dagger:hilt-compiler:2.48")
+    implementation (libs.hilt.android)
+    debugImplementation(libs.androidx.ui.tooling)
+    kapt (libs.hilt.compiler)
 
     // Compass view
     implementation("com.github.kix2902:CompassView:master-SNAPSHOT")
 
     // seekbar
-//    implementation("com.github.Triggertrap:SeekArc:v1.1")
     implementation("com.github.marcinmoskala:ArcSeekBar:0.31")
-
-    implementation(libs.material.v190)
-
 }
 
 kapt {

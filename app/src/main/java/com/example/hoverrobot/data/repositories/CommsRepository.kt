@@ -12,8 +12,9 @@ import com.example.hoverrobot.data.models.comms.RobotDynamicData
 import com.example.hoverrobot.data.models.comms.RobotLocalConfig
 import com.example.hoverrobot.data.models.comms.asRobotDynamicData
 import com.example.hoverrobot.data.models.comms.asRobotLocalConfig
-import com.example.hoverrobot.data.utils.ByteArraysUtils.toByteBuffer
+
 import com.example.hoverrobot.data.utils.ConnectionStatus
+import com.example.hoverrobot.data.utils.toByteBuffer
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
