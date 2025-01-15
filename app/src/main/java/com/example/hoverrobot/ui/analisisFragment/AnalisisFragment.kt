@@ -135,6 +135,8 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
                 val randomData = RobotDynamicData(
                     batVoltage = (Math.random() * 100).toFloat(),
                     tempImu = (Math.random() * 100).toFloat(),
+                    tempMcb = (Math.random() * 100).toFloat(),
+                    tempMainboard = (Math.random() * 100).toFloat(),
                     speedR = Math.random().toInt(),
                     speedL = Math.random().toInt(),
                     pitchAngle = ((Math.random() - 0.5) * 180).toFloat(),

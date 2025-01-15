@@ -11,6 +11,7 @@
     <string name="title_battery_temp">Bateria</string>
     <string name="title_motorboard_temp">Motor controller</string>
     <string name="title_mainboard_temp">Mainboard</string>
+    <string name="title_imu_temp">IMU</string>
 
     <!--    Placeholders-->
     <string name="placeholder_battery_percent">%s %%</string>
@@ -48,17 +49,23 @@
         <item>PID YAW</item>
     </string-array>
 
-    <!--    Mapper status error-->
-    <string name="status_normal">Normal</string>
-    <string name="status_initializing_imu">Init IMU</string>
-    <string name="status_error_imu">Error IMU</string>
-    <string name="status_init_motorboard">Init ESCs</string>
-    <string name="status_error_motorboard_comms">Error MCB</string>
-    <string name="status_error_motors_hall">Error motors hall</string>
-    <string name="status_error_motors_hardware">Error ESCs</string>
-    <string name="status_error_motors_battery">Error battery</string>
-    <string name="status_error_critical">Critical error</string>
-    <string name="status_unknown">Desconectado</string>
+    <!--    Mapper status connection -->
+    <string name="status_connection_init">Iniciando</string>
+    <string name="status_connection_waiting">Esperando conexion</string>
+    <string name="status_connection_connected">Conectado</string>
+    <string name="status_connection_error">Reintentar</string>
+
+    <!--    Mapper status robot -->
+    <string name="status_robot_init">Inicializando</string>
+    <string name="status_robot_disable">Deshabilitado</string>
+    <string name="status_robot_enable">Armado</string>
+    <string name="status_robot_stabilized">Estabilizado</string>
+    <string name="status_robot_error">Error</string>
+    <string name="status_robot_error_limit_speed">Error speed</string>
+    <string name="status_robot_error_mcb">Error MCB</string>
+    <string name="status_robot_error_imu">Error IMU</string>
+    <string name="status_robot_error_halls">Error HALLS</string>
+    <string name="status_robot_error_battery">Error battery</string>
 
     <!--    Navigation Fragment-->
     <string name="control_move_placeholder_forward">%.02fmts forward</string>

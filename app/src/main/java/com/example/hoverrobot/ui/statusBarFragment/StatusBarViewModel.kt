@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 import com.example.hoverrobot.data.models.Battery
 import com.example.hoverrobot.data.utils.ToolBox.Companion.ioScope
 import com.example.hoverrobot.data.repositories.CommsRepository
-import com.example.hoverrobot.data.utils.ConnectionStatus
+import com.example.hoverrobot.data.utils.StatusConnection
 import com.example.hoverrobot.data.utils.StatusRobot
 import com.example.hoverrobot.data.utils.ToolBox.Companion.toPercentLevel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,18 +27,18 @@ class StatusBarViewModel @Inject constructor(
     private var _tempImu = MutableLiveData<Float>()
     val tempImu : LiveData<Float> = _tempImu
 
-    private var _connectionStatus = MutableLiveData<ConnectionStatus>()
-    val connectionStatus : LiveData<ConnectionStatus> = _connectionStatus
+    private var _StatusConnection = MutableLiveData<StatusConnection>()
+    val statusConnection : LiveData<StatusConnection> = _StatusConnection
 
-    private var _statusRobot = MutableLiveData<StatusRobot?>()
-    val statusRobot : LiveData<StatusRobot?> get() = _statusRobot
+    private var _statusRobot = MutableLiveData<StatusRobot>()
+    val statusRobot : LiveData<StatusRobot> get() = _statusRobot
 
     init {
         _battery.postValue(Battery(0,0F))
         _fpsStatus.postValue(0.0F)
         _tempImu.postValue(0F)
-        _connectionStatus.postValue(ConnectionStatus.INIT)
-        _statusRobot.postValue(null)
+        _StatusConnection.postValue(StatusConnection.INIT)
+        _statusRobot.postValue(StatusRobot.INIT)
 
         ioScope.launch {
             commsRepository.dynamicDataRobotFlow.collect {
@@ -55,7 +55,7 @@ class StatusBarViewModel @Inject constructor(
 
         ioScope.launch {
             commsRepository.connectionStateFlow.collect {
-                _connectionStatus.postValue(it)
+                _StatusConnection.postValue(it)
             }
         }
     }

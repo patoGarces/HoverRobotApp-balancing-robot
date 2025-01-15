@@ -36,7 +36,6 @@ class NavigationFragment : Fragment() {
     private lateinit var _binding : NavigationFragmentBinding
     private val binding get() = _binding
 
-    private var directionYaw: Int = 0
     private var joyAxisX: Int = 0
     private var joyAxisY: Int = 0
 
@@ -52,6 +51,9 @@ class NavigationFragment : Fragment() {
 
     private var entryDataPoints: ArrayList<Entry> = ArrayList()
     private lateinit var scatterDataset: ScatterDataSet
+
+    private val dualRateAggressiveness: Float
+        get() = AggressivenessLevels.getLevelPercent(navigationViewModel.aggressivenessLevel.value ?: 0) ?: 0F
 
     private val TAG = "ControlFragment"
 
@@ -79,13 +81,13 @@ class NavigationFragment : Fragment() {
     private fun setupListener(){
 
         binding.joystickDirection.setOnMoveListener{ angle, relValue ->
-            joyAxisX = relValue * (90 - angle).sign
+            joyAxisX = (relValue * (90 - angle).sign * dualRateAggressiveness).toInt()
             navigationViewModel.newCoordinatesJoystick(joyAxisX,joyAxisY)
             Log.i("calibrate","Y: $joyAxisX")
         }
 
         binding.joystickThrottle.setOnMoveListener{ angle, relValue ->
-            joyAxisY = relValue * (180 - angle).sign
+            joyAxisY = (relValue * (180 - angle).sign * dualRateAggressiveness).toInt()
             navigationViewModel.newCoordinatesJoystick(joyAxisX,joyAxisY)
             Log.i("calibrate","Y: $joyAxisY")
         }
@@ -171,7 +173,6 @@ class NavigationFragment : Fragment() {
             Collections.sort(entryDataPoints, EntryXComparator())
 
             val dataSet = ScatterDataSet(entryDataPoints, "").apply {
-//            color = Color.BLUE
                 color = Color.RED
                 scatterShapeSize = 10f
                 setScatterShape(ScatterChart.ScatterShape.CIRCLE)
@@ -222,3 +223,15 @@ private const val MAX_DISTANCE = 1f
 
 private const val MIN_DIR = 1f
 private const val MAX_DIR = 180f
+
+enum class AggressivenessLevels(val normalizePercent: Float) {
+    SOFT(0.3F),
+    MODERATE(0.6F),
+    AGGRESSIVE(1F);
+
+    companion object {
+        fun getLevelPercent(indexLevel: Int): Float? {
+            return entries.getOrNull(indexLevel)?.normalizePercent
+        }
+    }
+}
