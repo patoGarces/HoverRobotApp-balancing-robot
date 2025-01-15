@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -38,19 +39,21 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.hoverrobot.R
-import com.example.hoverrobot.data.utils.ConnectionStatus
-import com.example.hoverrobot.data.utils.MapperGralStatus
-import com.example.hoverrobot.data.utils.StatusEnumGral
+import com.example.hoverrobot.data.utils.StatusConnection
 import com.example.hoverrobot.data.utils.StatusMapper
+import com.example.hoverrobot.data.utils.StatusMapper.colorRes
+import com.example.hoverrobot.data.utils.StatusMapper.stringRes
+import com.example.hoverrobot.data.utils.StatusRobot
 import com.example.hoverrobot.data.utils.mapTempToColor
 
 @Composable
 fun StatusDataScreen(
-    robotStatus: StatusEnumGral,
-    connectionStatus: ConnectionStatus,
+    statusRobot: StatusRobot,
+    statusConnection: StatusConnection,
     defaultAggressiveness: Int,
     mainboardTemp: Float,
     motorControllerTemp: Float,
+    imuTemp: Float,
     version: String,
     localIp: String?,
     onNewAction: (OnActionStatusDataScreen) -> Unit
@@ -72,14 +75,14 @@ fun StatusDataScreen(
 
         NormalComponent(
             title = stringResource(R.string.title_status_robot),
-            value = MapperGralStatus(LocalContext.current).mapGralStatusText(robotStatus),
-            colorOutline = colorResource(MapperGralStatus(LocalContext.current).mapGralStatusToColor(robotStatus)),
+            value = stringResource(statusRobot.stringRes(statusConnection)),
+            colorOutline = colorResource(statusRobot.colorRes(statusConnection)),
         ) { }
 
         NormalComponent(
             title = stringResource(R.string.title_connection_status),
-            value = StatusMapper.statusToString(connectionStatus),
-            colorOutline = colorResource(StatusMapper.statusToColor(connectionStatus))
+            value = stringResource(statusConnection.stringRes()),
+            colorOutline = colorResource(statusConnection.colorRes())
         ) {
             onNewAction(OnActionStatusDataScreen.OnActionOpenNetworkSettings)
         }
@@ -98,6 +101,12 @@ fun StatusDataScreen(
                 stringResource(R.string.title_motorboard_temp),
                 stringResource(R.string.placeholder_temp).format(motorControllerTemp),
                 motorControllerTemp.mapTempToColor()
+            )
+
+            TemperatureComponent(
+                stringResource(R.string.title_imu_temp),
+                stringResource(R.string.placeholder_temp).format(imuTemp),
+                imuTemp.mapTempToColor()
             )
         }
 
@@ -281,11 +290,12 @@ private fun AggressivenessScreenPreview() {
             .background(Color.Black)
     ) {
         StatusDataScreen(
-            robotStatus = StatusEnumGral.NORMAL,
-            connectionStatus = ConnectionStatus.CONNECTED,
+            statusRobot = StatusRobot.STABILIZED,
+            statusConnection = StatusConnection.CONNECTED,
             defaultAggressiveness = 0,
             mainboardTemp = 12.5F,
             motorControllerTemp = 50F,
+            imuTemp = 80F,
             version = "V1.2.3",
             localIp = "255.255.255.255"
         ) { }

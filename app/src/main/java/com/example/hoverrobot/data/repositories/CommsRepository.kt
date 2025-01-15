@@ -13,7 +13,7 @@ import com.example.hoverrobot.data.models.comms.RobotLocalConfig
 import com.example.hoverrobot.data.models.comms.asRobotDynamicData
 import com.example.hoverrobot.data.models.comms.asRobotLocalConfig
 
-import com.example.hoverrobot.data.utils.ConnectionStatus
+import com.example.hoverrobot.data.utils.StatusConnection
 import com.example.hoverrobot.data.utils.toByteBuffer
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -32,7 +32,7 @@ interface CommsRepository {
 
     val robotLocalConfigFlow: SharedFlow<RobotLocalConfig?>
 
-    val connectionStateFlow: StateFlow<ConnectionStatus>
+    val connectionStateFlow: StateFlow<StatusConnection>
 
     fun sendPidParams(pidParams: PidSettings)
 
@@ -56,8 +56,8 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
     private val _robotLocalConfigFlow = MutableStateFlow<RobotLocalConfig?>(null)
     override val robotLocalConfigFlow: StateFlow<RobotLocalConfig?> = _robotLocalConfigFlow
 
-    private val _connectionStateFlow = MutableStateFlow(ConnectionStatus.INIT)
-    override val connectionStateFlow: StateFlow<ConnectionStatus> = _connectionStateFlow
+    private val _connectionStateFlow = MutableStateFlow(StatusConnection.INIT)
+    override val connectionStateFlow: StateFlow<StatusConnection> = _connectionStateFlow
 
     private val TAG = "CommsRepository"
 
@@ -115,7 +115,7 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
             serverSocket.connectionsStatus.collect {
                 _connectionStateFlow.emit(it)
 
-                if (it == ConnectionStatus.WAITING) {
+                if (it == StatusConnection.WAITING) {
                     _robotLocalConfigFlow.emit(null)                                            // Para forzar el collect al reconectar
                 }
             }

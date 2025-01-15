@@ -7,6 +7,8 @@ import java.nio.ByteBuffer
 data class RobotDynamicData(
     val batVoltage: Float,
     val tempImu: Float,
+    val tempMcb: Float,
+    val tempMainboard: Float,
     val speedR: Int,
     val speedL: Int,
     val pitchAngle: Float,
@@ -26,6 +28,8 @@ val ByteBuffer.asRobotDynamicData: RobotDynamicData
     get() = RobotDynamicData(
         this.short.toFloat() / PRECISION_DECIMALS_COMMS,
         this.short.toFloat() / PRECISION_DECIMALS_COMMS,
+        this.short.toFloat() / PRECISION_DECIMALS_COMMS,
+        this.short.toFloat() / PRECISION_DECIMALS_COMMS,
         this.short.toInt(),
         this.short.toInt(),
         this.short.toFloat() / PRECISION_DECIMALS_COMMS,
@@ -41,4 +45,4 @@ val ByteBuffer.asRobotDynamicData: RobotDynamicData
         this.short.toInt()
     )
 
-const val ROBOT_DYNAMIC_DATA_SIZE = 30
+const val ROBOT_DYNAMIC_DATA_SIZE = 34

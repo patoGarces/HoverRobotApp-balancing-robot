@@ -2,7 +2,7 @@ package com.example.hoverrobot.data.repositories
 
 import android.util.Log
 
-import com.example.hoverrobot.data.utils.ConnectionStatus
+import com.example.hoverrobot.data.utils.StatusConnection
 import com.example.hoverrobot.data.utils.ToolBox.Companion.ioScope
 import com.example.hoverrobot.data.utils.toByteBuffer
 import kotlinx.coroutines.Dispatchers
@@ -32,8 +32,8 @@ class ServerTcp {
     private val _receivedDataFlow = MutableSharedFlow<ByteBuffer>()
     val receivedDataFlow: SharedFlow<ByteBuffer> = _receivedDataFlow
 
-    private val _connectionsStatus = MutableStateFlow(ConnectionStatus.INIT)
-    val connectionsStatus: StateFlow<ConnectionStatus> = _connectionsStatus
+    private val _connectionsStatus = MutableStateFlow(StatusConnection.INIT)
+    val connectionsStatus: StateFlow<StatusConnection> = _connectionsStatus
 
     private val TAG = "ServerTcp"
 
@@ -54,7 +54,7 @@ class ServerTcp {
     private var contFailReception = 0
 
     init {
-        setNewConnectStatus(ConnectionStatus.INIT)
+        setNewConnectStatus(StatusConnection.INIT)
         tcpSocket = ServerSocket(port)
         socketHandler()
     }
@@ -64,7 +64,7 @@ class ServerTcp {
             while (true) {
                 localIp = getIPAddress()
                 Log.d(TAG, "Server started, local IP: $localIp, port: $port")
-                setNewConnectStatus(ConnectionStatus.WAITING)
+                setNewConnectStatus(StatusConnection.WAITING)
                 socket = tcpSocket.accept()
 
                 val remoteIp = socket.inetAddress
@@ -75,7 +75,7 @@ class ServerTcp {
 
                 ioScope.launch { socketAlive() }
 
-                setNewConnectStatus(ConnectionStatus.CONNECTED)
+                setNewConnectStatus(StatusConnection.CONNECTED)
 
                 if (!socket.isClosed) socket.getInputStream().handleReception()
 
@@ -130,7 +130,7 @@ class ServerTcp {
         }
     }
 
-    private fun setNewConnectStatus(newStatus: ConnectionStatus) {
+    private fun setNewConnectStatus(newStatus: StatusConnection) {
         ioScope.launch {
             _connectionsStatus.emit(newStatus)
         }

@@ -7,7 +7,7 @@ import com.example.hoverrobot.data.models.comms.CommandsRobot
 import com.example.hoverrobot.data.models.comms.PidSettings
 import com.example.hoverrobot.data.models.comms.RobotLocalConfig
 import com.example.hoverrobot.data.repositories.CommsRepository
-import com.example.hoverrobot.data.utils.ConnectionStatus
+import com.example.hoverrobot.data.utils.StatusConnection
 import com.example.hoverrobot.data.utils.ToolBox.Companion.ioScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -34,7 +34,7 @@ class SettingsFragmentViewModel @Inject constructor(
     }
 
     fun sendNewPidTunning(newTunning : PidSettings): Boolean {
-        return if (commsRepository.connectionStateFlow.value == ConnectionStatus.CONNECTED) {
+        return if (commsRepository.connectionStateFlow.value == StatusConnection.CONNECTED) {
             commsRepository.sendPidParams(newTunning)
             true
         }
@@ -42,7 +42,7 @@ class SettingsFragmentViewModel @Inject constructor(
     }
 
     fun sendCommand(command: CommandsRobot): Boolean {
-        return if (commsRepository.connectionStateFlow.value == ConnectionStatus.CONNECTED) {
+        return if (commsRepository.connectionStateFlow.value == StatusConnection.CONNECTED) {
             commsRepository.sendCommand(command)
             true
         }

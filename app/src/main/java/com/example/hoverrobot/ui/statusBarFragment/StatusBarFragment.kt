@@ -9,10 +9,10 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.example.hoverrobot.R
-import com.example.hoverrobot.data.utils.StatusMapper
+import com.example.hoverrobot.data.utils.StatusMapper.colorBtnStatusRes
+import com.example.hoverrobot.data.utils.StatusMapper.stringBtnStatusRes
 import com.example.hoverrobot.data.utils.ToolBox
 import com.example.hoverrobot.databinding.StatusBarFragmentBinding
-
 
 class StatusBarFragment : Fragment() {
 
@@ -40,19 +40,36 @@ class StatusBarFragment : Fragment() {
     }
 
     private fun setupObserver() {
-
-        statusBarViewModel.connectionStatus.observe(viewLifecycleOwner){
-            it?.let {
-                binding.btnStatus.text = StatusMapper.statusToString(it,statusBarViewModel.statusRobot.value)
-                ToolBox.changeStrokeColor(binding.btnStatus,
-                    requireContext().getColor(StatusMapper.statusToColor(it,statusBarViewModel.statusRobot.value)),3)
+        statusBarViewModel.statusConnection.observe(viewLifecycleOwner) {
+            it?.let { statusConnection ->
+                statusBarViewModel.statusRobot.value?.let { statusRobot ->
+                    binding.btnStatus.text =
+                        getString(statusRobot.stringBtnStatusRes(statusConnection))
+                    ToolBox.changeStrokeColor(
+                        binding.btnStatus,
+                        requireContext().getColor(
+                            statusRobot.colorBtnStatusRes(
+                                statusConnection
+                            )
+                        ), 3
+                    )
+                }
             }
         }
 
-        statusBarViewModel.statusRobot.observe(viewLifecycleOwner){
-            binding.btnStatus.text = StatusMapper.statusToString(statusBarViewModel.connectionStatus.value!!,it)
-            ToolBox.changeStrokeColor(binding.btnStatus,
-                requireContext().getColor(StatusMapper.statusToColor(statusBarViewModel.connectionStatus.value!!,it)),3)
+        statusBarViewModel.statusRobot.observe(viewLifecycleOwner) {
+            it?.let { statusRobot ->
+                statusBarViewModel.statusConnection.value?.let { statusConnection ->
+                    binding.btnStatus.text =
+                        getString(statusRobot.stringBtnStatusRes(statusConnection))
+                    ToolBox.changeStrokeColor(
+                        binding.btnStatus,
+                        requireContext().getColor(
+                            statusRobot.colorBtnStatusRes(statusConnection)
+                        ), 3
+                    )
+                }
+            }
         }
 
         statusBarViewModel.battery.observe(viewLifecycleOwner) {
