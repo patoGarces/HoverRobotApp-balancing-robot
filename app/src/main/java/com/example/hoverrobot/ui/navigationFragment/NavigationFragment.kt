@@ -11,21 +11,17 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.example.hoverrobot.R
-import com.example.hoverrobot.data.models.comms.DirectionControl
-import com.example.hoverrobot.data.utils.ToolBox.Companion.ioScope
+import com.example.hoverrobot.data.utils.ToolBox.ioScope
 import com.example.hoverrobot.databinding.NavigationFragmentBinding
 import com.github.mikephil.charting.charts.ScatterChart
 import com.github.mikephil.charting.data.Entry
-import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.data.ScatterData
 import com.github.mikephil.charting.data.ScatterDataSet
 import com.github.mikephil.charting.utils.EntryXComparator
+import com.marcinmoskala.arcseekbar.ProgressListener
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
-import com.marcinmoskala.arcseekbar.ProgressListener;
-import java.lang.Math.round
 import java.util.Collections
 import kotlin.math.sign
 

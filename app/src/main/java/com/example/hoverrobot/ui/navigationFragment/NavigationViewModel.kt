@@ -10,7 +10,7 @@ import com.example.hoverrobot.data.models.comms.RobotDynamicData
 import com.example.hoverrobot.data.repositories.CommsRepository
 import com.example.hoverrobot.data.repositories.StoreSettings
 import com.example.hoverrobot.data.utils.StatusConnection
-import com.example.hoverrobot.data.utils.ToolBox.Companion.ioScope
+import com.example.hoverrobot.data.utils.ToolBox.ioScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -19,29 +19,27 @@ import javax.inject.Inject
 class NavigationViewModel @Inject constructor(
     private val commsRepository: CommsRepository,
     private val storeSettings: StoreSettings
-): ViewModel() {
+) : ViewModel() {
 
     private var _joyVisible: MutableLiveData<Boolean?> = MutableLiveData()
-    val joyVisible : LiveData<Boolean?> get() = _joyVisible
+    val joyVisible: LiveData<Boolean?> get() = _joyVisible
 
     private var _dynamicData: MutableLiveData<RobotDynamicData> = MutableLiveData()
-    val dynamicData : LiveData<RobotDynamicData> get() = _dynamicData
+    val dynamicData: LiveData<RobotDynamicData> get() = _dynamicData
 
-    private var _pointCloud:  MutableLiveData<List<PointCloudItem>> = MutableLiveData()
+    private var _pointCloud: MutableLiveData<List<PointCloudItem>> = MutableLiveData()
     val pointCloud: LiveData<List<PointCloudItem>> = _pointCloud
 
     private var _aggressivenessLevel: MutableLiveData<Int> = MutableLiveData(0)
     val aggressivenessLevel: LiveData<Int> = _aggressivenessLevel
 
+    private val isRobotConnected: Boolean
+        get() = commsRepository.connectionState.value.status == StatusConnection.CONNECTED
+
     init {
         ioScope.launch {
-            commsRepository.connectionStateFlow.collect {
-                if (it == StatusConnection.CONNECTED) {
-                    _joyVisible.postValue(true)
-                }
-                else {
-                    _joyVisible.postValue(false)
-                }
+            commsRepository.connectionState.collect {
+                _joyVisible.postValue(isRobotConnected)
             }
         }
 
@@ -77,28 +75,29 @@ class NavigationViewModel @Inject constructor(
         ioScope.launch { storeSettings.saveAggressiveness(level) }
     }
 
-    fun newCoordinatesJoystick(axisX: Int,axisY: Int){
-        if (commsRepository.connectionStateFlow.value == StatusConnection.CONNECTED) {
-            commsRepository.sendDirectionControl(DirectionControl(axisX.toShort(),axisY.toShort()))
+    fun newCoordinatesJoystick(axisX: Int, axisY: Int) {
+        if (isRobotConnected) {
+            commsRepository.sendDirectionControl(DirectionControl(axisX.toShort(), axisY.toShort()))
         }
     }
 
     fun sendNewMovePosition(distanceInMts: Float, isBackward: Boolean = false) {
-        val command = if(isBackward) CommandsRobot.COMMAND_MOVE_BACKWARD else CommandsRobot.COMMAND_MOVE_FORWARD
+        val command =
+            if (isBackward) CommandsRobot.COMMAND_MOVE_BACKWARD else CommandsRobot.COMMAND_MOVE_FORWARD
 
-        if (commsRepository.connectionStateFlow.value == StatusConnection.CONNECTED) {
+        if (isRobotConnected) {
             commsRepository.sendCommand(command, distanceInMts)
         }
     }
 
     fun sendNewMoveAbsYaw(desiredAngle: Float) {
-        if (commsRepository.connectionStateFlow.value == StatusConnection.CONNECTED) {
+        if (isRobotConnected) {
             commsRepository.sendCommand(CommandsRobot.COMMAND_MOVE_ABS_YAW, desiredAngle)
         }
     }
 
     fun sendNewMoveRelYaw(angle: Float) {
-        if (commsRepository.connectionStateFlow.value == StatusConnection.CONNECTED) {
+        if (isRobotConnected) {
             commsRepository.sendCommand(CommandsRobot.COMMAND_MOVE_REL_YAW, angle)
         }
     }

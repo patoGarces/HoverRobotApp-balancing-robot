@@ -8,7 +8,7 @@ import com.example.hoverrobot.data.models.comms.PidSettings
 import com.example.hoverrobot.data.models.comms.RobotLocalConfig
 import com.example.hoverrobot.data.repositories.CommsRepository
 import com.example.hoverrobot.data.utils.StatusConnection
-import com.example.hoverrobot.data.utils.ToolBox.Companion.ioScope
+import com.example.hoverrobot.data.utils.ToolBox.ioScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -20,6 +20,9 @@ class SettingsFragmentViewModel @Inject constructor(
 
     private var _localConfigFromRobot: MutableLiveData<RobotLocalConfig?> = MutableLiveData()
     val localConfigFromRobot : LiveData<RobotLocalConfig?> get() = _localConfigFromRobot
+
+    private val isRobotConnected: Boolean
+        get() = commsRepository.connectionState.value.status == StatusConnection.CONNECTED
 
     init {
         _localConfigFromRobot.value = null
@@ -34,7 +37,7 @@ class SettingsFragmentViewModel @Inject constructor(
     }
 
     fun sendNewPidTunning(newTunning : PidSettings): Boolean {
-        return if (commsRepository.connectionStateFlow.value == StatusConnection.CONNECTED) {
+        return if (isRobotConnected) {
             commsRepository.sendPidParams(newTunning)
             true
         }
@@ -42,7 +45,7 @@ class SettingsFragmentViewModel @Inject constructor(
     }
 
     fun sendCommand(command: CommandsRobot): Boolean {
-        return if (commsRepository.connectionStateFlow.value == StatusConnection.CONNECTED) {
+        return if (isRobotConnected) {
             commsRepository.sendCommand(command)
             true
         }

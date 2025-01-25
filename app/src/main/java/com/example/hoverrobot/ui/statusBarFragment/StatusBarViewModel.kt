@@ -4,11 +4,12 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.hoverrobot.data.models.Battery
-import com.example.hoverrobot.data.utils.ToolBox.Companion.ioScope
+import com.example.hoverrobot.data.models.comms.ConnectionState
+import com.example.hoverrobot.data.utils.ToolBox.ioScope
 import com.example.hoverrobot.data.repositories.CommsRepository
 import com.example.hoverrobot.data.utils.StatusConnection
 import com.example.hoverrobot.data.utils.StatusRobot
-import com.example.hoverrobot.data.utils.ToolBox.Companion.toPercentLevel
+import com.example.hoverrobot.data.utils.ToolBox.toPercentLevel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -18,28 +19,19 @@ class StatusBarViewModel @Inject constructor(
     private val commsRepository: CommsRepository
 ): ViewModel() {
 
-    private var _battery = MutableLiveData<Battery>()
+    private var _battery = MutableLiveData(Battery(0,0F))
     val battery : LiveData<Battery> = _battery
 
-    private var _fpsStatus = MutableLiveData<Float>()
-    var fpsStatus : LiveData<Float> = _fpsStatus
-
-    private var _tempImu = MutableLiveData<Float>()
+    private var _tempImu = MutableLiveData(0F)
     val tempImu : LiveData<Float> = _tempImu
 
-    private var _StatusConnection = MutableLiveData<StatusConnection>()
-    val statusConnection : LiveData<StatusConnection> = _StatusConnection
+    private var _statusRobot = MutableLiveData(StatusRobot.INIT)
+    val statusRobot : LiveData<StatusRobot> = _statusRobot
 
-    private var _statusRobot = MutableLiveData<StatusRobot>()
-    val statusRobot : LiveData<StatusRobot> get() = _statusRobot
+    private var _connectionState = MutableLiveData<ConnectionState>()
+    val connectionState: LiveData<ConnectionState> = _connectionState
 
     init {
-        _battery.postValue(Battery(0,0F))
-        _fpsStatus.postValue(0.0F)
-        _tempImu.postValue(0F)
-        _StatusConnection.postValue(StatusConnection.INIT)
-        _statusRobot.postValue(StatusRobot.INIT)
-
         ioScope.launch {
             commsRepository.dynamicDataRobotFlow.collect {
                 _battery.postValue(
@@ -53,9 +45,10 @@ class StatusBarViewModel @Inject constructor(
             }
         }
 
+
         ioScope.launch {
-            commsRepository.connectionStateFlow.collect {
-                _StatusConnection.postValue(it)
+            commsRepository.connectionState.collect {
+                _connectionState.postValue(it)
             }
         }
     }

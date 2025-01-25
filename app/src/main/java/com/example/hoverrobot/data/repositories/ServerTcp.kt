@@ -3,7 +3,7 @@ package com.example.hoverrobot.data.repositories
 import android.util.Log
 
 import com.example.hoverrobot.data.utils.StatusConnection
-import com.example.hoverrobot.data.utils.ToolBox.Companion.ioScope
+import com.example.hoverrobot.data.utils.ToolBox.ioScope
 import com.example.hoverrobot.data.utils.toByteBuffer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -41,9 +41,6 @@ class ServerTcp {
 
     private lateinit var socket: Socket
 
-    var localIp = ""
-        internal set
-
     var clientsIp: String? = null
         internal set
 
@@ -62,8 +59,6 @@ class ServerTcp {
     private fun socketHandler() {
         ioScope.launch {
             while (true) {
-                localIp = getIPAddress()
-                Log.d(TAG, "Server started, local IP: $localIp, port: $port")
                 setNewConnectStatus(StatusConnection.WAITING)
                 socket = tcpSocket.accept()
 
@@ -134,39 +129,6 @@ class ServerTcp {
         ioScope.launch {
             _connectionsStatus.emit(newStatus)
         }
-    }
-
-    private fun getIPAddress(useIPv4: Boolean = true): String {
-        try {
-            val interfaces: List<NetworkInterface> =
-                Collections.list(NetworkInterface.getNetworkInterfaces())
-            for (intf in interfaces) {
-                val addrs: List<InetAddress> = Collections.list(intf.inetAddresses)
-                for (addr in addrs) {
-                    if (!addr.isLoopbackAddress) {
-                        val sAddr = addr.hostAddress
-                        //boolean isIPv4 = InetAddressUtils.isIPv4Address(sAddr);
-                        val isIPv4 = sAddr.indexOf(':') < 0
-                        if (useIPv4) {
-                            if (isIPv4) return sAddr
-                        } else {
-                            if (!isIPv4) {
-                                val delim = sAddr.indexOf('%') // drop ip6 zone suffix
-                                return if (delim < 0) sAddr.uppercase(Locale.getDefault()) else sAddr.substring(
-                                    0,
-                                    delim
-                                ).uppercase(
-                                    Locale.getDefault()
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            Log.e(TAG,"Error getting IP: $e")
-        }
-        return ""
     }
 
     fun sendData(data: ByteArray) {

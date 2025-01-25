@@ -1,0 +1,12 @@
+package com.example.hoverrobot.data.models.comms
+
+import com.example.hoverrobot.data.utils.StatusConnection
+
+data class ConnectionState(
+    val status: StatusConnection = StatusConnection.INIT,
+    val receiverPacketRates: Int = 0,
+    val rssi: Int = 0,
+    val strength: Int = 0,
+    val frequency: Int = 0,
+    val ip: String? = null
+)

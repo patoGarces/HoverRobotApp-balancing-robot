@@ -33,25 +33,52 @@
             />
 
         <TextView
-            android:id="@+id/tv_stream_fps"
+            android:id="@+id/tv_packets_rate"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:text="@string/placeholder_fps"
+            android:text="@string/placeholder_packets_rate"
+            android:layout_marginStart="8dp"
+            style="@style/styleTvStatusBar"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/divider5"
+            tools:text = "rx: 40 pps"
+            />
+
+
+        <View
+            android:id="@+id/divider5"
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="@color/red_80_percent"
+            android:layout_marginHorizontal="8dp"
+            android:layout_marginVertical="8dp"
+            app:layout_constraintStart_toEndOf="@id/tv_rssi"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            />
+
+        <TextView
+            android:id="@+id/tv_rssi"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="@string/placeholder_rssi"
             android:layout_marginStart="4dp"
             style="@style/styleTvStatusBar"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@id/ib_stream"
-            tools:text = "17.1 fps"
+            app:layout_constraintStart_toEndOf="@id/ib_strength"
+            tools:text = "-70 dbm"
             />
 
         <ImageButton
-            android:id="@+id/ib_stream"
+            android:id="@+id/ib_strength"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:src="@drawable/ic_stream"
+            android:src="@drawable/network_wifi_0"
             android:layout_marginStart="16dp"
             android:background="@color/transparent"
+            android:tint="@color/white"
             android:adjustViewBounds="true"
             android:scaleType="fitCenter"
             app:layout_constraintTop_toTopOf="parent"
@@ -76,7 +103,7 @@
             android:id="@+id/ib_battery_status"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:src="@drawable/ic_battery_0"
+            android:src="@drawable/ic_battery_unknown"
             android:background="@color/transparent"
             android:adjustViewBounds="true"
             android:scaleType="fitCenter"

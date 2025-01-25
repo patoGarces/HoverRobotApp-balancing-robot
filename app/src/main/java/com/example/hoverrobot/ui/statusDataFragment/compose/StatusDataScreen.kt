@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -30,7 +29,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -40,7 +38,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.hoverrobot.R
 import com.example.hoverrobot.data.utils.StatusConnection
-import com.example.hoverrobot.data.utils.StatusMapper
 import com.example.hoverrobot.data.utils.StatusMapper.colorRes
 import com.example.hoverrobot.data.utils.StatusMapper.stringRes
 import com.example.hoverrobot.data.utils.StatusRobot
@@ -92,22 +89,26 @@ fun StatusDataScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            TemperatureComponent(
-                stringResource(R.string.title_mainboard_temp),
-                stringResource(R.string.placeholder_temp).format(mainboardTemp),
-                mainboardTemp.mapTempToColor())
+            if (mainboardTemp != 0.0F) {
+                TemperatureComponent(
+                    stringResource(R.string.title_mainboard_temp),
+                    mainboardTemp
+                )
+            }
 
-            TemperatureComponent(
-                stringResource(R.string.title_motorboard_temp),
-                stringResource(R.string.placeholder_temp).format(motorControllerTemp),
-                motorControllerTemp.mapTempToColor()
-            )
+            if (motorControllerTemp != 0.0F) {
+                TemperatureComponent(
+                    stringResource(R.string.title_motorboard_temp),
+                    motorControllerTemp
+                )
+            }
 
-            TemperatureComponent(
-                stringResource(R.string.title_imu_temp),
-                stringResource(R.string.placeholder_temp).format(imuTemp),
-                imuTemp.mapTempToColor()
-            )
+            if (imuTemp != 0.0F) {
+                TemperatureComponent(
+                    stringResource(R.string.title_imu_temp),
+                    imuTemp
+                )
+            }
         }
 
         VersionAndIp(version,localIp)
@@ -199,7 +200,7 @@ private fun NormalComponent(
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
+            .padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -232,51 +233,15 @@ private fun NormalComponent(
 }
 
 @Composable
-private fun TemperatureComponent(title: String,temp: String,colorOutline: Color) {
-    Column(
-        Modifier
-            .padding(8.dp)
-            .size(120.dp)
-            .border(width = 2.dp, color = colorOutline, shape = RoundedCornerShape(8.dp)),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Column(
-            Modifier.weight(1F),
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = title,
-                modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 4.dp)
-                    .fillMaxWidth(),
-                textAlign = TextAlign.Center,
-                color = Color.White,
-                fontSize = 14.sp
-            )
-        }
-
-        Text(
-            text = temp,
-            fontSize = 20.sp,
-            modifier = Modifier.padding(8.dp),
-            color = Color.White,
-            textAlign = TextAlign.Center,
-            fontWeight = FontWeight.Bold
-        )
-    }
-}
-
-@Composable
 private fun VersionAndIp(version: String,localIp: String?) {
 
     Text(
         modifier = Modifier.padding(vertical = 4.dp),
-        text = version + if(localIp != null ) " - Local ip: $localIp" else "",
+        text = version + if(!localIp.isNullOrEmpty() ) " - Local ip: $localIp" else "",
         fontSize = 14.sp,
         color = Color.White
     )
 }
-
 
 @Composable
 @Preview(
