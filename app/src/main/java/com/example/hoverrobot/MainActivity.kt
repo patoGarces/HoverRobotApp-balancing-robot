@@ -12,7 +12,6 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
-import com.example.hoverrobot.data.repositories.CommsRepository
 import com.example.hoverrobot.databinding.ActivityMainBinding
 import com.example.hoverrobot.ui.analisisFragment.AnalisisFragment
 import com.example.hoverrobot.ui.analisisFragment.AnalisisViewModel
@@ -26,7 +25,6 @@ import com.example.hoverrobot.ui.statusDataFragment.StatusDataFragment
 import com.example.hoverrobot.ui.statusDataFragment.StatusDataViewModel
 import com.google.android.material.tabs.TabLayoutMediator
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 
 
 @AndroidEntryPoint
@@ -39,9 +37,6 @@ class MainActivity : AppCompatActivity() {
     private val navigationViewModel: NavigationViewModel by viewModels()
     private val analisisViewModel: AnalisisViewModel by viewModels()
     private val settingsFragmentViewModel: SettingsFragmentViewModel by viewModels()
-
-    @Inject
-    lateinit var commsRepository: CommsRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

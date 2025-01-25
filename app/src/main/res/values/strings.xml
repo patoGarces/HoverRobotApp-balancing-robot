@@ -15,8 +15,9 @@
 
     <!--    Placeholders-->
     <string name="placeholder_battery_percent">%s %%</string>
-    <string name="placeholder_battery_voltage">%.1fv</string>
-    <string name="placeholder_fps">%.1f fps</string>
+    <string name="placeholder_battery_voltage">%.1fV</string>
+    <string name="placeholder_rssi">%d dbm</string>
+    <string name="placeholder_packets_rate">rx: %d pps</string>
     <string name="placeholder_temp">%.1f ºC</string>
     <string name="version_placeholder">HoverRobot V%s</string>
 

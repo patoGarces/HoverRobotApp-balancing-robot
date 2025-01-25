@@ -7,7 +7,7 @@ import com.example.hoverrobot.data.models.Battery
 import com.example.hoverrobot.data.repositories.CommsRepository
 import com.example.hoverrobot.data.utils.StatusConnection
 import com.example.hoverrobot.data.utils.StatusRobot
-import com.example.hoverrobot.data.utils.ToolBox.Companion.ioScope
+import com.example.hoverrobot.data.utils.ToolBox.ioScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -17,31 +17,28 @@ class StatusDataViewModel @Inject constructor(
     private val commsRepository: CommsRepository,
 ) : ViewModel() {
 
-    private var _gralStatus = MutableLiveData<StatusRobot>()
-    val gralStatus : LiveData<StatusRobot> = _gralStatus
+    private var _gralStatus = MutableLiveData(StatusRobot.INIT)
+    val gralStatus: LiveData<StatusRobot> = _gralStatus
 
     private var _motorControllerTemp = MutableLiveData(0F)
-    val motorControllerTemp : LiveData<Float> = _motorControllerTemp
+    val motorControllerTemp: LiveData<Float> = _motorControllerTemp
 
     private var _mainboardTemp = MutableLiveData(0F)
-    val mainboardTemp : LiveData<Float> = _mainboardTemp
+    val mainboardTemp: LiveData<Float> = _mainboardTemp
 
     private var _imuTemp = MutableLiveData(0F)
-    val imuTemp : LiveData<Float> = _imuTemp
+    val imuTemp: LiveData<Float> = _imuTemp
 
-    private var _batteryStatus = MutableLiveData<Battery>()
-    val batteryStatus : LiveData<Battery> = _batteryStatus
+    private var _batteryStatus = MutableLiveData(Battery(0, 0F))
+    val batteryStatus: LiveData<Battery> = _batteryStatus
 
-    private var _StatusConnection = MutableLiveData<StatusConnection>()
-    val statusConnection : LiveData<StatusConnection> = _StatusConnection
+    private var _statusConnection = MutableLiveData<StatusConnection>()
+    val statusConnection: LiveData<StatusConnection> = _statusConnection
 
     private var _localIp = MutableLiveData<String>()
-    val localIp : LiveData<String> = _localIp
+    val localIp: LiveData<String> = _localIp
 
     init {
-        _gralStatus.postValue(StatusRobot.INIT)
-        _batteryStatus.postValue(Battery(0,0F))
-
         ioScope.launch {
             commsRepository.dynamicDataRobotFlow.collect {
                 _mainboardTemp.postValue(it.tempMainboard)
@@ -53,9 +50,11 @@ class StatusDataViewModel @Inject constructor(
         }
 
         ioScope.launch {
-            commsRepository.connectionStateFlow.collect {
-                _StatusConnection.postValue(it)
-                _localIp.postValue(commsRepository.getLocalIp())    // TODO: mover de aca, solo provisorio.
+            commsRepository.connectionState.collect {
+                it.ip?.let { ip ->
+                    _localIp.postValue(ip)
+                }
+                _statusConnection.postValue(it.status)
             }
         }
     }

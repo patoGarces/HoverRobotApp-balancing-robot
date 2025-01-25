@@ -110,7 +110,8 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
         }
 
         binding.btnPlayPause.setOnClickListener {
-            binding.btnPlayPause.text = getString(if(isAnalisisPaused) R.string.btn_pause_title else R.string.btn_play_title)
+            binding.btnPlayPause.text =
+                getString(if (isAnalisisPaused) R.string.btn_pause_title else R.string.btn_play_title)
             isAnalisisPaused = !isAnalisisPaused
         }
 
@@ -156,7 +157,7 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
         }
     }
 
-private fun initGraph() {
+    private fun initGraph() {
         with(binding.chart) {
             setOnChartValueSelectedListener(this@AnalisisFragment)
             setDrawGridBackground(false)
@@ -193,23 +194,54 @@ private fun initGraph() {
             legend.setDrawInside(true)
         }
 
-        lineDataAnglePitch = createLineDataSet(entryAnglePitch,R.string.dataset_angle_pitch,R.color.red_80_percent)
-        lineDataAngleRoll = createLineDataSet(entryAngleRoll,R.string.dataset_angle_roll,R.color.green_80_percent)
-        lineDataAngleYaw = createLineDataSet(entryAngleYaw,R.string.dataset_angle_yaw,R.color.yellow_80_percent)
-        lineDataMotorL = createLineDataSet(entryMotorL,R.string.dataset_motor_l,R.color.blue_80_percent)
-        lineDataMotorR = createLineDataSet(entryMotorR,R.string.dataset_motor_r,R.color.red_80_percent)
-        lineDataSetPointAngle = createLineDataSet(entrySetPointAngle,R.string.dataset_set_point_angle,R.color.status_turquesa)
-        lineDataSetPointPos = createLineDataSet(entrySetPointPos,R.string.dataset_set_point_pos,R.color.status_green)
-        lineDataSetPointYaw = createLineDataSet(entrySetPointYaw,R.string.dataset_set_point_yaw,R.color.status_turquesa)
-        lineDataSetPointSpeed = createLineDataSet(entrySetPointSpeed,R.string.dataset_set_point_speed,R.color.blue_80_percent)
-        lineDataSetOutputYaw = createLineDataSet(entryOutputYaw,R.string.dataset_output_yaw,R.color.red_80_percent)
-        lineDataSetPosInMeters = createLineDataSet(entryPosInMeters,R.string.dataset_position_meters,R.color.red_80_percent)
-        lineDataSetSpeed = createLineDataSet(entryActualSpeed,R.string.dataset_speed,R.color.red_80_percent)
+        lineDataAnglePitch =
+            createLineDataSet(entryAnglePitch, R.string.dataset_angle_pitch, R.color.red_80_percent)
+        lineDataAngleRoll =
+            createLineDataSet(entryAngleRoll, R.string.dataset_angle_roll, R.color.green_80_percent)
+        lineDataAngleYaw =
+            createLineDataSet(entryAngleYaw, R.string.dataset_angle_yaw, R.color.yellow_80_percent)
+        lineDataMotorL =
+            createLineDataSet(entryMotorL, R.string.dataset_motor_l, R.color.blue_80_percent)
+        lineDataMotorR =
+            createLineDataSet(entryMotorR, R.string.dataset_motor_r, R.color.red_80_percent)
+        lineDataSetPointAngle = createLineDataSet(
+            entrySetPointAngle,
+            R.string.dataset_set_point_angle,
+            R.color.status_turquesa
+        )
+        lineDataSetPointPos = createLineDataSet(
+            entrySetPointPos,
+            R.string.dataset_set_point_pos,
+            R.color.status_green
+        )
+        lineDataSetPointYaw = createLineDataSet(
+            entrySetPointYaw,
+            R.string.dataset_set_point_yaw,
+            R.color.status_turquesa
+        )
+        lineDataSetPointSpeed = createLineDataSet(
+            entrySetPointSpeed,
+            R.string.dataset_set_point_speed,
+            R.color.blue_80_percent
+        )
+        lineDataSetOutputYaw =
+            createLineDataSet(entryOutputYaw, R.string.dataset_output_yaw, R.color.red_80_percent)
+        lineDataSetPosInMeters = createLineDataSet(
+            entryPosInMeters,
+            R.string.dataset_position_meters,
+            R.color.red_80_percent
+        )
+        lineDataSetSpeed =
+            createLineDataSet(entryActualSpeed, R.string.dataset_speed, R.color.red_80_percent)
 
         initTimeStamp = System.currentTimeMillis()
     }
 
-    private fun createLineDataSet(entry: List<Entry>,labelResId: Int, colorResId: Int): LineDataSet {
+    private fun createLineDataSet(
+        entry: List<Entry>,
+        labelResId: Int,
+        colorResId: Int
+    ): LineDataSet {
         return LineDataSet(entry, requireContext().getString(labelResId)).also {
             it.lineWidth = 2.5f
             it.circleRadius = 1f
@@ -248,15 +280,20 @@ private fun initGraph() {
             entryAnglePitch.add(Entry(actualTimeInSec, newFrame.pitchAngle))
             entryAngleRoll.add(Entry(actualTimeInSec, newFrame.rollAngle))
             entryAngleYaw.add(Entry(actualTimeInSec, newFrame.yawAngle))
-            entryMotorL.add(Entry(actualTimeInSec, newFrame.speedL.toFloat()))
-            entryMotorR.add(Entry(actualTimeInSec, newFrame.speedR.toFloat()))
+            entryMotorL.add(Entry(actualTimeInSec, newFrame.speedL.toFloat()/100))
+            entryMotorR.add(Entry(actualTimeInSec, newFrame.speedR.toFloat()/100))
             entrySetPointAngle.add(Entry(actualTimeInSec, newFrame.setPointAngle))
             entrySetPointPos.add(Entry(actualTimeInSec, newFrame.setPointPos))
             entrySetPointYaw.add(Entry(actualTimeInSec, newFrame.setPointYaw))
             entrySetPointSpeed.add(Entry(actualTimeInSec, newFrame.setPointSpeed))
             entryPosInMeters.add(Entry(actualTimeInSec, newFrame.posInMeters))
             entryOutputYaw.add(Entry(actualTimeInSec, newFrame.outputYawControl))
-            entryActualSpeed.add(Entry(actualTimeInSec, newFrame.speedL.toFloat()))           // TODO: tomar velocidad promedio
+            entryActualSpeed.add(
+                Entry(
+                    actualTimeInSec,
+                    newFrame.speedL.toFloat()
+                )
+            )           // TODO: tomar velocidad promedio
 
             lineDataAnglePitch.notifyDataSetChanged()
             lineDataAngleRoll.notifyDataSetChanged()
@@ -279,32 +316,36 @@ private fun initGraph() {
         binding.chart.data = when (selectedDataset) {
             SelectedDataset.DATASET_IMU -> {
                 setImuMode()
-                LineData(lineDataAnglePitch,lineDataAngleRoll,lineDataAngleYaw)
+                LineData(lineDataAnglePitch, lineDataAngleRoll, lineDataAngleYaw)
             }
 
             SelectedDataset.DATASET_MOTOR -> {
                 setMotorControlMode()
-                LineData(lineDataMotorL,lineDataMotorR)
+                LineData(lineDataMotorL, lineDataMotorR)
             }
 
             SelectedDataset.DATASET_PID_ANGLE -> {
                 setPidAngleMode()
-                LineData(lineDataSetPointAngle,lineDataAnglePitch,lineDataAngleRoll,lineDataMotorL)
+                LineData(
+                    lineDataSetPointAngle,
+                    lineDataAnglePitch,
+                    lineDataMotorL
+                )
             }
 
             SelectedDataset.DATASET_PID_POS -> {
                 setPidMode(10F)
-                LineData(lineDataSetPointPos,lineDataSetPosInMeters,lineDataSetPointAngle)
+                LineData(lineDataSetPointPos, lineDataSetPosInMeters, lineDataSetPointAngle)
             }
 
             SelectedDataset.DATASET_PID_YAW -> {
                 setPidMode(190F)
-                LineData(lineDataSetPointYaw,lineDataSetOutputYaw,lineDataAngleYaw)
+                LineData(lineDataSetPointYaw, lineDataSetOutputYaw, lineDataAngleYaw)
             }
 
             SelectedDataset.DATASET_PID_SPEED -> {
                 setPidMode(1050F)
-                LineData(lineDataSetPointSpeed,lineDataSetSpeed,lineDataSetPointAngle)
+                LineData(lineDataSetPointSpeed, lineDataSetSpeed, lineDataSetPointAngle)
             }
         }
         binding.chart.notifyDataSetChanged()

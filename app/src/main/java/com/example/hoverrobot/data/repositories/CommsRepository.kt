@@ -1,9 +1,11 @@
 package com.example.hoverrobot.data.repositories
 
 import android.content.Context
+import android.net.wifi.WifiInfo
+import android.net.wifi.WifiManager
 import android.util.Log
 import com.example.hoverrobot.data.models.comms.CommandsRobot
-import com.example.hoverrobot.data.utils.ToolBox.Companion.ioScope
+import com.example.hoverrobot.data.models.comms.ConnectionState
 import com.example.hoverrobot.data.models.comms.DirectionControl
 import com.example.hoverrobot.data.models.comms.PidSettings
 import com.example.hoverrobot.data.models.comms.ROBOT_DYNAMIC_DATA_SIZE
@@ -12,10 +14,12 @@ import com.example.hoverrobot.data.models.comms.RobotDynamicData
 import com.example.hoverrobot.data.models.comms.RobotLocalConfig
 import com.example.hoverrobot.data.models.comms.asRobotDynamicData
 import com.example.hoverrobot.data.models.comms.asRobotLocalConfig
-
 import com.example.hoverrobot.data.utils.StatusConnection
+import com.example.hoverrobot.data.utils.ToolBox.ioScope
+import com.example.hoverrobot.data.utils.ToolBox.toIpString
 import com.example.hoverrobot.data.utils.toByteBuffer
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -28,11 +32,11 @@ import javax.inject.Inject
 
 interface CommsRepository {
 
+    val connectionState: StateFlow<ConnectionState>
+
     val dynamicDataRobotFlow: SharedFlow<RobotDynamicData>
 
     val robotLocalConfigFlow: SharedFlow<RobotLocalConfig?>
-
-    val connectionStateFlow: StateFlow<StatusConnection>
 
     fun sendPidParams(pidParams: PidSettings)
 
@@ -41,8 +45,6 @@ interface CommsRepository {
     fun sendCommand(commandCode: CommandsRobot, value: Float = 0f)
 
     fun getConnectedClient(): String?
-
-    fun getLocalIp(): String
 }
 
 class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val context: Context) :
@@ -50,27 +52,27 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
 
     private val serverSocket = ServerTcp()
 
+    private val _connectionState = MutableStateFlow(ConnectionState())                // Es un stateFlow, porque busco que emita SOLO si cambia el valor de su contenido
+    override val connectionState: StateFlow<ConnectionState> = _connectionState
+
     private val _dynamicDataRobotFlow = MutableSharedFlow<RobotDynamicData>()
     override val dynamicDataRobotFlow: SharedFlow<RobotDynamicData> = _dynamicDataRobotFlow
 
     private val _robotLocalConfigFlow = MutableStateFlow<RobotLocalConfig?>(null)
     override val robotLocalConfigFlow: StateFlow<RobotLocalConfig?> = _robotLocalConfigFlow
 
-    private val _connectionStateFlow = MutableStateFlow(StatusConnection.INIT)
-    override val connectionStateFlow: StateFlow<StatusConnection> = _connectionStateFlow
-
     private val TAG = "CommsRepository"
 
-    init {
-        commsHandler()
-    }
+    private var contPackets: Int = 0
 
-    private fun commsHandler() {
+    init {
         val bufferSize = 2048
         val byteBuffer = ByteBuffer.allocate(bufferSize)
 
         ioScope.launch {
             serverSocket.receivedDataFlow.collect { newPaquet ->
+
+                contPackets++
 
                 byteBuffer.put(newPaquet)
                 byteBuffer.flip()
@@ -112,9 +114,25 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
         }
 
         ioScope.launch {
-            serverSocket.connectionsStatus.collect {
-                _connectionStateFlow.emit(it)
+            while(true) {
+                val wifiInfo = getWifiInfo(context)
+                _connectionState.emit(
+                    ConnectionState(
+                        status = serverSocket.connectionsStatus.value,
+                        receiverPacketRates = contPackets,
+                        rssi = wifiInfo.rssi,
+                        strength = WifiManager.calculateSignalLevel(wifiInfo.rssi, 5),
+                        frequency = wifiInfo.frequency,
+                        ip = wifiInfo.ipAddress.toIpString()
+                    )
+                )
+                contPackets = 0
+                delay(1000)
+            }
+        }
 
+        ioScope.launch {
+            serverSocket.connectionsStatus.collect {
                 if (it == StatusConnection.WAITING) {
                     _robotLocalConfigFlow.emit(null)                                            // Para forzar el collect al reconectar
                 }
@@ -169,9 +187,16 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
         return serverSocket.clientsIp
     }
 
-    override fun getLocalIp(): String {
-        return serverSocket.localIp
+    private fun getWifiInfo(context: Context): WifiInfo {
+        val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+
+        return  if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            WifiInfo.Builder().build()
+        } else {
+            wifiManager.connectionInfo // Para API < 30
+        }
     }
+
 
     companion object {
         const val HEADER_PACKAGE_STATUS: Int = 0xAB01       // Package recepcion
