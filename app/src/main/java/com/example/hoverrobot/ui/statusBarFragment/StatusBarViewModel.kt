@@ -19,7 +19,7 @@ class StatusBarViewModel @Inject constructor(
     private val commsRepository: CommsRepository
 ): ViewModel() {
 
-    private var _battery = MutableLiveData(Battery(0,0F))
+    private var _battery = MutableLiveData(Battery(false,0,0F))
     val battery : LiveData<Battery> = _battery
 
     private var _tempImu = MutableLiveData(0F)
@@ -36,12 +36,13 @@ class StatusBarViewModel @Inject constructor(
             commsRepository.dynamicDataRobotFlow.collect {
                 _battery.postValue(
                     Battery(
+                        it.isCharging,
                         it.batVoltage.toPercentLevel(),
                         it.batVoltage
                     )
                 )
                 _tempImu.postValue(it.tempImu)
-                _statusRobot.postValue(StatusRobot.getStatusRobot(it.statusCode))
+                _statusRobot.postValue(it.statusCode)
             }
         }
 

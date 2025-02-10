@@ -15,6 +15,7 @@ import com.example.hoverrobot.data.models.comms.PidSettings
 import com.example.hoverrobot.R
 import com.example.hoverrobot.data.models.comms.CommandsRobot
 import com.example.hoverrobot.data.models.comms.RobotLocalConfig
+import com.example.hoverrobot.data.models.comms.Wheel
 import com.example.hoverrobot.databinding.SettingsFragmentBinding
 import com.google.android.material.slider.Slider
 
@@ -149,6 +150,14 @@ class SettingsFragment : Fragment() {
 
         binding.btnCalibrateImu.setOnClickListener {
             settingsFragmentViewModel.sendCommand(CommandsRobot.CALIBRATE_IMU)
+        }
+
+        binding.btnCleanWheelLeft.setOnClickListener {
+            settingsFragmentViewModel.sendCommand(CommandsRobot.CLEAN_WHEELS, Wheel.LEFT_WHEEL.ordinal.toFloat())
+        }
+
+        binding.btnCleanWheelRight.setOnClickListener {
+            settingsFragmentViewModel.sendCommand(CommandsRobot.CLEAN_WHEELS,Wheel.RIGHT_RIGHT.ordinal.toFloat())
         }
     }
 

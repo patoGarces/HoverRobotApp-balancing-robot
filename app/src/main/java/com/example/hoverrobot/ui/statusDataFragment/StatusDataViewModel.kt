@@ -29,7 +29,7 @@ class StatusDataViewModel @Inject constructor(
     private var _imuTemp = MutableLiveData(0F)
     val imuTemp: LiveData<Float> = _imuTemp
 
-    private var _batteryStatus = MutableLiveData(Battery(0, 0F))
+    private var _batteryStatus = MutableLiveData(Battery(false,0, 0F))
     val batteryStatus: LiveData<Battery> = _batteryStatus
 
     private var _statusConnection = MutableLiveData<StatusConnection>()
@@ -44,7 +44,7 @@ class StatusDataViewModel @Inject constructor(
                 _mainboardTemp.postValue(it.tempMainboard)
                 _imuTemp.postValue(it.tempImu)
                 _motorControllerTemp.postValue(it.tempMcb)
-                _gralStatus.postValue(StatusRobot.entries[it.statusCode])
+                _gralStatus.postValue(it.statusCode)
 
             }
         }

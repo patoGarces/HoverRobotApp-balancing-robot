@@ -80,17 +80,25 @@ class StatusBarFragment : Fragment() {
         statusBarViewModel.battery.observe(viewLifecycleOwner) {
 
             it?.let{
-                binding.tvBatteryVoltage.text = String.format(getString(R.string.placeholder_battery_voltage),it.batVoltage)
+                if (it.batVoltage > 0 && it.batVoltage < 50) {
+                    binding.tvBatteryVoltage.text = String.format(
+                        getString(R.string.placeholder_battery_voltage),
+                        it.batVoltage
+                    )
+                } else {
+                    binding.tvBatteryVoltage.text = getString(R.string.battery_voltage_unknown)
+                }
                 with(binding.ibBatteryStatus) {
                     if (statusBarViewModel.connectionState.value?.status != StatusConnection.CONNECTED) {
                         setImageResource(R.drawable.ic_battery_unknown)
-                        binding.tvBatteryVoltage.text = "-.-v"
-                        binding.tvBatteryPercent.text = ""
+                        binding.tvBatteryVoltage.text = getString(R.string.battery_voltage_unknown)
+                        binding.tvBatteryPercent.text = getString(R.string.battery_percent_unknown)
                         binding.ibBatteryStatus.imageTintList = null
                     }
-                    else if (it.batLevel in 101..199) {
+                    else if (it.isCharging) {
                         setImageResource(R.drawable.ic_battery_charging)
-                        binding.tvBatteryPercent.text = String.format(getString(R.string.placeholder_battery_percent),(it.batLevel-100).toString())
+                        binding.ibBatteryStatus.imageTintList = null
+                        binding.tvBatteryPercent.text = ""
                     }
                     else {
                         if (it.batLevel > BATTERY_HIGH) {
@@ -105,8 +113,7 @@ class StatusBarFragment : Fragment() {
                         } else if (it.batLevel > BATTERY_EMPTY) {
                             setImageResource(R.drawable.ic_battery_1)
                             binding.ibBatteryStatus.imageTintList = ColorStateList.valueOf(context.getColor(R.color.status_orange))
-                        }
-                        else{
+                        } else{
                             setImageResource(R.drawable.ic_battery_0)
                             binding.ibBatteryStatus.imageTintList = ColorStateList.valueOf(context.getColor(R.color.red))
                         }

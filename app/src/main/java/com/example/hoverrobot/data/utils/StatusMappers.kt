@@ -1,7 +1,6 @@
 package com.example.hoverrobot.data.utils
 
 import com.example.hoverrobot.R
-import com.example.hoverrobot.data.utils.StatusMapper.stringRes
 
 object StatusMapper {
     private val mapStatusConnectionString = mapOf(
@@ -21,16 +20,20 @@ object StatusMapper {
     private val mapStatusRobotString = mapOf(
         StatusRobot.INIT to R.string.status_robot_init,
         StatusRobot.DISABLE to R.string.status_robot_disable,
-        StatusRobot.ENABLE to R.string.status_robot_enable,
+        StatusRobot.ARMED to R.string.status_robot_enable,
         StatusRobot.STABILIZED to R.string.status_robot_stabilized,
+        StatusRobot.CHARGING to R.string.status_robot_charging,
+        StatusRobot.TEST_MODE to R.string.status_robot_test_mode,
         StatusRobot.ERROR to R.string.status_robot_error,
     )
 
     private val mapStatusRobotColor = mapOf(
         StatusRobot.INIT to R.color.status_orange,
         StatusRobot.DISABLE to R.color.gray_80_percent,
-        StatusRobot.ENABLE to R.color.status_turquesa,
+        StatusRobot.ARMED to R.color.status_turquesa,
         StatusRobot.STABILIZED to R.color.status_blue,
+        StatusRobot.CHARGING to R.color.status_orange,
+        StatusRobot.TEST_MODE to R.color.status_orange,
         StatusRobot.ERROR to R.color.status_red
     )
 
@@ -73,19 +76,14 @@ enum class StatusConnection {
 enum class StatusRobot {
     INIT,
     DISABLE,
-    ENABLE,
+    ARMED,
     STABILIZED,
+    CHARGING,
     ERROR,
     ERROR_LIMIT_SPEED,
     ERROR_MCB,
     ERROR_IMU,
     ERROR_HALLS,
-    ERROR_BATTERY;
-
-    companion object {
-        fun getStatusRobot(code: Int): StatusRobot? {
-            val codeMap = entries.associateBy { it.ordinal }
-            return codeMap[code]
-        }
-    }
+    ERROR_BATTERY,
+    TEST_MODE;
 }

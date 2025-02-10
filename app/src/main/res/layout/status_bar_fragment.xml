@@ -77,14 +77,14 @@
             android:layout_height="match_parent"
             android:src="@drawable/network_wifi_0"
             android:layout_marginStart="16dp"
+            android:padding="4dp"
             android:background="@color/transparent"
-            android:tint="@color/white"
             android:adjustViewBounds="true"
             android:scaleType="fitCenter"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            />
+            app:tint="@color/white" />
 
         <TextView
             android:id="@+id/tv_battery_percent"

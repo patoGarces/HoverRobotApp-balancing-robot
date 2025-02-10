@@ -134,12 +134,12 @@
                                             />
 
                                         <RadioButton
-                                            android:id="@+id/rb_dataset_motor"
+                                            android:id="@+id/rb_dataset_power"
                                             android:layout_width="match_parent"
                                             android:layout_height="wrap_content"
                                             android:buttonTint="@color/red_80_percent"
                                             android:textAppearance="@style/style_text_14sp"
-                                            android:text="@string/dataset_motor_output"
+                                            android:text="@string/dataset_power_data"
                                             />
 
                                         <RadioButton
