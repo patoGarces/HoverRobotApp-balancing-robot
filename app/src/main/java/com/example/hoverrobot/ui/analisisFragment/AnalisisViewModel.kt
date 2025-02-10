@@ -1,5 +1,6 @@
 package com.example.hoverrobot.ui.analisisFragment
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -26,6 +27,8 @@ class AnalisisViewModel @Inject constructor(
         ioScope.launch {
             commsRepository.dynamicDataRobotFlow.collect {
                 _newDataAnalisis.postValue(it)
+
+                Log.d("TAG","current: ${it.currentL}, ${it.currentR}")
             }
         }
 

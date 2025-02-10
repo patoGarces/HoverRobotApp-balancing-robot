@@ -3,11 +3,17 @@ package com.example.hoverrobot.data.models.comms
 enum class CommandsRobot {        // En sync con el codigo del esp!
     CALIBRATE_IMU,
     SAVE_PARAMS_SETTINGS,
-    ARMED_ROBOT,
-    DISARMED_ROBOT,
+    ARMED,
+    DEARMED,
+    CLEAN_WHEELS,
     VIBRATION_TEST,
-    COMMAND_MOVE_FORWARD,
-    COMMAND_MOVE_BACKWARD,
-    COMMAND_MOVE_ABS_YAW,
-    COMMAND_MOVE_REL_YAW
+    MOVE_FORWARD,
+    MOVE_BACKWARD,
+    MOVE_ABS_YAW,
+    MOVE_REL_YAW
+}
+
+enum class Wheel {
+    LEFT_WHEEL,
+    RIGHT_RIGHT
 }

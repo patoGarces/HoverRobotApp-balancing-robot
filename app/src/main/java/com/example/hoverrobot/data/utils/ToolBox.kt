@@ -19,8 +19,10 @@ object ToolBox {
     }
 
     fun Float.toPercentLevel(): Int {
-        return if (this == 0f) 0
-        else (((this/10) - MIN_VOLTAGE_PER_CELL_BATTERY) * 100 / (MAX_VOLTAGE_PER_CELL_BATTERY-MIN_VOLTAGE_PER_CELL_BATTERY)).toInt()
+        if (this == 0f) return 0
+        val batPercent = (((this / 10) - MIN_VOLTAGE_PER_CELL_BATTERY) * 100 /
+                (MAX_VOLTAGE_PER_CELL_BATTERY - MIN_VOLTAGE_PER_CELL_BATTERY)).toInt()
+        return batPercent.coerceIn(0, 100)
     }
 
     fun Int.toIpString(): String? {

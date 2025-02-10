@@ -72,8 +72,6 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
         ioScope.launch {
             serverSocket.receivedDataFlow.collect { newPaquet ->
 
-                contPackets++
-
                 byteBuffer.put(newPaquet)
                 byteBuffer.flip()
 
@@ -91,6 +89,7 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
                             try {
                                 val dynamicData = ByteArray(ROBOT_DYNAMIC_DATA_SIZE)
                                 byteBuffer.get(dynamicData)
+                                contPackets++
                                 _dynamicDataRobotFlow.emit(dynamicData.toByteBuffer().asRobotDynamicData)
                             }
                             catch (e: BufferUnderflowException) {
@@ -101,6 +100,7 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
                         HEADER_PACKAGE_LOCAL_CONFIG -> {
                             val localConfig = ByteArray(ROBOT_LOCAL_CONFIG_SIZE)
                             byteBuffer.get(localConfig)
+                            contPackets++
                             _robotLocalConfigFlow.emit(localConfig.toByteBuffer().asRobotLocalConfig)
                         }
 

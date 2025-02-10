@@ -10,8 +10,11 @@ import com.example.hoverrobot.data.models.comms.RobotDynamicData
 import com.example.hoverrobot.data.repositories.CommsRepository
 import com.example.hoverrobot.data.repositories.StoreSettings
 import com.example.hoverrobot.data.utils.StatusConnection
+import com.example.hoverrobot.data.utils.StatusRobot
 import com.example.hoverrobot.data.utils.ToolBox.ioScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -36,6 +39,9 @@ class NavigationViewModel @Inject constructor(
     private val isRobotConnected: Boolean
         get() = commsRepository.connectionState.value.status == StatusConnection.CONNECTED
 
+    private val _isRobotStabilized = MutableStateFlow(false)
+    val isRobotStabilized: StateFlow<Boolean> = _isRobotStabilized
+
     init {
         ioScope.launch {
             commsRepository.connectionState.collect {
@@ -46,6 +52,8 @@ class NavigationViewModel @Inject constructor(
         ioScope.launch {
             commsRepository.dynamicDataRobotFlow.collect {
                 _dynamicData.postValue(it)
+                _isRobotStabilized.value = it.statusCode == StatusRobot.STABILIZED
+
             }
         }
 
@@ -83,7 +91,7 @@ class NavigationViewModel @Inject constructor(
 
     fun sendNewMovePosition(distanceInMts: Float, isBackward: Boolean = false) {
         val command =
-            if (isBackward) CommandsRobot.COMMAND_MOVE_BACKWARD else CommandsRobot.COMMAND_MOVE_FORWARD
+            if (isBackward) CommandsRobot.MOVE_BACKWARD else CommandsRobot.MOVE_FORWARD
 
         if (isRobotConnected) {
             commsRepository.sendCommand(command, distanceInMts)
@@ -92,13 +100,19 @@ class NavigationViewModel @Inject constructor(
 
     fun sendNewMoveAbsYaw(desiredAngle: Float) {
         if (isRobotConnected) {
-            commsRepository.sendCommand(CommandsRobot.COMMAND_MOVE_ABS_YAW, desiredAngle)
+            commsRepository.sendCommand(CommandsRobot.MOVE_ABS_YAW, desiredAngle)
         }
     }
 
     fun sendNewMoveRelYaw(angle: Float) {
         if (isRobotConnected) {
-            commsRepository.sendCommand(CommandsRobot.COMMAND_MOVE_REL_YAW, angle)
+            commsRepository.sendCommand(CommandsRobot.MOVE_REL_YAW, angle)
+        }
+    }
+
+    fun sendDearmedCommand() {
+        if (isRobotConnected) {
+            commsRepository.sendCommand(CommandsRobot.DEARMED)
         }
     }
 }

@@ -1,16 +1,20 @@
 package com.example.hoverrobot.data.models.comms
 
 import com.example.hoverrobot.data.repositories.PRECISION_DECIMALS_COMMS
+import com.example.hoverrobot.data.utils.StatusRobot
 import java.nio.ByteBuffer
 
 
 data class RobotDynamicData(
+    var isCharging: Boolean,
     val batVoltage: Float,
     val tempImu: Float,
     val tempMcb: Float,
     val tempMainboard: Float,
     val speedR: Int,
     val speedL: Int,
+    val currentR: Float,
+    val currentL: Float,
     val pitchAngle: Float,
     val rollAngle: Float,
     val yawAngle: Float,
@@ -21,11 +25,12 @@ data class RobotDynamicData(
     val setPointYaw: Float,
     val setPointSpeed: Float,
     val centerAngle: Float,
-    val statusCode: Int,
+    val statusCode: StatusRobot,
 )
 
 val ByteBuffer.asRobotDynamicData: RobotDynamicData
     get() = RobotDynamicData(
+        this.short.toInt() != 0,
         this.short.toFloat() / PRECISION_DECIMALS_COMMS,
         this.short.toFloat() / PRECISION_DECIMALS_COMMS,
         this.short.toFloat() / PRECISION_DECIMALS_COMMS,
@@ -42,7 +47,9 @@ val ByteBuffer.asRobotDynamicData: RobotDynamicData
         this.short.toFloat() / PRECISION_DECIMALS_COMMS,
         this.short.toFloat() / PRECISION_DECIMALS_COMMS,
         this.short.toFloat() / PRECISION_DECIMALS_COMMS,
-        this.short.toInt()
+        this.short.toFloat() / PRECISION_DECIMALS_COMMS,
+        this.short.toFloat() / PRECISION_DECIMALS_COMMS,
+        StatusRobot.entries[this.short.toInt()]
     )
 
-const val ROBOT_DYNAMIC_DATA_SIZE = 34
+const val ROBOT_DYNAMIC_DATA_SIZE = 40

@@ -176,32 +176,14 @@
         app:layout_constraintBottom_toBottomOf="parent"
         />
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_yaw_left"
-        android:layout_width="wrap_content"
+    <androidx.compose.ui.platform.ComposeView
+        android:id="@+id/compose_view"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:padding="8dp"
-        android:layout_margin="32dp"
-        android:textColor="@color/white"
-        android:textStyle="bold"
-        android:backgroundTint="@color/red"
+        android:layout_margin="16dp"
+        app:layout_constraintBottom_toTopOf="@id/compass_view"
         app:layout_constraintStart_toEndOf="@id/joystick_throttle"
-        app:layout_constraintEnd_toStartOf="@id/btn_yaw_right"
-        app:layout_constraintBottom_toTopOf="@id/compass_view"
-        />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_yaw_right"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:padding="8dp"
-        android:layout_margin="32dp"
-        android:textColor="@color/white"
-        android:textStyle="bold"
-        android:backgroundTint="@color/red"
-        app:layout_constraintStart_toEndOf="@id/btn_yaw_left"
         app:layout_constraintEnd_toStartOf="@id/joystick_direction"
-        app:layout_constraintBottom_toTopOf="@id/compass_view"
         />
 
 
@@ -209,7 +191,7 @@
         android:id="@+id/navigation_visible"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:constraint_referenced_ids="btn_backward,btn_forward,joystick_direction,joystick_throttle,seekbar_left,seekbar_right,btn_yaw_left,btn_yaw_right,frame_backward,frame_forward"
+        app:constraint_referenced_ids="btn_backward,btn_forward,joystick_direction,joystick_throttle,seekbar_left,seekbar_right,compose_view,frame_backward,frame_forward"
         />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

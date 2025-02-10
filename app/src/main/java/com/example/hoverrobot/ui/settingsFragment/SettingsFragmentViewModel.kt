@@ -44,9 +44,9 @@ class SettingsFragmentViewModel @Inject constructor(
         else false
     }
 
-    fun sendCommand(command: CommandsRobot): Boolean {
+    fun sendCommand(command: CommandsRobot,value: Float = 0F): Boolean {
         return if (isRobotConnected) {
-            commsRepository.sendCommand(command)
+            commsRepository.sendCommand(command,value)
             true
         }
         else false

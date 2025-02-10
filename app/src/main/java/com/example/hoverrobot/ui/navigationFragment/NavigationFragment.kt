@@ -7,12 +7,15 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.example.hoverrobot.R
 import com.example.hoverrobot.data.utils.ToolBox.ioScope
 import com.example.hoverrobot.databinding.NavigationFragmentBinding
+import com.example.hoverrobot.ui.navigationFragment.compose.NavigationButtons
 import com.github.mikephil.charting.charts.ScatterChart
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.ScatterData
@@ -58,7 +61,25 @@ class NavigationFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = NavigationFragmentBinding.inflate(inflater,container,false)
-        return binding.root
+        return binding.apply {
+
+            composeView.apply {
+                setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+                composeView.setContent {
+                    NavigationButtons(
+                        isRobotStabilized = navigationViewModel.isRobotStabilized.collectAsState().value,
+                        yawLeftAngle = "12",
+                        yawRightAngle = "34",
+                        onYawLeftClick = {},
+                        onYawRightClick = {},
+                        onDearmedClick = {
+                            navigationViewModel.sendDearmedCommand()
+                        }
+                    )
+                }
+            }
+
+        }.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -126,13 +147,13 @@ class NavigationFragment : Fragment() {
         binding.seekbarLeft.onProgressChangedListener =
             ProgressListener { progress ->
                 leftDirection = -(MIN_DIR + ((progress / 100f) * (MAX_DIR - MIN_DIR))).toInt()
-                binding.btnYawLeft.text = getString(R.string.control_move_placeholder_direction).format(leftDirection)
+//                binding.btnYawLeft.text = getString(R.string.control_move_placeholder_direction).format(leftDirection)
             }
 
         binding.seekbarRight.onProgressChangedListener =
             ProgressListener { progress ->
                 rightDirection = (MIN_DIR + ((progress / 100f) * (MAX_DIR - MIN_DIR))).toInt()
-                binding.btnYawRight.text = getString(R.string.control_move_placeholder_direction).format(rightDirection)
+//                binding.btnYawRight.text = getString(R.string.control_move_placeholder_direction).format(rightDirection)
             }
 
         binding.btnForward.setOnClickListener {
@@ -143,13 +164,13 @@ class NavigationFragment : Fragment() {
             navigationViewModel.sendNewMovePosition(distanceBackward,true)
         }
 
-        binding.btnYawLeft.setOnClickListener {
-            navigationViewModel.sendNewMoveRelYaw(leftDirection.toFloat())
-        }
-
-        binding.btnYawRight.setOnClickListener {
-            navigationViewModel.sendNewMoveRelYaw(rightDirection.toFloat())
-        }
+//        binding.btnYawLeft.setOnClickListener {
+//            navigationViewModel.sendNewMoveRelYaw(leftDirection.toFloat())
+//        }
+//
+//        binding.btnYawRight.setOnClickListener {
+//            navigationViewModel.sendNewMoveRelYaw(rightDirection.toFloat())
+//        }
     }
 
     private fun setupObserver(){

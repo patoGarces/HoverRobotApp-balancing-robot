@@ -13,6 +13,9 @@
     <string name="title_mainboard_temp">Mainboard</string>
     <string name="title_imu_temp">IMU</string>
 
+    <string name="battery_voltage_unknown">-V</string>
+    <string name="battery_percent_unknown">-%</string>
+
     <!--    Placeholders-->
     <string name="placeholder_battery_percent">%s %%</string>
     <string name="placeholder_battery_voltage">%.1fV</string>
@@ -29,7 +32,6 @@
 
     <!--    Settings Fragment-->
     <string name="pid_group_title">Ajustes PID</string>
-    <string name="imu_group_title">Ajustes IMU</string>
     <string name="pid_parameter_p_title">Parametro P:</string>
     <string name="pid_parameter_i_title">Parametro I:</string>
     <string name="pid_parameter_d_title">Parametro D:</string>
@@ -40,7 +42,12 @@
     <string name="btn_pid_save">Guardar</string>
     <string name="btn_pid_reset">Deshacer</string>
     <string name="value_slider_format">%.2f</string>
-    <string name="imu_btn_calibrate">Calibrar</string>
+    <string name="general_commands_group_title">Ajustes generales</string>
+    <string name="general_commands_calibrate_imu_title">Calibrar IMU</string>
+    <string name="general_command_btn_calibrate">Calibrar</string>
+    <string name="general_command_clean_wheels_title">Limpieza de ruedas</string>
+    <string name="general_command_btn_clean_left">Limpiar rueda izq.</string>
+    <string name="general_command_btn_clean_right">Limpiar rueda der.</string>
     <string name="pid_center_front">Front</string>
     <string name="pid_center_back">Back</string>
     <string-array name="sp_memory_items">
@@ -61,6 +68,8 @@
     <string name="status_robot_disable">Deshabilitado</string>
     <string name="status_robot_enable">Armado</string>
     <string name="status_robot_stabilized">Estabilizado</string>
+    <string name="status_robot_charging">Cargando</string>
+    <string name="status_robot_test_mode">TEST MODE</string>
     <string name="status_robot_error">Error</string>
     <string name="status_robot_error_limit_speed">Error speed</string>
     <string name="status_robot_error_mcb">Error MCB</string>
@@ -90,7 +99,7 @@
 
     <!--    RadioGroup dataset select-->
     <string name="dataset_imu_data">IMU Data</string>
-    <string name="dataset_motor_output">Motor Control Data</string>
+    <string name="dataset_power_data">Power Data</string>
     <string name="dataset_pid_angle">PID Angle</string>
     <string name="dataset_pid_pos">PID Pos</string>
     <string name="dataset_pid_yaw">PID Yaw</string>
@@ -108,8 +117,10 @@
     <string name="dataset_angle_pitch">"Pitch Angle"</string>
     <string name="dataset_angle_yaw">"Yaw Angle"</string>
     <string name="dataset_angle_roll">"Roll Angle"</string>
-    <string name="dataset_motor_l">"motorL x100"</string>
-    <string name="dataset_motor_r">"motorR x100"</string>
+    <string name="dataset_speed_motor_l">"Speed L x10"</string>
+    <string name="dataset_speed_motor_r">"Speed R x10"</string>
+    <string name="dataset_current_motor_l">"Current L(A)"</string>
+    <string name="dataset_current_motor_r">"Current R(A)"</string>
     <string name="dataset_set_point_angle">"setPoint Angle"</string>
     <string name="dataset_set_point_pos">"setPoint Pos"</string>
     <string name="dataset_set_point_yaw">"setPoint Yaw"</string>
@@ -117,4 +128,7 @@
     <string name="dataset_output_yaw">"Output Yaw"</string>
     <string name="dataset_position_meters">"Pos in mts"</string>
     <string name="dataset_speed">"Actual Speed"</string>
+    <string name="dataset_battery_level">"Battery Level %"</string>
+
+    <string name="dearmed_button">Desarmar</string>
 </resources>

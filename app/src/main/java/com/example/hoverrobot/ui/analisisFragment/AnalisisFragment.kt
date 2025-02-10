@@ -10,6 +10,8 @@ import androidx.fragment.app.viewModels
 import com.example.hoverrobot.R
 import com.example.hoverrobot.data.models.comms.RobotDynamicData
 import com.example.hoverrobot.data.models.comms.RobotLocalConfig
+import com.example.hoverrobot.data.utils.StatusRobot
+import com.example.hoverrobot.data.utils.ToolBox.toPercentLevel
 import com.example.hoverrobot.databinding.AnalisisFragmentBinding
 import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.components.LimitLine
@@ -17,7 +19,6 @@ import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.highlight.Highlight
-import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 
 class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
@@ -33,8 +34,10 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
     private var entryAnglePitch: ArrayList<Entry> = ArrayList()
     private var entryAngleRoll: ArrayList<Entry> = ArrayList()
     private var entryAngleYaw: ArrayList<Entry> = ArrayList()
-    private var entryMotorL: ArrayList<Entry> = ArrayList()
-    private var entryMotorR: ArrayList<Entry> = ArrayList()
+    private var entrySpeedMotorL: ArrayList<Entry> = ArrayList()
+    private var entrySpeedMotorR: ArrayList<Entry> = ArrayList()
+    private var entryCurrentMotorL: ArrayList<Entry> = ArrayList()
+    private var entryCurrentMotorR: ArrayList<Entry> = ArrayList()
     private var entrySetPointAngle: ArrayList<Entry> = ArrayList()
     private var entrySetPointPos: ArrayList<Entry> = ArrayList()
     private var entrySetPointYaw: ArrayList<Entry> = ArrayList()
@@ -42,12 +45,15 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
     private var entryOutputYaw: ArrayList<Entry> = ArrayList()
     private var entryPosInMeters: ArrayList<Entry> = ArrayList()
     private var entryActualSpeed: ArrayList<Entry> = ArrayList()
+    private var entryBatteryLevel: ArrayList<Entry> = ArrayList()
 
     private lateinit var lineDataAnglePitch: LineDataSet
     private lateinit var lineDataAngleRoll: LineDataSet
     private lateinit var lineDataAngleYaw: LineDataSet
-    private lateinit var lineDataMotorL: LineDataSet
-    private lateinit var lineDataMotorR: LineDataSet
+    private lateinit var lineDataSpeedMotorL: LineDataSet
+    private lateinit var lineDataSpeedMotorR: LineDataSet
+    private lateinit var lineDataCurrentMotorL: LineDataSet
+    private lateinit var lineDataCurrentMotorR: LineDataSet
     private lateinit var lineDataSetPointAngle: LineDataSet
     private lateinit var lineDataSetPointPos: LineDataSet
     private lateinit var lineDataSetPointYaw: LineDataSet
@@ -55,6 +61,7 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
     private lateinit var lineDataSetOutputYaw: LineDataSet
     private lateinit var lineDataSetPosInMeters: LineDataSet
     private lateinit var lineDataSetSpeed: LineDataSet
+    private lateinit var lineDataBatteryLevel: LineDataSet
 
     private var actualLimitScale = 90F
 
@@ -100,7 +107,7 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
         binding.rgDatasetSelect.setOnCheckedChangeListener { _, checkedId ->
             selectedDataset = when (checkedId) {
                 R.id.rb_dataset_imu -> SelectedDataset.DATASET_IMU
-                R.id.rb_dataset_motor -> SelectedDataset.DATASET_MOTOR
+                R.id.rb_dataset_power -> SelectedDataset.DATASET_POWER
                 R.id.rb_dataset_pid_angle -> SelectedDataset.DATASET_PID_ANGLE
                 R.id.rb_dataset_pid_pos -> SelectedDataset.DATASET_PID_POS
                 R.id.rb_dataset_pid_yaw -> SelectedDataset.DATASET_PID_YAW
@@ -119,8 +126,10 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
             entryAnglePitch.clear()
             entryAngleRoll.clear()
             entryAngleYaw.clear()
-            entryMotorL.clear()
-            entryMotorR.clear()
+            entrySpeedMotorL.clear()
+            entrySpeedMotorR.clear()
+            entryCurrentMotorL.clear()
+            entryCurrentMotorR.clear()
             entrySetPointAngle.clear()
             entrySetPointPos.clear()
             entrySetPointYaw.clear()
@@ -128,18 +137,22 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
             entryOutputYaw.clear()
             entryPosInMeters.clear()
             entryActualSpeed.clear()
+            entryBatteryLevel.clear()
         }
 
         binding.btnGenerateDataset.setOnClickListener {
             for (i in 0..100) {
 
                 val randomData = RobotDynamicData(
+                    isCharging = false,
                     batVoltage = (Math.random() * 100).toFloat(),
                     tempImu = (Math.random() * 100).toFloat(),
                     tempMcb = (Math.random() * 100).toFloat(),
                     tempMainboard = (Math.random() * 100).toFloat(),
                     speedR = Math.random().toInt(),
                     speedL = Math.random().toInt(),
+                    currentR = ((Math.random() - 0.5) * 180).toFloat(),
+                    currentL = ((Math.random() - 0.5) * 180).toFloat(),
                     pitchAngle = ((Math.random() - 0.5) * 180).toFloat(),
                     rollAngle = ((Math.random() - 0.5) * 180).toFloat(),
                     yawAngle = ((Math.random() - 0.5) * 180).toFloat(),
@@ -150,7 +163,7 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
                     setPointYaw = ((Math.random() - 0.5) * 180).toFloat(),
                     setPointSpeed = ((Math.random() - 0.5) * 180).toFloat(),
                     centerAngle = ((Math.random() - 0.5) * 180).toFloat(),
-                    statusCode = 0,
+                    statusCode = StatusRobot.INIT,
                 )
                 newDynamicFrame(randomData)
             }
@@ -200,10 +213,14 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
             createLineDataSet(entryAngleRoll, R.string.dataset_angle_roll, R.color.green_80_percent)
         lineDataAngleYaw =
             createLineDataSet(entryAngleYaw, R.string.dataset_angle_yaw, R.color.yellow_80_percent)
-        lineDataMotorL =
-            createLineDataSet(entryMotorL, R.string.dataset_motor_l, R.color.blue_80_percent)
-        lineDataMotorR =
-            createLineDataSet(entryMotorR, R.string.dataset_motor_r, R.color.red_80_percent)
+        lineDataSpeedMotorL =
+            createLineDataSet(entrySpeedMotorL, R.string.dataset_speed_motor_l, R.color.blue_80_percent)
+        lineDataSpeedMotorR =
+            createLineDataSet(entrySpeedMotorR, R.string.dataset_speed_motor_r, R.color.red_80_percent)
+        lineDataCurrentMotorL =
+            createLineDataSet(entryCurrentMotorL, R.string.dataset_current_motor_l, R.color.status_orange)
+        lineDataCurrentMotorR =
+            createLineDataSet(entryCurrentMotorR, R.string.dataset_current_motor_r, R.color.status_green)
         lineDataSetPointAngle = createLineDataSet(
             entrySetPointAngle,
             R.string.dataset_set_point_angle,
@@ -233,6 +250,8 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
         )
         lineDataSetSpeed =
             createLineDataSet(entryActualSpeed, R.string.dataset_speed, R.color.red_80_percent)
+        lineDataBatteryLevel =
+            createLineDataSet(entryBatteryLevel, R.string.dataset_battery_level, R.color.status_turquesa)
 
         initTimeStamp = System.currentTimeMillis()
     }
@@ -280,8 +299,10 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
             entryAnglePitch.add(Entry(actualTimeInSec, newFrame.pitchAngle))
             entryAngleRoll.add(Entry(actualTimeInSec, newFrame.rollAngle))
             entryAngleYaw.add(Entry(actualTimeInSec, newFrame.yawAngle))
-            entryMotorL.add(Entry(actualTimeInSec, newFrame.speedL.toFloat()/100))
-            entryMotorR.add(Entry(actualTimeInSec, newFrame.speedR.toFloat()/100))
+            entrySpeedMotorL.add(Entry(actualTimeInSec, newFrame.speedL.toFloat() / 10))
+            entrySpeedMotorR.add(Entry(actualTimeInSec, newFrame.speedR.toFloat() / 10))
+            entryCurrentMotorL.add(Entry(actualTimeInSec, newFrame.currentL))
+            entryCurrentMotorR.add(Entry(actualTimeInSec, newFrame.currentR))
             entrySetPointAngle.add(Entry(actualTimeInSec, newFrame.setPointAngle))
             entrySetPointPos.add(Entry(actualTimeInSec, newFrame.setPointPos))
             entrySetPointYaw.add(Entry(actualTimeInSec, newFrame.setPointYaw))
@@ -294,12 +315,15 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
                     newFrame.speedL.toFloat()
                 )
             )           // TODO: tomar velocidad promedio
+            entryBatteryLevel.add(Entry(actualTimeInSec, newFrame.batVoltage.toPercentLevel().toFloat()))
 
             lineDataAnglePitch.notifyDataSetChanged()
             lineDataAngleRoll.notifyDataSetChanged()
             lineDataAngleYaw.notifyDataSetChanged()
-            lineDataMotorL.notifyDataSetChanged()
-            lineDataMotorR.notifyDataSetChanged()
+            lineDataSpeedMotorL.notifyDataSetChanged()
+            lineDataSpeedMotorR.notifyDataSetChanged()
+            lineDataCurrentMotorL.notifyDataSetChanged()
+            lineDataCurrentMotorR.notifyDataSetChanged()
             lineDataSetPointAngle.notifyDataSetChanged()
             lineDataSetPointPos.notifyDataSetChanged()
             lineDataSetPointYaw.notifyDataSetChanged()
@@ -307,6 +331,7 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
             lineDataSetOutputYaw.notifyDataSetChanged()
             lineDataSetPosInMeters.notifyDataSetChanged()
             lineDataSetSpeed.notifyDataSetChanged()
+            lineDataBatteryLevel.notifyDataSetChanged()
 
             updateDataset(selectedDataset)
         }
@@ -319,9 +344,14 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
                 LineData(lineDataAnglePitch, lineDataAngleRoll, lineDataAngleYaw)
             }
 
-            SelectedDataset.DATASET_MOTOR -> {
+            SelectedDataset.DATASET_POWER -> {
                 setMotorControlMode()
-                LineData(lineDataMotorL, lineDataMotorR)
+                LineData(
+                    lineDataSpeedMotorL,
+                    lineDataSpeedMotorR,
+                    lineDataCurrentMotorL,
+                    lineDataCurrentMotorR,
+                    lineDataBatteryLevel)
             }
 
             SelectedDataset.DATASET_PID_ANGLE -> {
@@ -329,7 +359,7 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
                 LineData(
                     lineDataSetPointAngle,
                     lineDataAnglePitch,
-                    lineDataMotorL
+                    lineDataSpeedMotorL
                 )
             }
 
@@ -439,7 +469,7 @@ private const val FRAME_PERIOD = 0.05 // frecuencia de muestras en segundos
 
 enum class SelectedDataset {
     DATASET_IMU,
-    DATASET_MOTOR,
+    DATASET_POWER,
     DATASET_PID_ANGLE,
     DATASET_PID_POS,
     DATASET_PID_YAW,
