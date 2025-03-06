@@ -104,6 +104,7 @@
     <string name="dataset_pid_pos">PID Pos</string>
     <string name="dataset_pid_yaw">PID Yaw</string>
     <string name="dataset_pid_speed">PID Speed</string>
+    <string name="dataset_log_mode">Log mode</string>
 
     <!--    general config -->
     <string name="general_config_title">General</string>

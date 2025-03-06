@@ -9,8 +9,8 @@
     app:layout_constraintStart_toStartOf="parent"
     >
 
-        <com.github.mikephil.charting.charts.LineChart
-            android:id="@+id/chart"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/analisis_layout"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_marginHorizontal="8dp"
@@ -19,15 +19,42 @@
             app:layout_constraintEnd_toStartOf="@id/menu_chart"
             app:layout_constraintBottom_toTopOf="@id/pid_params"
             >
-        </com.github.mikephil.charting.charts.LineChart>
+                <com.github.mikephil.charting.charts.LineChart
+                    android:id="@+id/chart"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_marginHorizontal="8dp"
+                    android:visibility="visible"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    tools:visibility="gone"
+                    />
+
+                <androidx.compose.ui.platform.ComposeView
+                    android:id="@+id/logs_compose_view"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_marginHorizontal="8dp"
+                    android:visibility="gone"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+
 
         <LinearLayout
             android:id="@+id/pid_params"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            app:layout_constraintStart_toStartOf="@id/chart"
-            app:layout_constraintEnd_toEndOf="@id/chart"
+            app:layout_constraintStart_toStartOf="@id/analisis_layout"
+            app:layout_constraintEnd_toEndOf="@id/analisis_layout"
             app:layout_constraintBottom_toBottomOf="parent">
 
                 <TextView
@@ -177,6 +204,15 @@
                                             android:textAppearance="@style/style_text_14sp"
                                             android:text="@string/dataset_pid_yaw"
                                             />
+
+                                        <RadioButton
+                                            android:id="@+id/rb_log_view"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:buttonTint="@color/red_80_percent"
+                                            android:textAppearance="@style/style_text_14sp"
+                                            android:text="@string/dataset_log_mode"
+                                            />
                                 </RadioGroup>
                         </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -226,21 +262,6 @@
                                     app:layout_constraintStart_toStartOf="parent"
                                     app:layout_constraintEnd_toEndOf="parent"
                                     app:layout_constraintTop_toBottomOf="@id/switch_autoscale"
-                                    />
-
-                                <Button
-                                    android:id="@+id/btn_generate_dataset"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:layout_margin="8dp"
-                                    android:padding="8dp"
-                                    android:backgroundTint="@color/red_80_percent"
-                                    android:textSize="11sp"
-                                    android:text="@string/btn_random_title"
-                                    android:textAppearance="@style/style_text_14sp_bold"
-                                    app:layout_constraintStart_toStartOf="parent"
-                                    app:layout_constraintEnd_toEndOf="parent"
-                                    app:layout_constraintTop_toBottomOf="@id/btn_clear_data"
                                     />
 
                         </androidx.constraintlayout.widget.ConstraintLayout>
