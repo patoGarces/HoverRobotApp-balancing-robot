@@ -5,6 +5,9 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.example.hoverrobot.R
@@ -13,6 +16,7 @@ import com.example.hoverrobot.data.models.comms.RobotLocalConfig
 import com.example.hoverrobot.data.utils.StatusRobot
 import com.example.hoverrobot.data.utils.ToolBox.toPercentLevel
 import com.example.hoverrobot.databinding.AnalisisFragmentBinding
+import com.example.hoverrobot.ui.analisisFragment.compose.LogScreen
 import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.components.LimitLine
 import com.github.mikephil.charting.data.Entry
@@ -29,7 +33,7 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
     private val binding get() = _binding
 
     private var initTimeStamp: Long = 0
-    private var selectedDataset = SelectedDataset.DATASET_IMU
+    private var selectedDataset: SelectedDataset? = SelectedDataset.DATASET_IMU
 
     private var entryAnglePitch: ArrayList<Entry> = ArrayList()
     private var entryAngleRoll: ArrayList<Entry> = ArrayList()
@@ -67,6 +71,8 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
 
     private var isAnalisisPaused = false
 
+    private val statusCodeLogs = mutableStateOf<StatusRobot?>(null)
+
     private val robotConfig: RobotLocalConfig?
         get() = analisisViewModel.newRobotConfig.value
 
@@ -76,6 +82,14 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
     ): View {
 
         _binding = AnalisisFragmentBinding.inflate(inflater, container, false)
+
+        binding.logsComposeView.apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+
+                LogScreen(newStatusRobot = statusCodeLogs)
+            }
+        }
         return binding.root
     }
 
@@ -94,6 +108,8 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
                 if (!isAnalisisPaused) {
                     newDynamicFrame(it)
                 }
+
+                statusCodeLogs.value = it.statusCode
             }
         }
     }
@@ -112,7 +128,11 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
                 R.id.rb_dataset_pid_pos -> SelectedDataset.DATASET_PID_POS
                 R.id.rb_dataset_pid_yaw -> SelectedDataset.DATASET_PID_YAW
                 R.id.rb_dataset_pid_speed -> SelectedDataset.DATASET_PID_SPEED
+                R.id.rb_log_view -> null
                 else -> SelectedDataset.DATASET_IMU
+            }.also {
+                binding.chart.isVisible = it != null
+                binding.logsComposeView.isVisible = it == null
             }
         }
 
@@ -138,35 +158,6 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
             entryPosInMeters.clear()
             entryActualSpeed.clear()
             entryBatteryLevel.clear()
-        }
-
-        binding.btnGenerateDataset.setOnClickListener {
-            for (i in 0..100) {
-
-                val randomData = RobotDynamicData(
-                    isCharging = false,
-                    batVoltage = (Math.random() * 100).toFloat(),
-                    tempImu = (Math.random() * 100).toFloat(),
-                    tempMcb = (Math.random() * 100).toFloat(),
-                    tempMainboard = (Math.random() * 100).toFloat(),
-                    speedR = Math.random().toInt(),
-                    speedL = Math.random().toInt(),
-                    currentR = ((Math.random() - 0.5) * 180).toFloat(),
-                    currentL = ((Math.random() - 0.5) * 180).toFloat(),
-                    pitchAngle = ((Math.random() - 0.5) * 180).toFloat(),
-                    rollAngle = ((Math.random() - 0.5) * 180).toFloat(),
-                    yawAngle = ((Math.random() - 0.5) * 180).toFloat(),
-                    posInMeters = ((Math.random() - 0.5) * 180).toFloat(),
-                    outputYawControl = ((Math.random() - 0.5) * 180).toFloat(),
-                    setPointAngle = ((Math.random() - 0.5) * 180).toFloat(),
-                    setPointPos = ((Math.random() - 0.5) * 180).toFloat(),
-                    setPointYaw = ((Math.random() - 0.5) * 180).toFloat(),
-                    setPointSpeed = ((Math.random() - 0.5) * 180).toFloat(),
-                    centerAngle = ((Math.random() - 0.5) * 180).toFloat(),
-                    statusCode = StatusRobot.INIT,
-                )
-                newDynamicFrame(randomData)
-            }
         }
     }
 
@@ -337,45 +328,48 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
         }
     }
 
-    private fun updateDataset(selectedDataset: SelectedDataset) {
-        binding.chart.data = when (selectedDataset) {
-            SelectedDataset.DATASET_IMU -> {
-                setImuMode()
-                LineData(lineDataAnglePitch, lineDataAngleRoll, lineDataAngleYaw)
-            }
+    private fun updateDataset(selectedDataset: SelectedDataset?) {
+        selectedDataset?.let {
+            binding.chart.data = when (selectedDataset) {
+                SelectedDataset.DATASET_IMU -> {
+                    setImuMode()
+                    LineData(lineDataAnglePitch, lineDataAngleRoll, lineDataAngleYaw)
+                }
 
-            SelectedDataset.DATASET_POWER -> {
-                setMotorControlMode()
-                LineData(
-                    lineDataSpeedMotorL,
-                    lineDataSpeedMotorR,
-                    lineDataCurrentMotorL,
-                    lineDataCurrentMotorR,
-                    lineDataBatteryLevel)
-            }
+                SelectedDataset.DATASET_POWER -> {
+                    setMotorControlMode()
+                    LineData(
+                        lineDataSpeedMotorL,
+                        lineDataSpeedMotorR,
+                        lineDataCurrentMotorL,
+                        lineDataCurrentMotorR,
+                        lineDataBatteryLevel
+                    )
+                }
 
-            SelectedDataset.DATASET_PID_ANGLE -> {
-                setPidAngleMode()
-                LineData(
-                    lineDataSetPointAngle,
-                    lineDataAnglePitch,
-                    lineDataSpeedMotorL
-                )
-            }
+                SelectedDataset.DATASET_PID_ANGLE -> {
+                    setPidAngleMode()
+                    LineData(
+                        lineDataSetPointAngle,
+                        lineDataAnglePitch,
+                        lineDataSpeedMotorL
+                    )
+                }
 
-            SelectedDataset.DATASET_PID_POS -> {
-                setPidMode(10F)
-                LineData(lineDataSetPointPos, lineDataSetPosInMeters, lineDataSetPointAngle)
-            }
+                SelectedDataset.DATASET_PID_POS -> {
+                    setPidMode(10F)
+                    LineData(lineDataSetPointPos, lineDataSetPosInMeters, lineDataSetPointAngle)
+                }
 
-            SelectedDataset.DATASET_PID_YAW -> {
-                setPidMode(190F)
-                LineData(lineDataSetPointYaw, lineDataSetOutputYaw, lineDataAngleYaw)
-            }
+                SelectedDataset.DATASET_PID_YAW -> {
+                    setPidMode(190F)
+                    LineData(lineDataSetPointYaw, lineDataSetOutputYaw, lineDataAngleYaw)
+                }
 
-            SelectedDataset.DATASET_PID_SPEED -> {
-                setPidMode(1050F)
-                LineData(lineDataSetPointSpeed, lineDataSetSpeed, lineDataSetPointAngle)
+                SelectedDataset.DATASET_PID_SPEED -> {
+                    setPidMode(1050F)
+                    LineData(lineDataSetPointSpeed, lineDataSetSpeed, lineDataSetPointAngle)
+                }
             }
         }
         binding.chart.notifyDataSetChanged()
@@ -473,5 +467,5 @@ enum class SelectedDataset {
     DATASET_PID_ANGLE,
     DATASET_PID_POS,
     DATASET_PID_YAW,
-    DATASET_PID_SPEED,
+    DATASET_PID_SPEED
 }

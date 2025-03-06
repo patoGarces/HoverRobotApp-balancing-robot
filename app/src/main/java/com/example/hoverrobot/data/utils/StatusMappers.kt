@@ -1,5 +1,9 @@
 package com.example.hoverrobot.data.utils
 
+import android.content.Context
+import androidx.annotation.ColorRes
+import androidx.compose.ui.graphics.Color
+import androidx.core.content.ContextCompat
 import com.example.hoverrobot.R
 
 object StatusMapper {
@@ -24,6 +28,7 @@ object StatusMapper {
         StatusRobot.STABILIZED to R.string.status_robot_stabilized,
         StatusRobot.CHARGING to R.string.status_robot_charging,
         StatusRobot.TEST_MODE to R.string.status_robot_test_mode,
+        StatusRobot.ERROR_MCB to R.string.status_robot_error_mcb,
         StatusRobot.ERROR to R.string.status_robot_error,
     )
 
@@ -34,7 +39,13 @@ object StatusMapper {
         StatusRobot.STABILIZED to R.color.status_blue,
         StatusRobot.CHARGING to R.color.status_orange,
         StatusRobot.TEST_MODE to R.color.status_orange,
-        StatusRobot.ERROR to R.color.status_red
+        StatusRobot.ERROR to R.color.status_red,
+        StatusRobot.ERROR_MCB to R.color.status_red,
+        StatusRobot.ERROR_IMU to R.color.status_red,
+        StatusRobot.ERROR_HALLS to R.color.status_red,
+        StatusRobot.ERROR_BATTERY to R.color.status_red,
+        StatusRobot.ERROR_LIMIT_SPEED to R.color.status_red,
+        StatusRobot.ERROR_LIMIT_ANGLE to R.color.status_red,
     )
 
     fun StatusConnection.stringRes(): Int {
@@ -64,6 +75,14 @@ object StatusMapper {
         return if (statusConnection != StatusConnection.CONNECTED) mapStatusConnectionColor[statusConnection]!!
         else mapStatusRobotColor[this] ?: R.color.gray_80_percent
     }
+
+    fun StatusRobot.colorStatusLog(): Int {
+        return  mapStatusRobotColor[this] ?: R.color.gray_80_percent
+    }
+
+    fun Context.colorFromRes(@ColorRes colorRes: Int): Color {
+        return Color(ContextCompat.getColor(this, colorRes))
+    }
 }
 
 enum class StatusConnection {
@@ -81,6 +100,7 @@ enum class StatusRobot {
     CHARGING,
     ERROR,
     ERROR_LIMIT_SPEED,
+    ERROR_LIMIT_ANGLE,
     ERROR_MCB,
     ERROR_IMU,
     ERROR_HALLS,
