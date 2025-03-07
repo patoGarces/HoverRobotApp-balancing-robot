@@ -28,7 +28,11 @@ object StatusMapper {
         StatusRobot.STABILIZED to R.string.status_robot_stabilized,
         StatusRobot.CHARGING to R.string.status_robot_charging,
         StatusRobot.TEST_MODE to R.string.status_robot_test_mode,
-        StatusRobot.ERROR_MCB to R.string.status_robot_error_mcb,
+        StatusRobot.ERROR_BATTERY to R.string.status_robot_error_battery,
+        StatusRobot.ERROR_IMU to R.string.status_robot_error_imu,
+        StatusRobot.ERROR_HALL_L to R.string.status_robot_error_hall_r,
+        StatusRobot.ERROR_HALL_R to R.string.status_robot_error_hall_r,
+        StatusRobot.ERROR_MCB_CONNECTION to R.string.status_robot_error_mcb,
         StatusRobot.ERROR to R.string.status_robot_error,
     )
 
@@ -39,13 +43,6 @@ object StatusMapper {
         StatusRobot.STABILIZED to R.color.status_blue,
         StatusRobot.CHARGING to R.color.status_orange,
         StatusRobot.TEST_MODE to R.color.status_orange,
-        StatusRobot.ERROR to R.color.status_red,
-        StatusRobot.ERROR_MCB to R.color.status_red,
-        StatusRobot.ERROR_IMU to R.color.status_red,
-        StatusRobot.ERROR_HALLS to R.color.status_red,
-        StatusRobot.ERROR_BATTERY to R.color.status_red,
-        StatusRobot.ERROR_LIMIT_SPEED to R.color.status_red,
-        StatusRobot.ERROR_LIMIT_ANGLE to R.color.status_red,
     )
 
     fun StatusConnection.stringRes(): Int {
@@ -63,7 +60,7 @@ object StatusMapper {
 
     fun StatusRobot.colorRes(statusConnection: StatusConnection): Int {
         return if (statusConnection != StatusConnection.CONNECTED) mapStatusConnectionColor[StatusConnection.WAITING]!!
-        else mapStatusRobotColor[this] ?: R.color.gray_80_percent
+        else mapStatusRobotColor[this] ?: R.color.status_red
     }
 
     fun StatusRobot.stringBtnStatusRes(statusConnection: StatusConnection): Int {
@@ -73,11 +70,11 @@ object StatusMapper {
 
     fun StatusRobot.colorBtnStatusRes(statusConnection: StatusConnection): Int {
         return if (statusConnection != StatusConnection.CONNECTED) mapStatusConnectionColor[statusConnection]!!
-        else mapStatusRobotColor[this] ?: R.color.gray_80_percent
+        else mapStatusRobotColor[this] ?: R.color.status_red
     }
 
     fun StatusRobot.colorStatusLog(): Int {
-        return  mapStatusRobotColor[this] ?: R.color.gray_80_percent
+        return  mapStatusRobotColor[this] ?: R.color.status_red
     }
 
     fun Context.colorFromRes(@ColorRes colorRes: Int): Color {
@@ -101,9 +98,11 @@ enum class StatusRobot {
     ERROR,
     ERROR_LIMIT_SPEED,
     ERROR_LIMIT_ANGLE,
-    ERROR_MCB,
+    ERROR_MCB_CONNECTION,
     ERROR_IMU,
-    ERROR_HALLS,
+    ERROR_HALL_L,
+    ERROR_HALL_R,
+    ERROR_TEMP,
     ERROR_BATTERY,
     TEST_MODE;
 }
