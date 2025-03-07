@@ -14,6 +14,8 @@ import com.example.hoverrobot.data.models.comms.RobotDynamicData
 import com.example.hoverrobot.data.models.comms.RobotLocalConfig
 import com.example.hoverrobot.databinding.AnalisisFragmentBinding
 import com.example.hoverrobot.ui.analisisFragment.compose.LogScreen
+import com.example.hoverrobot.ui.analisisFragment.compose.SettingsMenuActions
+import com.example.hoverrobot.ui.analisisFragment.compose.SettingsMenuScreen
 import com.example.hoverrobot.ui.analisisFragment.resources.EntriesMaps.datasetColors
 import com.example.hoverrobot.ui.analisisFragment.resources.EntriesMaps.datasetLabels
 import com.example.hoverrobot.ui.analisisFragment.resources.EntriesMaps.updateWithFrame
@@ -45,6 +47,7 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
     private var actualLimitScale = 90F
 
     private var isAnalisisPaused = false
+    private var isAutoScaleEnabled = false
 
     private val robotConfig: RobotLocalConfig?
         get() = analisisViewModel.newRobotConfig.value
@@ -63,6 +66,34 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
                 LogScreen(newStatusRobot = analisisViewModel.statusCode)
             }
         }
+
+        binding.settingsChart.apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                SettingsMenuScreen { onAction ->
+                    when (onAction) {
+                        is SettingsMenuActions.OnAutoScaleChange -> {
+                            setAutoScale(onAction.isEnable)
+                        }
+
+                        is SettingsMenuActions.OnDatasetChange -> {
+                            selectedDataset = onAction.selectedDataset
+
+                            binding.chart.isVisible = selectedDataset != null
+                            binding.logsComposeView.isVisible = selectedDataset == null
+                        }
+
+                        is SettingsMenuActions.OnPauseChange -> {
+                            isAnalisisPaused = onAction.isPaused
+                        }
+
+                        is SettingsMenuActions.OnClearData -> {
+                            entryMap.values.forEach { it.clear() }
+                        }
+                    }
+                }
+            }
+        }
         return binding.root
     }
 
@@ -72,7 +103,6 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
         setupChart()
         initDatasets()
         setupObserver()
-        setupListener()
     }
 
     private fun setupObserver() {
@@ -83,39 +113,6 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
                     newDynamicFrame(it)
                 }
             }
-        }
-    }
-
-    private fun setupListener() {
-
-        binding.switchAutoscale.setOnCheckedChangeListener { _, isChecked ->
-//            setAutoScale(isChecked)
-        }
-
-        binding.rgDatasetSelect.setOnCheckedChangeListener { _, checkedId ->
-            selectedDataset = when (checkedId) {
-                R.id.rb_dataset_imu -> SelectedDataset.DATASET_IMU
-                R.id.rb_dataset_power -> SelectedDataset.DATASET_POWER
-                R.id.rb_dataset_pid_angle -> SelectedDataset.DATASET_PID_ANGLE
-                R.id.rb_dataset_pid_pos -> SelectedDataset.DATASET_PID_POS
-                R.id.rb_dataset_pid_yaw -> SelectedDataset.DATASET_PID_YAW
-                R.id.rb_dataset_pid_speed -> SelectedDataset.DATASET_PID_SPEED
-                R.id.rb_log_view -> null
-                else -> SelectedDataset.DATASET_IMU
-            }.also {
-                binding.chart.isVisible = it != null
-                binding.logsComposeView.isVisible = it == null
-            }
-        }
-
-        binding.btnPlayPause.setOnClickListener {
-            binding.btnPlayPause.text =
-                getString(if (isAnalisisPaused) R.string.btn_pause_title else R.string.btn_play_title)
-            isAnalisisPaused = !isAnalisisPaused
-        }
-
-        binding.btnClearData.setOnClickListener {
-            entryMap.values.forEach { it.clear() }
         }
     }
 
@@ -172,6 +169,7 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
             lineDataMap[key] = createLineDataSet(entryMap[key]!!, labelResId, colorResId)
         }
     }
+
     private fun createLineDataSet(
         entry: List<Entry>,
         labelResId: Int,
@@ -199,6 +197,7 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
                 chart.axisRight.resetAxisMinimum()
             }
         }
+        isAutoScaleEnabled = autoScale
     }
 
     private fun newDynamicFrame(newFrame: RobotDynamicData) {
@@ -292,15 +291,14 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
 
     private fun setMotorControlMode() {
         actualLimitScale = 1000F
-        setAutoScale(binding.switchAutoscale.isChecked)
+        setAutoScale(isAutoScaleEnabled)
         binding.chart.axisLeft.removeAllLimitLines()
     }
 
     private fun setImuMode() {
 
         actualLimitScale = 180F
-        setAutoScale(binding.switchAutoscale.isChecked)
-
+        setAutoScale(isAutoScaleEnabled)
         binding.chart.axisLeft.removeAllLimitLines()
         val colorSafetyLimits = requireContext().getColor(R.color.status_turquesa)
 
@@ -341,8 +339,7 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
 
     private fun setPidAngleMode() {
         actualLimitScale = 15F
-        setAutoScale(binding.switchAutoscale.isChecked)
-
+        setAutoScale(isAutoScaleEnabled)
         binding.chart.axisLeft.removeAllLimitLines()
 
         robotConfig?.let { robotConfig ->
@@ -358,7 +355,7 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
 
     private fun setPidMode(limit: Float) {
         actualLimitScale = limit
-        setAutoScale(binding.switchAutoscale.isChecked)
+        setAutoScale(isAutoScaleEnabled)
         binding.chart.axisLeft.removeAllLimitLines()
     }
 }
