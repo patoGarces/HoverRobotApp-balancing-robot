@@ -1,6 +1,9 @@
 package com.example.hoverrobot.ui.analisisFragment
 
 import android.util.Log
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -8,7 +11,10 @@ import com.example.hoverrobot.data.utils.ToolBox.ioScope
 import com.example.hoverrobot.data.models.comms.RobotDynamicData
 import com.example.hoverrobot.data.models.comms.RobotLocalConfig
 import com.example.hoverrobot.data.repositories.CommsRepository
+import com.example.hoverrobot.data.utils.StatusRobot
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -23,12 +29,14 @@ class AnalisisViewModel @Inject constructor(
     private var _newRobotConfig : MutableLiveData<RobotLocalConfig> = MutableLiveData()
     val newRobotConfig : LiveData<RobotLocalConfig> get() = _newRobotConfig
 
+    private var _statusCode = mutableStateOf<StatusRobot?>(null)
+    val statusCode : State<StatusRobot?> get() = _statusCode
+
     init {
         ioScope.launch {
             commsRepository.dynamicDataRobotFlow.collect {
                 _newDataAnalisis.postValue(it)
-
-                Log.d("TAG","current: ${it.currentL}, ${it.currentR}")
+                _statusCode.value = it.statusCode
             }
         }
 

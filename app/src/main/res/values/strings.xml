@@ -74,7 +74,8 @@
     <string name="status_robot_error_limit_speed">Error speed</string>
     <string name="status_robot_error_mcb">Error MCB</string>
     <string name="status_robot_error_imu">Error IMU</string>
-    <string name="status_robot_error_halls">Error HALLS</string>
+    <string name="status_robot_error_hall_r">Error HALL R</string>
+    <string name="status_robot_error_hall_l">Error HALL L</string>
     <string name="status_robot_error_battery">Error battery</string>
 
     <!--    Navigation Fragment-->
@@ -130,6 +131,7 @@
     <string name="dataset_position_meters">"Pos in mts"</string>
     <string name="dataset_speed">"Actual Speed"</string>
     <string name="dataset_battery_level">"Battery Level %"</string>
+    <string name="dataset_default">"none"</string>
 
     <string name="dearmed_button">Desarmar</string>
 </resources>

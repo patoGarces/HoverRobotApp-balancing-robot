@@ -5,7 +5,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -13,10 +12,13 @@ import androidx.fragment.app.viewModels
 import com.example.hoverrobot.R
 import com.example.hoverrobot.data.models.comms.RobotDynamicData
 import com.example.hoverrobot.data.models.comms.RobotLocalConfig
-import com.example.hoverrobot.data.utils.StatusRobot
-import com.example.hoverrobot.data.utils.ToolBox.toPercentLevel
 import com.example.hoverrobot.databinding.AnalisisFragmentBinding
 import com.example.hoverrobot.ui.analisisFragment.compose.LogScreen
+import com.example.hoverrobot.ui.analisisFragment.resources.EntriesMaps.datasetColors
+import com.example.hoverrobot.ui.analisisFragment.resources.EntriesMaps.datasetLabels
+import com.example.hoverrobot.ui.analisisFragment.resources.EntriesMaps.updateWithFrame
+import com.example.hoverrobot.ui.analisisFragment.resources.LineDataKeys
+import com.example.hoverrobot.ui.analisisFragment.resources.SelectedDataset
 import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.components.LimitLine
 import com.github.mikephil.charting.data.Entry
@@ -35,43 +37,14 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
     private var initTimeStamp: Long = 0
     private var selectedDataset: SelectedDataset? = SelectedDataset.DATASET_IMU
 
-    private var entryAnglePitch: ArrayList<Entry> = ArrayList()
-    private var entryAngleRoll: ArrayList<Entry> = ArrayList()
-    private var entryAngleYaw: ArrayList<Entry> = ArrayList()
-    private var entrySpeedMotorL: ArrayList<Entry> = ArrayList()
-    private var entrySpeedMotorR: ArrayList<Entry> = ArrayList()
-    private var entryCurrentMotorL: ArrayList<Entry> = ArrayList()
-    private var entryCurrentMotorR: ArrayList<Entry> = ArrayList()
-    private var entrySetPointAngle: ArrayList<Entry> = ArrayList()
-    private var entrySetPointPos: ArrayList<Entry> = ArrayList()
-    private var entrySetPointYaw: ArrayList<Entry> = ArrayList()
-    private var entrySetPointSpeed: ArrayList<Entry> = ArrayList()
-    private var entryOutputYaw: ArrayList<Entry> = ArrayList()
-    private var entryPosInMeters: ArrayList<Entry> = ArrayList()
-    private var entryActualSpeed: ArrayList<Entry> = ArrayList()
-    private var entryBatteryLevel: ArrayList<Entry> = ArrayList()
+    private val entryMap: MutableMap<LineDataKeys, MutableList<Entry>> = mutableMapOf()
+    private val lineDataMap: MutableMap<LineDataKeys, LineDataSet> = mutableMapOf()
 
-    private lateinit var lineDataAnglePitch: LineDataSet
-    private lateinit var lineDataAngleRoll: LineDataSet
-    private lateinit var lineDataAngleYaw: LineDataSet
-    private lateinit var lineDataSpeedMotorL: LineDataSet
-    private lateinit var lineDataSpeedMotorR: LineDataSet
-    private lateinit var lineDataCurrentMotorL: LineDataSet
-    private lateinit var lineDataCurrentMotorR: LineDataSet
-    private lateinit var lineDataSetPointAngle: LineDataSet
-    private lateinit var lineDataSetPointPos: LineDataSet
-    private lateinit var lineDataSetPointYaw: LineDataSet
-    private lateinit var lineDataSetPointSpeed: LineDataSet
-    private lateinit var lineDataSetOutputYaw: LineDataSet
-    private lateinit var lineDataSetPosInMeters: LineDataSet
-    private lateinit var lineDataSetSpeed: LineDataSet
-    private lateinit var lineDataBatteryLevel: LineDataSet
+    private val datasetKeys = LineDataKeys.entries.toList()
 
     private var actualLimitScale = 90F
 
     private var isAnalisisPaused = false
-
-    private val statusCodeLogs = mutableStateOf<StatusRobot?>(null)
 
     private val robotConfig: RobotLocalConfig?
         get() = analisisViewModel.newRobotConfig.value
@@ -87,7 +60,7 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
 
-                LogScreen(newStatusRobot = statusCodeLogs)
+                LogScreen(newStatusRobot = analisisViewModel.statusCode)
             }
         }
         return binding.root
@@ -96,7 +69,8 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        initGraph()
+        setupChart()
+        initDatasets()
         setupObserver()
         setupListener()
     }
@@ -108,8 +82,6 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
                 if (!isAnalisisPaused) {
                     newDynamicFrame(it)
                 }
-
-                statusCodeLogs.value = it.statusCode
             }
         }
     }
@@ -143,110 +115,63 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
         }
 
         binding.btnClearData.setOnClickListener {
-            entryAnglePitch.clear()
-            entryAngleRoll.clear()
-            entryAngleYaw.clear()
-            entrySpeedMotorL.clear()
-            entrySpeedMotorR.clear()
-            entryCurrentMotorL.clear()
-            entryCurrentMotorR.clear()
-            entrySetPointAngle.clear()
-            entrySetPointPos.clear()
-            entrySetPointYaw.clear()
-            entrySetPointSpeed.clear()
-            entryOutputYaw.clear()
-            entryPosInMeters.clear()
-            entryActualSpeed.clear()
-            entryBatteryLevel.clear()
+            entryMap.values.forEach { it.clear() }
         }
     }
 
-    private fun initGraph() {
+    private fun setupChart() {
         with(binding.chart) {
-            setOnChartValueSelectedListener(this@AnalisisFragment)
             setDrawGridBackground(false)
-            description.isEnabled = false                             // Configura el eje
+            description.isEnabled = false
             setDrawBorders(true)
-
-            axisLeft.isEnabled = true
-            axisLeft.setDrawAxisLine(true)
-            axisLeft.setDrawGridLines(true)
-
-            axisRight.isEnabled = true
-            axisRight.setDrawAxisLine(true)
-            axisRight.setDrawGridLines(true)
-
-            setAutoScale(binding.switchAutoscale.isChecked)
-
-            xAxis.setDrawAxisLine(true)
-            xAxis.setDrawGridLines(true)
-
-            // enable touch gestures
-            setTouchEnabled(true)
-
-            // enable scaling and dragging
-            isDragEnabled = true
-            setScaleEnabled(true)
-
-            // if disabled, scaling can be done on x- and y-axis separately
-            setPinchZoom(false)
-
-            legend.verticalAlignment = Legend.LegendVerticalAlignment.TOP
-            legend.horizontalAlignment = Legend.LegendHorizontalAlignment.RIGHT
-            legend.orientation = Legend.LegendOrientation.VERTICAL
-            legend.form = Legend.LegendForm.CIRCLE
-            legend.setDrawInside(true)
+            configureAxes()
+            enableTouchAndZoom()
+            configureLegend()
         }
-
-        lineDataAnglePitch =
-            createLineDataSet(entryAnglePitch, R.string.dataset_angle_pitch, R.color.red_80_percent)
-        lineDataAngleRoll =
-            createLineDataSet(entryAngleRoll, R.string.dataset_angle_roll, R.color.green_80_percent)
-        lineDataAngleYaw =
-            createLineDataSet(entryAngleYaw, R.string.dataset_angle_yaw, R.color.yellow_80_percent)
-        lineDataSpeedMotorL =
-            createLineDataSet(entrySpeedMotorL, R.string.dataset_speed_motor_l, R.color.blue_80_percent)
-        lineDataSpeedMotorR =
-            createLineDataSet(entrySpeedMotorR, R.string.dataset_speed_motor_r, R.color.red_80_percent)
-        lineDataCurrentMotorL =
-            createLineDataSet(entryCurrentMotorL, R.string.dataset_current_motor_l, R.color.status_orange)
-        lineDataCurrentMotorR =
-            createLineDataSet(entryCurrentMotorR, R.string.dataset_current_motor_r, R.color.status_green)
-        lineDataSetPointAngle = createLineDataSet(
-            entrySetPointAngle,
-            R.string.dataset_set_point_angle,
-            R.color.status_turquesa
-        )
-        lineDataSetPointPos = createLineDataSet(
-            entrySetPointPos,
-            R.string.dataset_set_point_pos,
-            R.color.status_green
-        )
-        lineDataSetPointYaw = createLineDataSet(
-            entrySetPointYaw,
-            R.string.dataset_set_point_yaw,
-            R.color.status_turquesa
-        )
-        lineDataSetPointSpeed = createLineDataSet(
-            entrySetPointSpeed,
-            R.string.dataset_set_point_speed,
-            R.color.blue_80_percent
-        )
-        lineDataSetOutputYaw =
-            createLineDataSet(entryOutputYaw, R.string.dataset_output_yaw, R.color.red_80_percent)
-        lineDataSetPosInMeters = createLineDataSet(
-            entryPosInMeters,
-            R.string.dataset_position_meters,
-            R.color.red_80_percent
-        )
-        lineDataSetSpeed =
-            createLineDataSet(entryActualSpeed, R.string.dataset_speed, R.color.red_80_percent)
-        lineDataBatteryLevel =
-            createLineDataSet(entryBatteryLevel, R.string.dataset_battery_level, R.color.status_turquesa)
-
         initTimeStamp = System.currentTimeMillis()
     }
 
+    private fun configureAxes() {
+        with(binding.chart) {
+            axisLeft.isEnabled = true
+            axisLeft.setDrawAxisLine(true)
+            axisLeft.setDrawGridLines(true)
+            axisRight.isEnabled = true
+            axisRight.setDrawAxisLine(true)
+            axisRight.setDrawGridLines(true)
+            xAxis.setDrawAxisLine(true)
+            xAxis.setDrawGridLines(true)
+        }
+    }
+
+    private fun enableTouchAndZoom() {
+        with(binding.chart) {
+            setTouchEnabled(true)
+            isDragEnabled = true
+            setScaleEnabled(true)
+            setPinchZoom(false)
+        }
+    }
+
+    private fun configureLegend() {
+        with(binding.chart.legend) {
+            verticalAlignment = Legend.LegendVerticalAlignment.TOP
+            horizontalAlignment = Legend.LegendHorizontalAlignment.RIGHT
+            orientation = Legend.LegendOrientation.VERTICAL
+            form = Legend.LegendForm.CIRCLE
+            setDrawInside(true)
+        }
+    }
+
+    private fun initDatasets() {
+        datasetKeys.forEach { key ->
+            val labelResId = datasetLabels[key] ?: R.string.dataset_default
+            val colorResId = datasetColors[key] ?: R.color.black
+
+            entryMap[key] = mutableListOf()  // Inicializamos la lista
+            lineDataMap[key] = createLineDataSet(entryMap[key]!!, labelResId, colorResId)
+        }
+    }
     private fun createLineDataSet(
         entry: List<Entry>,
         labelResId: Int,
@@ -277,9 +202,7 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
     }
 
     private fun newDynamicFrame(newFrame: RobotDynamicData) {
-
         with(binding) {
-
             tvAnglePitch.text = getString(R.string.placeholder_pitch, newFrame.pitchAngle)
             tvAngleRoll.text = getString(R.string.placeholder_roll, newFrame.rollAngle)
             tvAngleYaw.text = getString(R.string.placeholder_yaw, newFrame.yawAngle)
@@ -287,43 +210,9 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
             tvPosition.text = getString(R.string.placeholder_position, newFrame.posInMeters)
 
             val actualTimeInSec = ((System.currentTimeMillis() - initTimeStamp).toFloat()) / 1000
-            entryAnglePitch.add(Entry(actualTimeInSec, newFrame.pitchAngle))
-            entryAngleRoll.add(Entry(actualTimeInSec, newFrame.rollAngle))
-            entryAngleYaw.add(Entry(actualTimeInSec, newFrame.yawAngle))
-            entrySpeedMotorL.add(Entry(actualTimeInSec, newFrame.speedL.toFloat() / 10))
-            entrySpeedMotorR.add(Entry(actualTimeInSec, newFrame.speedR.toFloat() / 10))
-            entryCurrentMotorL.add(Entry(actualTimeInSec, newFrame.currentL))
-            entryCurrentMotorR.add(Entry(actualTimeInSec, newFrame.currentR))
-            entrySetPointAngle.add(Entry(actualTimeInSec, newFrame.setPointAngle))
-            entrySetPointPos.add(Entry(actualTimeInSec, newFrame.setPointPos))
-            entrySetPointYaw.add(Entry(actualTimeInSec, newFrame.setPointYaw))
-            entrySetPointSpeed.add(Entry(actualTimeInSec, newFrame.setPointSpeed))
-            entryPosInMeters.add(Entry(actualTimeInSec, newFrame.posInMeters))
-            entryOutputYaw.add(Entry(actualTimeInSec, newFrame.outputYawControl))
-            entryActualSpeed.add(
-                Entry(
-                    actualTimeInSec,
-                    newFrame.speedL.toFloat()
-                )
-            )           // TODO: tomar velocidad promedio
-            entryBatteryLevel.add(Entry(actualTimeInSec, newFrame.batVoltage.toPercentLevel().toFloat()))
+            entryMap.updateWithFrame(actualTimeInSec, newFrame)
 
-            lineDataAnglePitch.notifyDataSetChanged()
-            lineDataAngleRoll.notifyDataSetChanged()
-            lineDataAngleYaw.notifyDataSetChanged()
-            lineDataSpeedMotorL.notifyDataSetChanged()
-            lineDataSpeedMotorR.notifyDataSetChanged()
-            lineDataCurrentMotorL.notifyDataSetChanged()
-            lineDataCurrentMotorR.notifyDataSetChanged()
-            lineDataSetPointAngle.notifyDataSetChanged()
-            lineDataSetPointPos.notifyDataSetChanged()
-            lineDataSetPointYaw.notifyDataSetChanged()
-            lineDataSetPointSpeed.notifyDataSetChanged()
-            lineDataSetOutputYaw.notifyDataSetChanged()
-            lineDataSetPosInMeters.notifyDataSetChanged()
-            lineDataSetSpeed.notifyDataSetChanged()
-            lineDataBatteryLevel.notifyDataSetChanged()
-
+            lineDataMap.values.forEach { it.notifyDataSetChanged() }
             updateDataset(selectedDataset)
         }
     }
@@ -333,42 +222,58 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
             binding.chart.data = when (selectedDataset) {
                 SelectedDataset.DATASET_IMU -> {
                     setImuMode()
-                    LineData(lineDataAnglePitch, lineDataAngleRoll, lineDataAngleYaw)
+                    LineData(
+                        lineDataMap[LineDataKeys.LINEDATA_KEY_ANGLE_PITCH],
+                        lineDataMap[LineDataKeys.LINEDATA_KEY_ANGLE_ROLL],
+                        lineDataMap[LineDataKeys.LINEDATA_KEY_ANGLE_YAW]
+                    )
                 }
 
                 SelectedDataset.DATASET_POWER -> {
                     setMotorControlMode()
                     LineData(
-                        lineDataSpeedMotorL,
-                        lineDataSpeedMotorR,
-                        lineDataCurrentMotorL,
-                        lineDataCurrentMotorR,
-                        lineDataBatteryLevel
+                        lineDataMap[LineDataKeys.LINEDATA_KEY_SPEED_L],
+                        lineDataMap[LineDataKeys.LINEDATA_KEY_SPEED_R],
+                        lineDataMap[LineDataKeys.LINEDATA_KEY_CURRENT_L],
+                        lineDataMap[LineDataKeys.LINEDATA_KEY_CURRENT_R],
+                        lineDataMap[LineDataKeys.LINEDATA_KEY_BATTERY_LVL]
                     )
                 }
 
                 SelectedDataset.DATASET_PID_ANGLE -> {
                     setPidAngleMode()
                     LineData(
-                        lineDataSetPointAngle,
-                        lineDataAnglePitch,
-                        lineDataSpeedMotorL
+                        lineDataMap[LineDataKeys.LINEDATA_KEY_SETPOINT_ANGLE],
+                        lineDataMap[LineDataKeys.LINEDATA_KEY_ANGLE_PITCH],
+                        lineDataMap[LineDataKeys.LINEDATA_KEY_SPEED_L]
                     )
                 }
 
                 SelectedDataset.DATASET_PID_POS -> {
                     setPidMode(10F)
-                    LineData(lineDataSetPointPos, lineDataSetPosInMeters, lineDataSetPointAngle)
+                    LineData(
+                        lineDataMap[LineDataKeys.LINEDATA_KEY_SETPOINT_POS],
+                        lineDataMap[LineDataKeys.LINEDATA_KEY_POS_IN_MTS],
+                        lineDataMap[LineDataKeys.LINEDATA_KEY_SETPOINT_ANGLE]
+                    )
                 }
 
                 SelectedDataset.DATASET_PID_YAW -> {
                     setPidMode(190F)
-                    LineData(lineDataSetPointYaw, lineDataSetOutputYaw, lineDataAngleYaw)
+                    LineData(
+                        lineDataMap[LineDataKeys.LINEDATA_KEY_SETPOINT_YAW],
+                        lineDataMap[LineDataKeys.LINEDATA_KEY_OUTPUT_YAW],
+                        lineDataMap[LineDataKeys.LINEDATA_KEY_ANGLE_YAW]
+                    )
                 }
 
                 SelectedDataset.DATASET_PID_SPEED -> {
                     setPidMode(1050F)
-                    LineData(lineDataSetPointSpeed, lineDataSetSpeed, lineDataSetPointAngle)
+                    LineData(
+                        lineDataMap[LineDataKeys.LINEDATA_KEY_SETPOINT_SPEED],
+                        lineDataMap[LineDataKeys.LINEDATA_KEY_ACTUAL_SPEED],
+                        lineDataMap[LineDataKeys.LINEDATA_KEY_SETPOINT_ANGLE]
+                    )
                 }
             }
         }
@@ -397,8 +302,7 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
         setAutoScale(binding.switchAutoscale.isChecked)
 
         binding.chart.axisLeft.removeAllLimitLines()
-        val colorSafetyLimits =
-            requireContext().getColor(androidx.appcompat.R.color.material_deep_teal_200)
+        val colorSafetyLimits = requireContext().getColor(R.color.status_turquesa)
 
         robotConfig?.let { robotConfig ->
 
@@ -459,13 +363,3 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
     }
 }
 
-private const val FRAME_PERIOD = 0.05 // frecuencia de muestras en segundos
-
-enum class SelectedDataset {
-    DATASET_IMU,
-    DATASET_POWER,
-    DATASET_PID_ANGLE,
-    DATASET_PID_POS,
-    DATASET_PID_YAW,
-    DATASET_PID_SPEED
-}
