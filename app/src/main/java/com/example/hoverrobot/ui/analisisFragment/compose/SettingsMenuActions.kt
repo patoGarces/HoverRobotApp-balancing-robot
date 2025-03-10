@@ -7,5 +7,4 @@ sealed class SettingsMenuActions {
     data class OnAutoScaleChange(val isEnable: Boolean): SettingsMenuActions()
     data class OnPauseChange(val isPaused: Boolean): SettingsMenuActions()
     data object OnClearData: SettingsMenuActions()
-
 }

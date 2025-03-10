@@ -17,7 +17,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchColors
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -140,7 +139,7 @@ private fun ButtonItem(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp),
+            .padding(16.dp),
         shape = RoundedCornerShape(8.dp)
     ) {
         Text(
@@ -166,7 +165,7 @@ private fun CheckboxItem(
     ) {
         Checkbox(
             checked = indexItem == datasetSelected,
-            onCheckedChange = { if (it) onItemSelected() }
+            onCheckedChange = { if (it) onItemSelected() },
         )
 
         Text(
