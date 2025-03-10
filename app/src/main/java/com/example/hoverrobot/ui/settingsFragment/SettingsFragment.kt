@@ -8,15 +8,21 @@ import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Toast
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.example.hoverrobot.data.models.comms.PidSettings
 import com.example.hoverrobot.R
 import com.example.hoverrobot.data.models.comms.CommandsRobot
+import com.example.hoverrobot.data.models.comms.PidParams
 import com.example.hoverrobot.data.models.comms.RobotLocalConfig
 import com.example.hoverrobot.data.models.comms.Wheel
 import com.example.hoverrobot.databinding.SettingsFragmentBinding
+import com.example.hoverrobot.ui.settingsFragment.compose.OnActionSettingsScreen
+import com.example.hoverrobot.ui.settingsFragment.compose.SettingsFragmentScreen
 import com.google.android.material.slider.Slider
 
 
@@ -37,154 +43,173 @@ class SettingsFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
-        _binding = SettingsFragmentBinding.inflate(inflater, container, false)
-        return binding.root
-    }
+    ) = ComposeView(requireContext()).apply {
+        setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        setupSpinner()
-        setupListener()
-        setupObserver()
-    }
-
-    private fun setupSpinner() {
-        binding.spTargetPid.adapter = ArrayAdapter(
-            requireContext(),
-            android.R.layout.simple_spinner_dropdown_item,
-            resources.getStringArray(R.array.sp_memory_items)
-        )
-
-        binding.spTargetPid.onItemSelectedListener = object :
-            AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(
-                parent: AdapterView<*>,
-                view: View, position: Int, id: Long
-            ) {
-                indexPidTarget = position
-                Log.d("pidYaw","index: $position")
-                loadSpinnersConfig()
+        setContent {
+            MaterialTheme {
+                val localConfig = RobotLocalConfig(
+                    pids = listOf(
+                        PidParams(1f, 2f, 3f)
+                    ),
+                    centerAngle = 4f,
+                    safetyLimits = 5f
+                )
+                SettingsFragmentScreen(localConfig) { onAction ->
+                    when (onAction) {
+                        is OnActionSettingsScreen.OnNewSettings -> {}
+                        is OnActionSettingsScreen.OnCalibrateImu -> {}
+                        is OnActionSettingsScreen.OnCleanRightMotor -> {}
+                        is OnActionSettingsScreen.OnCleanLeftMotor -> {}
+                    }
+                }
             }
-
-            override fun onNothingSelected(parent: AdapterView<*>) {}
         }
     }
 
-    private fun setupListener() {
-
-        binding.sbPidP.addOnChangeListener { _, progressP, _ ->
-            kpValue = progressP
-            binding.tvValueP.text = getString(R.string.value_slider_format).format((kpValue))
-        }
-
-        binding.sbPidP.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
-            override fun onStartTrackingTouch(slider: Slider) {}
-            override fun onStopTrackingTouch(slider: Slider) {
-                sendNewSetting()
-            }
-        })
-
-        binding.sbPidI.addOnChangeListener { _, progressI, _ ->
-            kiValue = progressI
-            binding.tvValueI.text = getString(R.string.value_slider_format).format((kiValue))
-        }
-
-        binding.sbPidI.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
-            override fun onStartTrackingTouch(slider: Slider) {}
-            override fun onStopTrackingTouch(slider: Slider) {
-                sendNewSetting()
-            }
-        })
-
-        binding.sbPidD.addOnChangeListener { _, progressD, _ ->
-            kdValue = progressD
-            binding.tvValueD.text = getString(R.string.value_slider_format).format((kdValue))
-        }
-
-        binding.sbPidD.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
-            override fun onStartTrackingTouch(slider: Slider) {}
-            override fun onStopTrackingTouch(slider: Slider) {
-                sendNewSetting()
-            }
-        })
-
-        binding.sbCenterAngle.addOnChangeListener { _, progressCenter, _ ->
-            centerValue = progressCenter
-            binding.tvValueCenter.text = centerValue.toString()
-        }
-
-        binding.sbCenterAngle.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
-            override fun onStartTrackingTouch(slider: Slider) {}
-            override fun onStopTrackingTouch(slider: Slider) {
-                sendNewSetting()
-            }
-        })
-
-        binding.sbSafetyLimits.addOnChangeListener { _, progressSafetyLimits, _ ->
-            safetyLimitsValue = progressSafetyLimits
-            binding.tvValueLimits.text = safetyLimitsValue.toString()
-        }
-
-        binding.sbSafetyLimits.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
-            override fun onStartTrackingTouch(slider: Slider) {}
-            override fun onStopTrackingTouch(slider: Slider) {
-                sendNewSetting()
-            }
-        })
-
-        binding.btnSyncPid.setOnClickListener {
-            Toast.makeText(requireContext(), "Sincronizando parametros", Toast.LENGTH_LONG).show()
-            sendNewSetting()
-        }
-
-        binding.btnSavePid.setOnClickListener {
-            saveLocalSettings()
-        }
-
-        binding.btnResetPid.setOnClickListener {
-            loadSpinnersConfig()
-            sendNewSetting()
-        }
-
-        binding.btnCalibrateImu.setOnClickListener {
-            settingsFragmentViewModel.sendCommand(CommandsRobot.CALIBRATE_IMU)
-        }
-
-        binding.btnCleanWheelLeft.setOnClickListener {
-            settingsFragmentViewModel.sendCommand(CommandsRobot.CLEAN_WHEELS, Wheel.LEFT_WHEEL.ordinal.toFloat())
-        }
-
-        binding.btnCleanWheelRight.setOnClickListener {
-            settingsFragmentViewModel.sendCommand(CommandsRobot.CLEAN_WHEELS,Wheel.RIGHT_RIGHT.ordinal.toFloat())
-        }
-    }
-
-    private fun setupObserver() {
-        settingsFragmentViewModel.localConfigFromRobot.observe(viewLifecycleOwner) {
-            it?.updateSpinners()
-        }
-    }
-
-    private fun loadSpinnersConfig() {
-        settingsFragmentViewModel.localConfigFromRobot.value?.updateSpinners()
-    }
-
-    private fun RobotLocalConfig.updateSpinners() {
-        kpValue = this.pids[indexPidTarget].kp
-        binding.sbPidP.inRange(kpValue)
-        kiValue = this.pids[indexPidTarget].ki
-        binding.sbPidI.inRange(kiValue)
-        kdValue = this.pids[indexPidTarget].kd
-        binding.sbPidD.inRange(kdValue)
-        centerValue = this.centerAngle
-        binding.sbCenterAngle.inRange(centerValue)
-        safetyLimitsValue = this.safetyLimits
-        binding.sbSafetyLimits.inRange(safetyLimitsValue)
-        binding.btnSavePid.isEnabled = false
-        binding.btnResetPid.isVisible = false
-    }
+//    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+//        super.onViewCreated(view, savedInstanceState)
+//
+//        setupSpinner()
+//        setupListener()
+//        setupObserver()
+//    }
+//
+//    private fun setupSpinner() {
+//        binding.spTargetPid.adapter = ArrayAdapter(
+//            requireContext(),
+//            android.R.layout.simple_spinner_dropdown_item,
+//            resources.getStringArray(R.array.sp_memory_items)
+//        )
+//
+//        binding.spTargetPid.onItemSelectedListener = object :
+//            AdapterView.OnItemSelectedListener {
+//            override fun onItemSelected(
+//                parent: AdapterView<*>,
+//                view: View, position: Int, id: Long
+//            ) {
+//                indexPidTarget = position
+//                Log.d("pidYaw","index: $position")
+//                loadSpinnersConfig()
+//            }
+//
+//            override fun onNothingSelected(parent: AdapterView<*>) {}
+//        }
+//    }
+//
+//    private fun setupListener() {
+//
+//        binding.sbPidP.addOnChangeListener { _, progressP, _ ->
+//            kpValue = progressP
+//            binding.tvValueP.text = getString(R.string.value_slider_format).format((kpValue))
+//        }
+//
+//        binding.sbPidP.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
+//            override fun onStartTrackingTouch(slider: Slider) {}
+//            override fun onStopTrackingTouch(slider: Slider) {
+//                sendNewSetting()
+//            }
+//        })
+//
+//        binding.sbPidI.addOnChangeListener { _, progressI, _ ->
+//            kiValue = progressI
+//            binding.tvValueI.text = getString(R.string.value_slider_format).format((kiValue))
+//        }
+//
+//        binding.sbPidI.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
+//            override fun onStartTrackingTouch(slider: Slider) {}
+//            override fun onStopTrackingTouch(slider: Slider) {
+//                sendNewSetting()
+//            }
+//        })
+//
+//        binding.sbPidD.addOnChangeListener { _, progressD, _ ->
+//            kdValue = progressD
+//            binding.tvValueD.text = getString(R.string.value_slider_format).format((kdValue))
+//        }
+//
+//        binding.sbPidD.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
+//            override fun onStartTrackingTouch(slider: Slider) {}
+//            override fun onStopTrackingTouch(slider: Slider) {
+//                sendNewSetting()
+//            }
+//        })
+//
+//        binding.sbCenterAngle.addOnChangeListener { _, progressCenter, _ ->
+//            centerValue = progressCenter
+//            binding.tvValueCenter.text = centerValue.toString()
+//        }
+//
+//        binding.sbCenterAngle.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
+//            override fun onStartTrackingTouch(slider: Slider) {}
+//            override fun onStopTrackingTouch(slider: Slider) {
+//                sendNewSetting()
+//            }
+//        })
+//
+//        binding.sbSafetyLimits.addOnChangeListener { _, progressSafetyLimits, _ ->
+//            safetyLimitsValue = progressSafetyLimits
+//            binding.tvValueLimits.text = safetyLimitsValue.toString()
+//        }
+//
+//        binding.sbSafetyLimits.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
+//            override fun onStartTrackingTouch(slider: Slider) {}
+//            override fun onStopTrackingTouch(slider: Slider) {
+//                sendNewSetting()
+//            }
+//        })
+//
+//        binding.btnSyncPid.setOnClickListener {
+//            Toast.makeText(requireContext(), "Sincronizando parametros", Toast.LENGTH_LONG).show()
+//            sendNewSetting()
+//        }
+//
+//        binding.btnSavePid.setOnClickListener {
+//            saveLocalSettings()
+//        }
+//
+//        binding.btnResetPid.setOnClickListener {
+//            loadSpinnersConfig()
+//            sendNewSetting()
+//        }
+//
+//        binding.btnCalibrateImu.setOnClickListener {
+//            settingsFragmentViewModel.sendCommand(CommandsRobot.CALIBRATE_IMU)
+//        }
+//
+//        binding.btnCleanWheelLeft.setOnClickListener {
+//            settingsFragmentViewModel.sendCommand(CommandsRobot.CLEAN_WHEELS, Wheel.LEFT_WHEEL.ordinal.toFloat())
+//        }
+//
+//        binding.btnCleanWheelRight.setOnClickListener {
+//            settingsFragmentViewModel.sendCommand(CommandsRobot.CLEAN_WHEELS,Wheel.RIGHT_RIGHT.ordinal.toFloat())
+//        }
+//    }
+//
+//    private fun setupObserver() {
+//        settingsFragmentViewModel.localConfigFromRobot.observe(viewLifecycleOwner) {
+//            it?.updateSpinners()
+//        }
+//    }
+//
+//    private fun loadSpinnersConfig() {
+//        settingsFragmentViewModel.localConfigFromRobot.value?.updateSpinners()
+//    }
+//
+//    private fun RobotLocalConfig.updateSpinners() {
+//        kpValue = this.pids[indexPidTarget].kp
+//        binding.sbPidP.inRange(kpValue)
+//        kiValue = this.pids[indexPidTarget].ki
+//        binding.sbPidI.inRange(kiValue)
+//        kdValue = this.pids[indexPidTarget].kd
+//        binding.sbPidD.inRange(kdValue)
+//        centerValue = this.centerAngle
+//        binding.sbCenterAngle.inRange(centerValue)
+//        safetyLimitsValue = this.safetyLimits
+//        binding.sbSafetyLimits.inRange(safetyLimitsValue)
+//        binding.btnSavePid.isEnabled = false
+//        binding.btnResetPid.isVisible = false
+//    }
 
     private fun saveLocalSettings() {
         sendNewSetting()
