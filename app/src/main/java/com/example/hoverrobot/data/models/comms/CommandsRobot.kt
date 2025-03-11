@@ -15,5 +15,5 @@ enum class CommandsRobot {        // En sync con el codigo del esp!
 
 enum class Wheel {
     LEFT_WHEEL,
-    RIGHT_RIGHT
+    RIGHT_WHEEL
 }

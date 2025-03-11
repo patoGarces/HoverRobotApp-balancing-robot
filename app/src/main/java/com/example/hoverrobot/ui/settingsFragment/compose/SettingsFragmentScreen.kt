@@ -1,5 +1,6 @@
 package com.example.hoverrobot.ui.settingsFragment.compose
 
+import android.util.Log
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -16,7 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -41,7 +41,7 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -58,19 +58,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.hoverrobot.R
 import com.example.hoverrobot.data.models.comms.PidParams
+import com.example.hoverrobot.data.models.comms.PidSettings
 import com.example.hoverrobot.data.models.comms.RobotLocalConfig
+import com.example.hoverrobot.data.models.comms.asPidSettings
 
 @Composable
 fun SettingsFragmentScreen(
-    originalRobotConfig: RobotLocalConfig,
-    onActionScreen: (OnActionSettingsScreen) -> Unit
+    initialRobotConfig: State<RobotLocalConfig>,
+    onPidSave: (PidSettings) -> Boolean,
+    onActionScreen: (OnActionSettingsScreen) -> Unit,
 ) {
-    val robotLocalConfig = remember { mutableStateOf(originalRobotConfig) }
-
-    LaunchedEffect(robotLocalConfig.value) {
-        onActionScreen(OnActionSettingsScreen.OnNewSettings(robotLocalConfig.value))
-    }
-
     Column(
         Modifier
             .fillMaxSize()
@@ -78,8 +75,9 @@ fun SettingsFragmentScreen(
             .verticalScroll(rememberScrollState())
     ) {
         PidSettingsCard(
-            robotLocalConfig = robotLocalConfig,
-            onPidSync = { onActionScreen(OnActionSettingsScreen.OnNewSettings(robotLocalConfig.value))}
+            originalLocalConfig = initialRobotConfig,
+            onSendPidSettings = { onActionScreen(OnActionSettingsScreen.OnNewSettings(it)) },
+            onPidSave = { onPidSave(it) },
         )
 
         GeneralSettingsCard(
@@ -90,18 +88,65 @@ fun SettingsFragmentScreen(
     }
 }
 
+private fun PidSettings.isDiffWithOriginalLocalConfig(originalLocalConfig: RobotLocalConfig): Boolean
+    {
+        val result = this.kp != originalLocalConfig.pids[this.indexPid].kp ||
+                this.ki != originalLocalConfig.pids[this.indexPid].ki ||
+                this.kd != originalLocalConfig.pids[this.indexPid].kd ||
+                this.centerAngle != originalLocalConfig.centerAngle ||
+                this.safetyLimits != originalLocalConfig.safetyLimits
+
+        if(result) Log.i("NewSettings","hay diff: ${this.kp} ${originalLocalConfig.pids[this.indexPid].kp})")
+        return result
+    }
+
 @Composable
 private fun PidSettingsCard(
-    robotLocalConfig: MutableState<RobotLocalConfig>,
-    onPidSync: () -> Unit
+    originalLocalConfig: State<RobotLocalConfig>,
+    onSendPidSettings: (PidSettings) -> Unit,
+    onPidSave: (PidSettings) -> Boolean,
 ) {
     var indexPid by remember { mutableIntStateOf(0) }
+    var newPidSettings by remember { mutableStateOf(originalLocalConfig.value.asPidSettings(indexPid)) }
+    var enablePidSave by remember { mutableStateOf(false) }
+    var enablePidReset by remember { mutableStateOf(false) }
+
+    var outlineColor by remember { mutableStateOf(Color.Red) }
+
+    val listColor = listOf(
+        Color.White,
+        Color.Blue,
+        Color.Green,
+        Color.Yellow
+    )
+
+    LaunchedEffect(originalLocalConfig.value) {
+        newPidSettings = originalLocalConfig.value.asPidSettings(indexPid)
+        enablePidReset = newPidSettings.isDiffWithOriginalLocalConfig(originalLocalConfig.value)
+        enablePidSave = newPidSettings.isDiffWithOriginalLocalConfig(originalLocalConfig.value)
+    }
+
+    LaunchedEffect(newPidSettings) {
+        enablePidReset = newPidSettings.isDiffWithOriginalLocalConfig(originalLocalConfig.value)
+        enablePidSave = newPidSettings.isDiffWithOriginalLocalConfig(originalLocalConfig.value)
+        onSendPidSettings(newPidSettings)
+    }
 
     PidSettingsCardHeader(
-        onPidSave = {},
-        onPidSync = onPidSync,
-        onPidReset = {},
-        onIndexPidChange = { indexPid = it }
+        enablePidSave = enablePidSave,
+        onPidSave = { onPidSave(newPidSettings) },
+        onPidSync = { onSendPidSettings(newPidSettings) }, // simplemente reenvio el pidSetting
+        enablePidReset = enablePidReset,
+        onPidReset = {
+            newPidSettings = originalLocalConfig.value.asPidSettings(indexPid)
+            onSendPidSettings(newPidSettings)
+        },
+        outlineColor = listColor[indexPid],
+        onIndexPidChange = {
+            indexPid = it
+            newPidSettings = originalLocalConfig.value.asPidSettings(indexPid)
+            outlineColor = listColor[it]
+        }
     )
 
     Column(
@@ -112,48 +157,64 @@ private fun PidSettingsCard(
             .border(width = 2.dp, color = Color.White, shape = RoundedCornerShape(8.dp))
             .verticalScroll(rememberScrollState())
     ) {
-        with(robotLocalConfig.value.pids[indexPid]) {
-            SliderParam(R.string.pid_parameter_p_title, kp) { newValue ->
-                robotLocalConfig.updatePidValue(indexPid) { it.copy(kp = newValue) }
+        Column(Modifier.padding(vertical = 8.dp)) {
+            SliderParam(
+                nameId = R.string.pid_parameter_p_title,
+                initialValue = newPidSettings.kp
+            ) { newValue ->
+                newPidSettings = newPidSettings.copy(kp = newValue)
             }
-            SliderParam(R.string.pid_parameter_i_title, ki) { newValue ->
-                robotLocalConfig.updatePidValue(indexPid) { it.copy(ki = newValue) }
+            SliderParam(
+                nameId = R.string.pid_parameter_i_title,
+                initialValue = newPidSettings.ki
+            ) { newValue ->
+                newPidSettings = newPidSettings.copy(ki = newValue)
             }
-            SliderParam(R.string.pid_parameter_d_title, kd) { newValue ->
-                robotLocalConfig.updatePidValue(indexPid) { it.copy(kd = newValue) }
+            SliderParam(
+                nameId = R.string.pid_parameter_d_title,
+                initialValue = newPidSettings.kd
+            ) { newValue ->
+                newPidSettings = newPidSettings.copy(kd = newValue)
             }
-        }
 
-        // TODO: es distinto este slider, tiene el centro en 0, con el wording "front", "back"
-        SliderParam(
-            nameId = R.string.pid_parameter_center_title,
-            actualValue = robotLocalConfig.value.centerAngle,
-            range = -10F..10F
-        ) {
-            robotLocalConfig.value = robotLocalConfig.value.copy(centerAngle = it)
-        }
+            // TODO: es distinto este slider, tiene el centro en 0, con el wording "front", "back"
+            SliderParam(
+                nameId = R.string.pid_parameter_center_title,
+                initialValue = newPidSettings.centerAngle,
+                range = -10F..10F
+            ) { newCenterAngle ->
+                newPidSettings = newPidSettings.copy(centerAngle = newCenterAngle)
+            }
 
-        SliderParam(
-            nameId = R.string.pid_parameter_limits_title,
-            actualValue = robotLocalConfig.value.safetyLimits,
-            range = 0F..60F                                             // TODO: traer de afuera
-        ) {
-            robotLocalConfig.value = robotLocalConfig.value.copy(safetyLimits = it)
+            SliderParam(
+                nameId = R.string.pid_parameter_limits_title,
+                stepSize = 1F,
+                initialValue = newPidSettings.safetyLimits,
+                range = 0F..60F                                             // TODO: traer de afuera
+            ) { newSafetyLimits ->
+                newPidSettings = newPidSettings.copy(safetyLimits = newSafetyLimits)
+            }
         }
     }
 }
 
-// TODO: falta controlar visibilidad de botones, enables, etc
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 private fun PidSettingsCardHeader(
+    enablePidReset: Boolean,
     onPidReset: () -> Unit,
-    onPidSave: () -> Unit,
+    enablePidSave: Boolean,
+    onPidSave: () -> Boolean,
     onPidSync: () -> Unit,
+    outlineColor: Color,
     onIndexPidChange: (Int) -> Unit
 ) {
     var isDropdownMenuExpanded by remember { mutableStateOf(false) }
     var dropDownMenuSelectedItem by remember { mutableIntStateOf(0) }
+    var buttonSaveEnable by remember { mutableStateOf(true) }
+
+    // TODO: sacar esto de aca:
+    val optionDropDownMenu = listOf("PID ANGLE", "PID POS", "PID SPEED", "PID YAW")
 
     Row(
         Modifier.fillMaxWidth(),
@@ -163,14 +224,19 @@ private fun PidSettingsCardHeader(
 
         Spacer(Modifier.weight(1F))
 
-        ButtonSection(R.string.btn_pid_reset, onClick = onPidReset)
+        ButtonSection(
+            title = R.string.btn_pid_reset,
+            enable = enablePidReset
+        ) { onPidReset() }
 
-        ButtonSection(R.string.btn_pid_save, onClick = onPidSave)
+        ButtonSection(
+            title = R.string.btn_pid_save,
+            enable = enablePidSave
+        ) { buttonSaveEnable = onPidSave() }
 
-        ButtonSection(R.string.btn_pid_sync, onClick = onPidSync)
-
-        // TODO: sacar esto de aca:
-        val optionDropDownMenu = listOf("PID ANGLE","PID POS","PID SPEED","PID YAW")
+        ButtonSection(
+            title = R.string.btn_pid_sync
+        ) { onPidSync() }
 
         ExposedDropdownMenuBox(
             expanded = isDropdownMenuExpanded,
@@ -181,7 +247,7 @@ private fun PidSettingsCardHeader(
                     .width(130.dp)
                     .height(35.dp)
                     .padding(horizontal = 8.dp)
-                    .border(width = 1.dp, color = Color.Red, shape = RoundedCornerShape(8.dp))
+                    .border(width = 1.dp, color = outlineColor, shape = RoundedCornerShape(8.dp))
                     .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -189,7 +255,11 @@ private fun PidSettingsCardHeader(
                     modifier = Modifier
                         .weight(1F)
                         .padding(start = 8.dp),
-                    state = TextFieldState(initialText = optionDropDownMenu.getOrNull(dropDownMenuSelectedItem) ?: ""),
+                    state = TextFieldState(
+                        initialText = optionDropDownMenu.getOrNull(
+                            dropDownMenuSelectedItem
+                        ) ?: ""
+                    ),
                     readOnly = true,
                     textStyle = LocalTextStyle.current.copy(
                         fontSize = 14.sp,
@@ -198,7 +268,8 @@ private fun PidSettingsCardHeader(
                     )
                 )
 
-                val trailingIcon = if (isDropdownMenuExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown
+                val trailingIcon =
+                    if (isDropdownMenuExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown
                 Icon(
                     imageVector = trailingIcon,
                     contentDescription = "Dropdown",
@@ -316,9 +387,10 @@ private fun ButtonSection(
     enable: Boolean = true,
     onClick: () -> Unit
 ) {
-    Column (
+    Column(
         modifier = Modifier
-            .widthIn(min = 100.dp).height(50.dp)
+            .widthIn(min = 100.dp)
+            .height(50.dp)
             .padding(8.dp)
             .border(
                 width = 1.dp,
@@ -336,30 +408,29 @@ private fun ButtonSection(
         ) {
             Text(
                 text = stringResource(title),
+                color = if (enable) Color.White else Color.Gray,
                 textAlign = TextAlign.Center
             )
         }
     }
 }
 
-
-//// TODO: mover de aca
-//private fun Float.normalize(range: ClosedFloatingPointRange<Float>):Float {
-//    return ((this - range.start) / (range.endInclusive - range.start))
-//}
-//
-//private fun Float.denormalize(range: ClosedFloatingPointRange<Float>):Float {
-//    return range.start + this * (range.endInclusive - range.start)
-//}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SliderParam(
     @StringRes nameId: Int,
-    actualValue: Float,
+    initialValue: Float,
     range: ClosedFloatingPointRange<Float> = 0F..4F,
+    stepSize: Float = 0.01F,
     onValueChange: (Float) -> Unit
 ) {
+    var actualValue by remember { mutableStateOf(initialValue) }
+
+    LaunchedEffect(initialValue) {
+        Log.i("NewSettings", "refresh initial value: $initialValue, actualValue: $actualValue")
+        actualValue = initialValue
+    }
+
     Column(
         Modifier
             .fillMaxWidth()
@@ -373,7 +444,9 @@ private fun SliderParam(
         )
 
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(Modifier.weight(1F)) {
@@ -403,12 +476,17 @@ private fun SliderParam(
                 Slider(
                     value = actualValue,
                     onValueChange = {
-                        onValueChange(it)
+                        actualValue = it
                     },
+                    steps = ((range.endInclusive - range.start) / stepSize).toInt() - 1,
+                    onValueChangeFinished = { onValueChange(actualValue) },
                     valueRange = range,
-                    modifier = Modifier.fillMaxWidth().height(30.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(30.dp),
                     colors = SliderDefaults.colors(
-                        thumbColor = Color.Red,
+                        activeTickColor = Color.Transparent,
+                        inactiveTickColor = Color.Transparent,
                         inactiveTrackColor = Color.Transparent,
                         activeTrackColor = Color.Transparent,
                     ),
@@ -433,28 +511,26 @@ private fun SliderParam(
     }
 }
 
-// TODO: sacar de aca
-private fun MutableState<RobotLocalConfig>.updatePidValue(index: Int, updateField: (PidParams) -> PidParams) {
-    value = value.copy(
-        pids = value.pids.toMutableList().apply {
-            this[index] = updateField(this[index])
-        }
-    )
-}
-
 @Composable
 @Preview(
     device = "spec:width=411dp,height=891dp,dpi=420,isRound=false,chinSize=0dp,orientation=landscape"
 )
 private fun SettingsFragmentScreenPreview() {
 
-    val localConfig = RobotLocalConfig(
-        pids = listOf(
-            PidParams(1f, 2f, 3f)
-        ),
-        centerAngle = 4f,
-        safetyLimits = 5f
-    )
-    SettingsFragmentScreen(localConfig) {}
+    val localConfig = remember {
+        mutableStateOf(
+            RobotLocalConfig(
+                pids = listOf(
+                    PidParams(1f, 2f, 3f)
+                ),
+                centerAngle = 4f,
+                safetyLimits = 5f
+            )
+        )
+    }
+    SettingsFragmentScreen(
+        initialRobotConfig = localConfig,
+        onPidSave = { false }
+    ) {}
 
 }

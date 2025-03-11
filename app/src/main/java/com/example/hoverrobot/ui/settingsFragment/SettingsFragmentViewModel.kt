@@ -18,15 +18,13 @@ class SettingsFragmentViewModel @Inject constructor(
     private val commsRepository: CommsRepository
 ): ViewModel(){
 
-    private var _localConfigFromRobot: MutableLiveData<RobotLocalConfig?> = MutableLiveData()
-    val localConfigFromRobot : LiveData<RobotLocalConfig?> get() = _localConfigFromRobot
+    private var _localConfigFromRobot: MutableLiveData<RobotLocalConfig> = MutableLiveData()
+    val localConfigFromRobot : LiveData<RobotLocalConfig> get() = _localConfigFromRobot
 
     private val isRobotConnected: Boolean
         get() = commsRepository.connectionState.value.status == StatusConnection.CONNECTED
 
     init {
-        _localConfigFromRobot.value = null
-
         ioScope.launch {
             commsRepository.robotLocalConfigFlow.collect {
                 it.let {
