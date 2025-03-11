@@ -24,6 +24,17 @@ val ByteBuffer.asRobotLocalConfig: RobotLocalConfig
         return RobotLocalConfig(centerAngle, safetyLimits, pidParams)
     }
 
+fun RobotLocalConfig.asPidSettings(indexPid: Int): PidSettings {
+    return PidSettings(
+        indexPid = indexPid,
+        kp = pids[indexPid].kp,
+        ki = pids[indexPid].ki,
+        kd = pids[indexPid].kd,
+        centerAngle = centerAngle,
+        safetyLimits = safetyLimits,
+    )
+}
+
 
 const val CANT_PIDS = 4                     // OJO: en sync con el firmware
 const val ROBOT_LOCAL_CONFIG_SIZE = 28//22
