@@ -50,9 +50,11 @@ class SettingsFragment : Fragment() {
             MaterialTheme {
                 val localConfig = RobotLocalConfig(
                     pids = listOf(
-                        PidParams(1f, 2f, 3f)
+                        PidParams(0.1f, 0.2f, 0.3f),
+                        PidParams(0.4f, 0.5f, 0.6f),
+                        PidParams(0.7f, 0.8f, 0.9f)
                     ),
-                    centerAngle = 4f,
+                    centerAngle = 0f,
                     safetyLimits = 5f
                 )
                 SettingsFragmentScreen(localConfig) { onAction ->
