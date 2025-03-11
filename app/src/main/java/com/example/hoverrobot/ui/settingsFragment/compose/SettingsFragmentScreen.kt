@@ -3,8 +3,6 @@ package com.example.hoverrobot.ui.settingsFragment.compose
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -14,25 +12,30 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.ExposedDropdownMenuBox
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
@@ -47,13 +50,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -158,28 +158,56 @@ private fun PidSettingsCardHeader(
         // TODO: sacar esto de aca:
         val optionDropDownMenu = listOf("PID ANGLE","PID POS","PID SPEED","PID YAW")
 
-//        // TODO: refactorizar
         ExposedDropdownMenuBox(
             expanded = isDropdownMenuExpanded,
             onExpandedChange = { isDropdownMenuExpanded = it },
         ) {
-            OutlinedTextField(
-                modifier = Modifier.heightIn(min = 40.dp).width(150.dp),
-                value = optionDropDownMenu.getOrNull(dropDownMenuSelectedItem) ?: "",
-                onValueChange = {},
-                readOnly = true,
-                textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isDropdownMenuExpanded) },
-            )
+            Row(
+                Modifier
+                    .width(130.dp)
+                    .height(35.dp)
+                    .padding(horizontal = 8.dp)
+                    .border(width = 1.dp, color = Color.Red, shape = RoundedCornerShape(8.dp))
+                    .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                BasicTextField(
+                    modifier = Modifier
+                        .weight(1F)
+                        .padding(start = 8.dp),
+                    state = TextFieldState(initialText = optionDropDownMenu.getOrNull(dropDownMenuSelectedItem) ?: ""),
+                    readOnly = true,
+                    textStyle = LocalTextStyle.current.copy(
+                        fontSize = 14.sp,
+                        color = Color.Black,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
 
-            ExposedDropdownMenu(expanded = isDropdownMenuExpanded, onDismissRequest = { isDropdownMenuExpanded = false }) {
+                val trailingIcon = if (isDropdownMenuExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown
+                Icon(
+                    imageVector = trailingIcon,
+                    contentDescription = "Dropdown",
+                    tint = Color.White,
+                )
+            }
+
+            ExposedDropdownMenu(
+                modifier = Modifier
+                    .padding(top = 8.dp)
+                    .border(1.dp, Color.Red, RoundedCornerShape(8.dp))
+                    .background(Color.Black, RoundedCornerShape(8.dp)),
+                containerColor = Color.Transparent,
+                expanded = isDropdownMenuExpanded,
+                onDismissRequest = { isDropdownMenuExpanded = false }) {
                 optionDropDownMenu.forEachIndexed { index, item ->
                     DropdownMenuItem(
-                        text = { Text(item) },
+                        text = { Text(item, color = Color.White) },
                         onClick = {
                             dropDownMenuSelectedItem = index
                             isDropdownMenuExpanded = false
-                        }
+                        },
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                     )
                 }
             }
@@ -226,7 +254,9 @@ private fun GeneralSettingsItem(
     onClickSecond: (() -> Unit)? = null
 ) {
     Row(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -271,15 +301,16 @@ private fun ButtonSection(
     enable: Boolean = true,
     onClick: () -> Unit
 ) {
-    Box(
+    Column (
         modifier = Modifier
-            .height(50.dp)
+            .widthIn(min = 100.dp).height(50.dp)
             .padding(8.dp)
             .border(
                 width = 1.dp,
                 shape = RoundedCornerShape(8.dp),
                 color = Color.Red
-            )
+            ),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Button(
             onClick = onClick,
@@ -288,7 +319,10 @@ private fun ButtonSection(
             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
             contentPadding = PaddingValues(vertical = 0.dp, horizontal = 16.dp)
         ) {
-            Text(text = stringResource(title))
+            Text(
+                text = stringResource(title),
+                textAlign = TextAlign.Center
+            )
         }
     }
 }
