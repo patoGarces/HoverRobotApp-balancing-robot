@@ -43,7 +43,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -78,7 +77,10 @@ fun SettingsFragmentScreen(
             .padding(16.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        PidSettingsCard(robotLocalConfig)
+        PidSettingsCard(
+            robotLocalConfig = robotLocalConfig,
+            onPidSync = { onActionScreen(OnActionSettingsScreen.OnNewSettings(robotLocalConfig.value))}
+        )
 
         GeneralSettingsCard(
             onCalibrateImu = { onActionScreen(OnActionSettingsScreen.OnCalibrateImu) },
@@ -90,43 +92,53 @@ fun SettingsFragmentScreen(
 
 @Composable
 private fun PidSettingsCard(
-    robotLocalConfig: MutableState<RobotLocalConfig>
+    robotLocalConfig: MutableState<RobotLocalConfig>,
+    onPidSync: () -> Unit
 ) {
+    var indexPid by remember { mutableIntStateOf(0) }
+
     PidSettingsCardHeader(
         onPidSave = {},
-        onPidSync = {},
-        onPidReset = {}
+        onPidSync = onPidSync,
+        onPidReset = {},
+        onIndexPidChange = { indexPid = it }
     )
 
     Column(
         Modifier
             .fillMaxWidth()
             .height(250.dp)
+            .padding(vertical = 8.dp)
             .border(width = 2.dp, color = Color.White, shape = RoundedCornerShape(8.dp))
+            .verticalScroll(rememberScrollState())
     ) {
-
-        LazyColumn {
-            items(robotLocalConfig.value.pids.size) { index ->
-                with(robotLocalConfig.value.pids[index]) {
-                    SliderParam(R.string.pid_parameter_p_title, kp) { newValue ->
-                        robotLocalConfig.updatePidValue(index) { it.copy(kp = newValue) }
-                    }
-                    SliderParam(R.string.pid_parameter_i_title, ki) { newValue ->
-                        robotLocalConfig.updatePidValue(index) { it.copy(ki = newValue) }
-                    }
-                    SliderParam(R.string.pid_parameter_d_title, kd) { newValue ->
-                        robotLocalConfig.updatePidValue(index) { it.copy(kd = newValue) }
-                    }
-                }
+        with(robotLocalConfig.value.pids[indexPid]) {
+            SliderParam(R.string.pid_parameter_p_title, kp) { newValue ->
+                robotLocalConfig.updatePidValue(indexPid) { it.copy(kp = newValue) }
             }
-
-            item { // TODO: es distinto este slider, tiene el centro en 0, con el wording "front", "back"
-                SliderParam(R.string.pid_parameter_center_title, robotLocalConfig.value.centerAngle) {}
+            SliderParam(R.string.pid_parameter_i_title, ki) { newValue ->
+                robotLocalConfig.updatePidValue(indexPid) { it.copy(ki = newValue) }
             }
-
-            item {
-                SliderParam(R.string.pid_parameter_limits_title, robotLocalConfig.value.centerAngle) {}
+            SliderParam(R.string.pid_parameter_d_title, kd) { newValue ->
+                robotLocalConfig.updatePidValue(indexPid) { it.copy(kd = newValue) }
             }
+        }
+
+        // TODO: es distinto este slider, tiene el centro en 0, con el wording "front", "back"
+        SliderParam(
+            nameId = R.string.pid_parameter_center_title,
+            actualValue = robotLocalConfig.value.centerAngle,
+            range = -10F..10F
+        ) {
+            robotLocalConfig.value = robotLocalConfig.value.copy(centerAngle = it)
+        }
+
+        SliderParam(
+            nameId = R.string.pid_parameter_limits_title,
+            actualValue = robotLocalConfig.value.safetyLimits,
+            range = 0F..60F                                             // TODO: traer de afuera
+        ) {
+            robotLocalConfig.value = robotLocalConfig.value.copy(safetyLimits = it)
         }
     }
 }
@@ -137,10 +149,12 @@ private fun PidSettingsCard(
 private fun PidSettingsCardHeader(
     onPidReset: () -> Unit,
     onPidSave: () -> Unit,
-    onPidSync: () -> Unit
+    onPidSync: () -> Unit,
+    onIndexPidChange: (Int) -> Unit
 ) {
     var isDropdownMenuExpanded by remember { mutableStateOf(false) }
     var dropDownMenuSelectedItem by remember { mutableIntStateOf(0) }
+
     Row(
         Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
@@ -205,6 +219,7 @@ private fun PidSettingsCardHeader(
                         text = { Text(item, color = Color.White) },
                         onClick = {
                             dropDownMenuSelectedItem = index
+                            onIndexPidChange(index)
                             isDropdownMenuExpanded = false
                         },
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
@@ -327,20 +342,28 @@ private fun ButtonSection(
     }
 }
 
+
+//// TODO: mover de aca
+//private fun Float.normalize(range: ClosedFloatingPointRange<Float>):Float {
+//    return ((this - range.start) / (range.endInclusive - range.start))
+//}
+//
+//private fun Float.denormalize(range: ClosedFloatingPointRange<Float>):Float {
+//    return range.start + this * (range.endInclusive - range.start)
+//}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SliderParam(
     @StringRes nameId: Int,
     actualValue: Float,
-    range: ClosedFloatingPointRange<Float> = 0F..1F,
+    range: ClosedFloatingPointRange<Float> = 0F..4F,
     onValueChange: (Float) -> Unit
 ) {
-
     Column(
         Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .padding(top = 8.dp)
     ) {
         Text(
             text = stringResource(nameId),
@@ -350,12 +373,9 @@ private fun SliderParam(
         )
 
         Row(
-            Modifier
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            var sliderValue by remember { mutableFloatStateOf(0f) }
-
             Box(Modifier.weight(1F)) {
 
                 Box(
@@ -372,7 +392,7 @@ private fun SliderParam(
                 Box(
                     modifier = Modifier
                         .height(5.dp)
-                        .fillMaxWidth(fraction = sliderValue)
+                        .fillMaxWidth(fraction = (actualValue - range.start) / (range.endInclusive - range.start))
                         .align(Alignment.CenterStart)
                         .background(
                             Color.Red,
@@ -381,14 +401,16 @@ private fun SliderParam(
                 )
 
                 Slider(
-                    value = sliderValue,
-                    onValueChange = onValueChange,
+                    value = actualValue,
+                    onValueChange = {
+                        onValueChange(it)
+                    },
                     valueRange = range,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().height(30.dp),
                     colors = SliderDefaults.colors(
                         thumbColor = Color.Red,
                         inactiveTrackColor = Color.Transparent,
-                        activeTrackColor = Color.Transparent
+                        activeTrackColor = Color.Transparent,
                     ),
                     thumb = {
                         Box(
