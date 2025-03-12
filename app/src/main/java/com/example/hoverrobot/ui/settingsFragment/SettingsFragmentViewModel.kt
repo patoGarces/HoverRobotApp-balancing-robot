@@ -8,6 +8,7 @@ import com.example.hoverrobot.data.models.comms.PidSettings
 import com.example.hoverrobot.data.models.comms.RobotLocalConfig
 import com.example.hoverrobot.data.repositories.CommsRepository
 import com.example.hoverrobot.data.utils.StatusConnection
+import com.example.hoverrobot.data.utils.StatusRobot
 import com.example.hoverrobot.data.utils.ToolBox.ioScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -21,6 +22,9 @@ class SettingsFragmentViewModel @Inject constructor(
     private var _localConfigFromRobot: MutableLiveData<RobotLocalConfig> = MutableLiveData()
     val localConfigFromRobot : LiveData<RobotLocalConfig> get() = _localConfigFromRobot
 
+    private var _statusRobot: MutableLiveData<StatusRobot> = MutableLiveData()
+    val statusRobot : LiveData<StatusRobot> get() = _statusRobot
+
     private val isRobotConnected: Boolean
         get() = commsRepository.connectionState.value.status == StatusConnection.CONNECTED
 
@@ -29,6 +33,14 @@ class SettingsFragmentViewModel @Inject constructor(
             commsRepository.robotLocalConfigFlow.collect {
                 it.let {
                     _localConfigFromRobot.postValue(it)
+                }
+            }
+        }
+
+        ioScope.launch {
+            commsRepository.dynamicDataRobotFlow.collect {
+                it.let {
+                    _statusRobot.postValue(it.statusCode)
                 }
             }
         }

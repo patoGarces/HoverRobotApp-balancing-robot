@@ -1,13 +1,22 @@
 package com.example.hoverrobot.data.models.comms
 
+import android.util.Log
 import com.example.hoverrobot.data.repositories.PRECISION_DECIMALS_COMMS
 import java.nio.ByteBuffer
 
 data class RobotLocalConfig(
-    val centerAngle: Float,
-    val safetyLimits: Float,
-    val pids: List<PidParams>
+    val centerAngle: Float = 0F,
+    val safetyLimits: Float = 0F,
+    val pids: List<PidParams> = listOf(
+        PidParams(0f, 0f, 0f),
+        PidParams(0f, 0f, 0f),
+        PidParams(0f, 0f, 0f),
+        PidParams(0f, 0f, 0f),
+    )
 )
+
+const val CANT_PIDS = 4                     // OJO: en sync con el firmware
+const val ROBOT_LOCAL_CONFIG_SIZE = 28
 
 val ByteBuffer.asRobotLocalConfig: RobotLocalConfig
     get() {
@@ -35,6 +44,9 @@ fun RobotLocalConfig.asPidSettings(indexPid: Int): PidSettings {
     )
 }
 
-
-const val CANT_PIDS = 4                     // OJO: en sync con el firmware
-const val ROBOT_LOCAL_CONFIG_SIZE = 28//22
+fun PidSettings.isDiffWithOriginalLocalConfig(originalLocalConfig: RobotLocalConfig): Boolean =
+    this.kp != originalLocalConfig.pids[this.indexPid].kp ||
+    this.ki != originalLocalConfig.pids[this.indexPid].ki ||
+    this.kd != originalLocalConfig.pids[this.indexPid].kd ||
+    this.centerAngle != originalLocalConfig.centerAngle ||
+    this.safetyLimits != originalLocalConfig.safetyLimits
