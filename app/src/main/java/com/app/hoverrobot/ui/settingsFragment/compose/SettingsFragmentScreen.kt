@@ -46,6 +46,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -201,8 +203,7 @@ private fun PidSettingsCardHeader(
     var isDropdownMenuExpanded by remember { mutableStateOf(false) }
     var dropDownMenuSelectedItem by remember { mutableIntStateOf(0) }
     var buttonSaveEnable by remember { mutableStateOf(true) }
-    val optionDropDownMenu =
-        listOf("PID ANGLE", "PID POS", "PID SPEED", "PID YAW") // TODO: sacar esto de aca
+    val optionDropDownMenu = stringArrayResource(R.array.dropdown_menu_pid_items)
 
     Row(
         Modifier.fillMaxWidth(),

@@ -50,7 +50,7 @@
     <string name="general_command_btn_clean_right">Limpiar rueda der.</string>
     <string name="pid_center_front">Front</string>
     <string name="pid_center_back">Back</string>
-    <string-array name="sp_memory_items">
+    <string-array name="dropdown_menu_pid_items">
         <item>PID ANGLE</item>
         <item>PID POS</item>
         <item>PID SPEED</item>
