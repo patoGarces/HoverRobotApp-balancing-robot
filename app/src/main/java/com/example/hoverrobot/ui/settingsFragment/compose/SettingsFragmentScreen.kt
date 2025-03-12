@@ -2,8 +2,10 @@ package com.example.hoverrobot.ui.settingsFragment.compose
 
 import android.util.Log
 import androidx.annotation.StringRes
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -29,12 +31,12 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -51,6 +53,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -61,10 +64,13 @@ import com.example.hoverrobot.data.models.comms.PidParams
 import com.example.hoverrobot.data.models.comms.PidSettings
 import com.example.hoverrobot.data.models.comms.RobotLocalConfig
 import com.example.hoverrobot.data.models.comms.asPidSettings
+import com.example.hoverrobot.data.models.comms.isDiffWithOriginalLocalConfig
+import com.example.hoverrobot.data.utils.StatusRobot
 
 @Composable
 fun SettingsFragmentScreen(
     initialRobotConfig: State<RobotLocalConfig>,
+    statusRobot: StatusRobot,
     onPidSave: (PidSettings) -> Boolean,
     onActionScreen: (OnActionSettingsScreen) -> Unit,
 ) {
@@ -81,24 +87,13 @@ fun SettingsFragmentScreen(
         )
 
         GeneralSettingsCard(
+            statusRobot = statusRobot,
             onCalibrateImu = { onActionScreen(OnActionSettingsScreen.OnCalibrateImu) },
             onCleanLeftMotor = { onActionScreen(OnActionSettingsScreen.OnCleanLeftMotor) },
             onCleanRightMotor = { onActionScreen(OnActionSettingsScreen.OnCleanRightMotor) }
         )
     }
 }
-
-private fun PidSettings.isDiffWithOriginalLocalConfig(originalLocalConfig: RobotLocalConfig): Boolean
-    {
-        val result = this.kp != originalLocalConfig.pids[this.indexPid].kp ||
-                this.ki != originalLocalConfig.pids[this.indexPid].ki ||
-                this.kd != originalLocalConfig.pids[this.indexPid].kd ||
-                this.centerAngle != originalLocalConfig.centerAngle ||
-                this.safetyLimits != originalLocalConfig.safetyLimits
-
-        if(result) Log.i("NewSettings","hay diff: ${this.kp} ${originalLocalConfig.pids[this.indexPid].kp})")
-        return result
-    }
 
 @Composable
 private fun PidSettingsCard(
@@ -177,9 +172,9 @@ private fun PidSettingsCard(
                 newPidSettings = newPidSettings.copy(kd = newValue)
             }
 
-            // TODO: es distinto este slider, tiene el centro en 0, con el wording "front", "back"
             SliderParam(
                 nameId = R.string.pid_parameter_center_title,
+                edgeIndicators = Pair(stringResource(R.string.pid_center_back),stringResource(R.string.pid_center_front)),
                 initialValue = newPidSettings.centerAngle,
                 range = -10F..10F
             ) { newCenterAngle ->
@@ -212,9 +207,8 @@ private fun PidSettingsCardHeader(
     var isDropdownMenuExpanded by remember { mutableStateOf(false) }
     var dropDownMenuSelectedItem by remember { mutableIntStateOf(0) }
     var buttonSaveEnable by remember { mutableStateOf(true) }
-
-    // TODO: sacar esto de aca:
-    val optionDropDownMenu = listOf("PID ANGLE", "PID POS", "PID SPEED", "PID YAW")
+    val optionDropDownMenu =
+        listOf("PID ANGLE", "PID POS", "PID SPEED", "PID YAW") // TODO: sacar esto de aca
 
     Row(
         Modifier.fillMaxWidth(),
@@ -261,7 +255,7 @@ private fun PidSettingsCardHeader(
                         ) ?: ""
                     ),
                     readOnly = true,
-                    textStyle = LocalTextStyle.current.copy(
+                    textStyle = TextStyle.Default.copy(
                         fontSize = 14.sp,
                         color = Color.Black,
                         fontWeight = FontWeight.Bold
@@ -303,6 +297,7 @@ private fun PidSettingsCardHeader(
 
 @Composable
 private fun GeneralSettingsCard(
+    statusRobot: StatusRobot,
     onCalibrateImu: () -> Unit,
     onCleanLeftMotor: () -> Unit,
     onCleanRightMotor: () -> Unit
@@ -325,6 +320,7 @@ private fun GeneralSettingsCard(
             titleItem = R.string.general_command_clean_wheels_title,
             firstButtonTitle = R.string.general_command_btn_clean_left,
             secondButtonTitle = R.string.general_command_btn_clean_right,
+            isLoading = statusRobot == StatusRobot.TEST_MODE,
             onClickFirst = onCleanLeftMotor,
             onClickSecond = onCleanRightMotor
         )
@@ -336,6 +332,7 @@ private fun GeneralSettingsItem(
     @StringRes titleItem: Int,
     @StringRes firstButtonTitle: Int,
     @StringRes secondButtonTitle: Int? = null,
+    isLoading: Boolean = false,
     onClickFirst: () -> Unit,
     onClickSecond: (() -> Unit)? = null
 ) {
@@ -355,10 +352,10 @@ private fun GeneralSettingsItem(
 
         Spacer(Modifier.weight(1F))
 
-        ButtonSection(firstButtonTitle, onClick = onClickFirst)
+        ButtonSection(firstButtonTitle, onClick = onClickFirst, isLoading = isLoading)
 
         secondButtonTitle?.let { title ->
-            ButtonSection(title, onClick = onClickSecond ?: {})
+            ButtonSection(title, onClick = onClickSecond ?: {}, isLoading = isLoading)
         }
     }
 
@@ -385,6 +382,7 @@ private fun TitleSectionText(@StringRes nameId: Int) {
 private fun ButtonSection(
     @StringRes title: Int,
     enable: Boolean = true,
+    isLoading: Boolean = false,
     onClick: () -> Unit
 ) {
     Column(
@@ -406,11 +404,29 @@ private fun ButtonSection(
             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
             contentPadding = PaddingValues(vertical = 0.dp, horizontal = 16.dp)
         ) {
-            Text(
-                text = stringResource(title),
-                color = if (enable) Color.White else Color.Gray,
-                textAlign = TextAlign.Center
-            )
+            AnimatedContent(
+                targetState = isLoading, label = ""
+            ) { state ->
+
+                if (state) {
+                    Column(
+                        modifier = Modifier.widthIn(min = 120.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        CircularProgressIndicator(
+                            Modifier.size(30.dp),
+                            color = Color.Red,
+                            strokeWidth = 3.dp
+                        )
+                    }
+                } else {
+                    Text(
+                        text = stringResource(title),
+                        color = if (enable) Color.White else Color.Gray,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
         }
     }
 }
@@ -419,6 +435,7 @@ private fun ButtonSection(
 @Composable
 private fun SliderParam(
     @StringRes nameId: Int,
+    edgeIndicators: Pair<String,String>? = null,
     initialValue: Float,
     range: ClosedFloatingPointRange<Float> = 0F..4F,
     stepSize: Float = 0.01F,
@@ -434,7 +451,7 @@ private fun SliderParam(
     Column(
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 32.dp)
     ) {
         Text(
             text = stringResource(nameId),
@@ -483,7 +500,7 @@ private fun SliderParam(
                     valueRange = range,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(30.dp),
+                        .height(20.dp),
                     colors = SliderDefaults.colors(
                         activeTickColor = Color.Transparent,
                         inactiveTickColor = Color.Transparent,
@@ -508,6 +525,22 @@ private fun SliderParam(
                 color = Color.White
             )
         }
+
+        edgeIndicators?.let {
+            Row(Modifier.fillMaxWidth().padding(start = 8.dp, end = 48.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(
+                    text = edgeIndicators.first,
+                    color = Color.White,
+                    fontSize = 12.sp
+                )
+                Text(
+                    text = edgeIndicators.second,
+                    color = Color.White,
+                    fontSize = 12.sp
+                )
+            }
+            Spacer(Modifier.padding(8.dp))
+        }
     }
 }
 
@@ -530,7 +563,7 @@ private fun SettingsFragmentScreenPreview() {
     }
     SettingsFragmentScreen(
         initialRobotConfig = localConfig,
+        statusRobot = StatusRobot.STABILIZED,
         onPidSave = { false }
     ) {}
-
 }

@@ -58,8 +58,8 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
     private val _dynamicDataRobotFlow = MutableSharedFlow<RobotDynamicData>()
     override val dynamicDataRobotFlow: SharedFlow<RobotDynamicData> = _dynamicDataRobotFlow
 
-    private val _robotLocalConfigFlow = MutableStateFlow<RobotLocalConfig?>(null)
-    override val robotLocalConfigFlow: StateFlow<RobotLocalConfig?> = _robotLocalConfigFlow
+    private val _robotLocalConfigFlow = MutableStateFlow<RobotLocalConfig>(RobotLocalConfig())
+    override val robotLocalConfigFlow: StateFlow<RobotLocalConfig> = _robotLocalConfigFlow
 
     private val TAG = "CommsRepository"
 
@@ -134,7 +134,7 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
         ioScope.launch {
             serverSocket.connectionsStatus.collect {
                 if (it == StatusConnection.WAITING) {
-                    _robotLocalConfigFlow.emit(null)                                            // Para forzar el collect al reconectar
+                    _robotLocalConfigFlow.emit(RobotLocalConfig())                                            // Para forzar el collect al reconectar
                 }
             }
         }
