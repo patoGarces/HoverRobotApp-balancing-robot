@@ -8,11 +8,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.hoverrobot"
+    namespace = "com.app.hoverrobot"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.hoverrobot"
+        applicationId = "com.app.hoverrobot"
         minSdk = 29
         targetSdk = 34
         versionCode = 1
