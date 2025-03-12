@@ -38,6 +38,7 @@ class SettingsFragment : Fragment() {
                         when (onAction) {
                             is OnActionSettingsScreen.OnNewSettings -> {
                                 Log.i("NewSettings","robotLocalConfig: ${onAction.pidSettings}")
+                                sendNewSetting(onAction.pidSettings)
                             }
 
                             is OnActionSettingsScreen.OnCalibrateImu -> settingsFragmentViewModel.sendCommand(CommandsRobot.CALIBRATE_IMU)
