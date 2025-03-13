@@ -1,6 +1,5 @@
 package com.app.hoverrobot.ui.navigationFragment.compose
 
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -29,20 +28,27 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.app.hoverrobot.R
+import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreenAction.OnDearmedAction
+import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreenAction.OnNewDragCompassInteraction
 import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreenAction.OnNewJoystickInteraction
+import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreenAction.OnYawLeftAction
+import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreenAction.OnYawRightAction
 import kotlinx.coroutines.delay
+import androidx.compose.runtime.State
 
 
 sealed class NavigationScreenAction {
     data class OnYawLeftAction(val relativeYaw: Int): NavigationScreenAction()
     data class OnYawRightAction(val relativeYaw: Int): NavigationScreenAction()
     data object OnDearmedAction: NavigationScreenAction()
+    data class OnNewDragCompassInteraction(val newDegress: Float): NavigationScreenAction()
     data class OnNewJoystickInteraction(val x: Float, val y: Float): NavigationScreenAction()
 }
 
 @Composable
 fun NavigationScreen(
     isRobotStabilized: Boolean,
+    newDegress: State<Int>,
     onActionScreen: (NavigationScreenAction) -> Unit
 ) {
     var joystickX by remember { mutableFloatStateOf(0F) }
@@ -57,67 +63,76 @@ fun NavigationScreen(
         }
     }
 
-    Row(
-        modifier = Modifier.padding(horizontal = 32.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.Bottom
-    ) {
-
-        Box(Modifier.padding(top = 8.dp)) {
-            JoystickAnalogCompose(
-                modifier = Modifier.align(Alignment.Center).zIndex(1F),
-                size = 100.dp,
-                dotSize = 50.dp,
-                fixedDirection = FixedDirection.VERTICAL
-            ) { x: Float, y: Float ->
-                joystickY = y
-            }
-
-            ArcSeekBar(
-                modifier = Modifier.align(Alignment.TopCenter),
-                range = 1F..180F,
-                sizeArc = 140.dp
-            ) {
-                leftAngleDir = -it.toInt()
-                Log.i("ArcSeekbar", "value: ${it.toInt()}")
-            }
-        }
-
-        Column(
-            Modifier
-                .padding(horizontal = 32.dp)
-                .weight(1F),
-            horizontalAlignment = Alignment.CenterHorizontally
+    Column {
+        Row(
+            modifier = Modifier.padding(horizontal = 32.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Bottom
         ) {
-            YawControlButtons(
-                isRobotStabilized = isRobotStabilized,
-                yawLeftText = stringResource(R.string.control_move_placeholder_direction, leftAngleDir),
-                yawLeftOnClick = { onActionScreen(NavigationScreenAction.OnYawLeftAction(leftAngleDir)) },
-                yawRightText = stringResource(R.string.control_move_placeholder_direction, rightAngleDir),
-                yawRightOnClick = { onActionScreen(NavigationScreenAction.OnYawRightAction(rightAngleDir)) },
-                onDearmedClick = { onActionScreen(NavigationScreenAction.OnDearmedAction) }
-            )
+            Box(Modifier.padding(top = 8.dp)) {
+                JoystickAnalogCompose(
+                    modifier = Modifier.align(Alignment.Center).zIndex(1F),
+                    size = 100.dp,
+                    dotSize = 50.dp,
+                    fixedDirection = FixedDirection.VERTICAL
+                ) { x: Float, y: Float ->
+                    joystickY = y
+                }
+
+                ArcSeekBar(
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    range = 1F..180F,
+                    sizeArc = 140.dp
+                ) { leftAngleDir = -it.toInt() }
+            }
+
+            Column(
+                Modifier
+                    .padding(horizontal = 32.dp)
+                    .weight(1F),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                YawControlButtons(
+                    isRobotStabilized = isRobotStabilized,
+                    yawLeftText = stringResource(
+                        R.string.control_move_placeholder_direction,
+                        leftAngleDir
+                    ),
+                    yawLeftOnClick = {
+                        onActionScreen(OnYawLeftAction(leftAngleDir))
+                    },
+                    yawRightText = stringResource(
+                        R.string.control_move_placeholder_direction,
+                        rightAngleDir
+                    ),
+                    yawRightOnClick = {
+                        onActionScreen(OnYawRightAction(rightAngleDir))
+                    },
+                    onDearmedClick = { onActionScreen(OnDearmedAction) }
+                )
+            }
+
+            Box(Modifier.padding(top = 8.dp)) {
+
+                JoystickAnalogCompose(
+                    modifier = Modifier.align(Alignment.Center).zIndex(1F),
+                    size = 100.dp,
+                    dotSize = 50.dp,
+                    fixedDirection = FixedDirection.HORIZONTAL
+                ) { x: Float, y: Float ->
+                    joystickX = x
+                }
+
+                ArcSeekBar(
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    range = 1F..180F,
+                    sizeArc = 140.dp
+                ) { rightAngleDir = it.toInt() }
+            }
         }
 
-        Box(Modifier.padding(top = 8.dp)) {
-
-            JoystickAnalogCompose(
-                modifier = Modifier.align(Alignment.Center).zIndex(1F),
-                size = 100.dp,
-                dotSize = 50.dp,
-                fixedDirection = FixedDirection.HORIZONTAL
-            ) { x: Float, y: Float ->
-                joystickX = x
-            }
-
-            ArcSeekBar(
-                modifier = Modifier.align(Alignment.TopCenter),
-                range = 1F..180F,
-                sizeArc = 140.dp
-            ) {
-                rightAngleDir = it.toInt()
-                Log.i("ArcSeekbar", "value: ${it.toInt()}")
-            }
+        CompassComposable(newDegress) {
+            onActionScreen(OnNewDragCompassInteraction(it))
         }
     }
 }
@@ -191,12 +206,14 @@ private fun YawControlButtons(
     device = "spec:width=411dp,height=891dp,dpi=420,isRound=false,chinSize=0dp,orientation=landscape"
 )
 fun NavigationButtonPreview() {
+    val dummySetDegress = remember { mutableIntStateOf(0) }
     Column(
         Modifier
             .padding(16.dp)
             .background(Color.Black)
     ) {
         NavigationScreen(
+            newDegress = dummySetDegress,
             isRobotStabilized = true,
         ) { }
     }
