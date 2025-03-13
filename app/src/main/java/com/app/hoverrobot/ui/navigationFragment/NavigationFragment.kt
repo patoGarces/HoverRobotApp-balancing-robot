@@ -8,23 +8,25 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.map
 import com.app.hoverrobot.R
-import com.app.hoverrobot.data.utils.ToolBox.ioScope
 import com.app.hoverrobot.databinding.NavigationFragmentBinding
 import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreen
-import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreenAction
+import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreenAction.OnDearmedAction
+import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreenAction.OnNewDragCompassInteraction
+import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreenAction.OnNewJoystickInteraction
+import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreenAction.OnYawLeftAction
+import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreenAction.OnYawRightAction
 import com.github.mikephil.charting.charts.ScatterChart
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.ScatterData
 import com.github.mikephil.charting.data.ScatterDataSet
 import com.github.mikephil.charting.utils.EntryXComparator
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.util.Collections
@@ -36,18 +38,8 @@ class NavigationFragment : Fragment() {
     private lateinit var _binding : NavigationFragmentBinding
     private val binding get() = _binding
 
-    private var joyAxisX: Int = 0
-    private var joyAxisY: Int = 0
-
-    private var disableCompassSet = false
-
-    private var jobSendYawCommand: Job? = null
-
     private var distanceBackward: Float = 0.5f
     private var distanceForward: Float = 0.5f
-
-//    private var leftAngleDir = mutableStateOf<Int>(1)
-//    private var rightAngleDir= mutableStateOf<Int>(1)
 
     private var entryDataPoints: ArrayList<Entry> = ArrayList()
     private lateinit var scatterDataset: ScatterDataSet
@@ -66,14 +58,21 @@ class NavigationFragment : Fragment() {
             composeView.apply {
                 setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
                 composeView.setContent {
+
+                    val actualYawAngle = navigationViewModel.dynamicData
+                        .map { it.yawAngle.toInt() }
+                        .observeAsState(initial = 0)
+
                     NavigationScreen(
                         isRobotStabilized = navigationViewModel.isRobotStabilized.collectAsState().value,
+                        newDegress = actualYawAngle
                     ) { onAction ->
                         when (onAction) {
-                            is NavigationScreenAction.OnDearmedAction -> navigationViewModel.sendDearmedCommand()
-                            is NavigationScreenAction.OnYawLeftAction -> navigationViewModel.sendNewMoveRelYaw(onAction.relativeYaw.toFloat())
-                            is NavigationScreenAction.OnYawRightAction -> navigationViewModel.sendNewMoveRelYaw(onAction.relativeYaw.toFloat())
-                            is NavigationScreenAction.OnNewJoystickInteraction -> {
+                            is OnDearmedAction -> navigationViewModel.sendDearmedCommand()
+                            is OnYawLeftAction -> navigationViewModel.sendNewMoveRelYaw(onAction.relativeYaw.toFloat())
+                            is OnYawRightAction -> navigationViewModel.sendNewMoveRelYaw(onAction.relativeYaw.toFloat())
+                            is OnNewDragCompassInteraction -> navigationViewModel.sendNewMoveAbsYaw(onAction.newDegress)
+                            is OnNewJoystickInteraction -> {
                                 val dualRateX = onAction.x * dualRateAggressiveness.toDouble()
                                 val dualRateY = onAction.y * dualRateAggressiveness.toDouble()
 
@@ -101,32 +100,7 @@ class NavigationFragment : Fragment() {
     }
 
     @SuppressLint("ClickableViewAccessibility")
-    private fun setupListener(){
-        binding.compassView.setOnCompassDragListener {
-            disableCompassSet = true
-            jobSendYawCommand?.cancel()
-            jobSendYawCommand = ioScope.launch {
-                navigationViewModel.sendNewMoveAbsYaw(it)
-                delay(200)
-                disableCompassSet = false
-           }
-        }
-
-//        binding.compassView.setOnTouchListener { view, event ->
-//            when (event.action) {
-//                MotionEvent.ACTION_DOWN -> {
-//                    Log.d("compassView","actionDown")
-//                    disableCompassSet = true
-//                }
-//
-//                MotionEvent.ACTION_UP -> {
-//                    Log.d("compassView","actionUp")
-//                    disableCompassSet = false
-//                }
-//            }
-//            true
-//        }
-
+    private fun setupListener() {
         binding.sliderBackward.addOnChangeListener { _,progress,_ ->
             distanceBackward = (MIN_DISTANCE + ((progress / 100f) * (MAX_DISTANCE - MIN_DISTANCE))).round(2)
             binding.btnBackward.text = getString(R.string.control_move_placeholder_backward).format(distanceBackward)
@@ -137,18 +111,6 @@ class NavigationFragment : Fragment() {
             binding.btnForward.text = getString(R.string.control_move_placeholder_forward).format(distanceForward)
         }
 
-//        binding.seekbarLeft.onProgressChangedListener =
-//            ProgressListener { progress ->
-//                leftAngleDir.value = -(MIN_DIR + ((progress / 100f) * (MAX_DIR - MIN_DIR))).toInt()
-////                binding.btnYawLeft.text = getString(R.string.control_move_placeholder_direction).format(leftDirection)
-//            }
-//
-//        binding.seekbarRight.onProgressChangedListener =
-//            ProgressListener { progress ->
-//                rightAngleDir.value = (MIN_DIR + ((progress / 100f) * (MAX_DIR - MIN_DIR))).toInt()
-////                binding.btnYawRight.text = getString(R.string.control_move_placeholder_direction).format(rightDirection)
-//            }
-
         binding.btnForward.setOnClickListener {
             navigationViewModel.sendNewMovePosition(distanceForward)
         }
@@ -156,24 +118,12 @@ class NavigationFragment : Fragment() {
         binding.btnBackward.setOnClickListener {
             navigationViewModel.sendNewMovePosition(distanceBackward,true)
         }
-
-//        binding.btnYawLeft.setOnClickListener {
-//            navigationViewModel.sendNewMoveRelYaw(leftDirection.toFloat())
-//        }
-//
-//        binding.btnYawRight.setOnClickListener {
-//            navigationViewModel.sendNewMoveRelYaw(rightDirection.toFloat())
-//        }
     }
 
     private fun setupObserver(){
         navigationViewModel.joyVisible.observe(viewLifecycleOwner) {
 //            binding.navigationVisible.isVisible = it ?: false
             binding.navigationVisible.isVisible = true      // TODO: borrar
-        }
-
-        navigationViewModel.dynamicData.observe(viewLifecycleOwner) {
-            if(!disableCompassSet) binding.compassView.degrees = it.yawAngle.toInt().toFloat()
         }
 
         navigationViewModel.pointCloud.observe(viewLifecycleOwner) {
