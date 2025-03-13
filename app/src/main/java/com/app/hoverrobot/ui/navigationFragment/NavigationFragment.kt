@@ -15,18 +15,19 @@ import androidx.fragment.app.viewModels
 import com.app.hoverrobot.R
 import com.app.hoverrobot.data.utils.ToolBox.ioScope
 import com.app.hoverrobot.databinding.NavigationFragmentBinding
-import com.app.hoverrobot.ui.navigationFragment.compose.NavigationButtons
+import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreen
+import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreenAction
 import com.github.mikephil.charting.charts.ScatterChart
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.ScatterData
 import com.github.mikephil.charting.data.ScatterDataSet
 import com.github.mikephil.charting.utils.EntryXComparator
-import com.marcinmoskala.arcseekbar.ProgressListener
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.util.Collections
-import kotlin.math.sign
 
 class NavigationFragment : Fragment() {
 
@@ -45,8 +46,8 @@ class NavigationFragment : Fragment() {
     private var distanceBackward: Float = 0.5f
     private var distanceForward: Float = 0.5f
 
-    private var leftDirection: Int = 1
-    private var rightDirection: Int = 1
+//    private var leftAngleDir = mutableStateOf<Int>(1)
+//    private var rightAngleDir= mutableStateOf<Int>(1)
 
     private var entryDataPoints: ArrayList<Entry> = ArrayList()
     private lateinit var scatterDataset: ScatterDataSet
@@ -62,31 +63,36 @@ class NavigationFragment : Fragment() {
     ): View {
         _binding = NavigationFragmentBinding.inflate(inflater,container,false)
         return binding.apply {
-
             composeView.apply {
                 setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
                 composeView.setContent {
-                    NavigationButtons(
+                    NavigationScreen(
                         isRobotStabilized = navigationViewModel.isRobotStabilized.collectAsState().value,
-                        yawLeftAngle = "12",
-                        yawRightAngle = "34",
-                        onYawLeftClick = {},
-                        onYawRightClick = {},
-                        onDearmedClick = {
-                            navigationViewModel.sendDearmedCommand()
+                    ) { onAction ->
+                        when (onAction) {
+                            is NavigationScreenAction.OnDearmedAction -> navigationViewModel.sendDearmedCommand()
+                            is NavigationScreenAction.OnYawLeftAction -> navigationViewModel.sendNewMoveRelYaw(onAction.relativeYaw.toFloat())
+                            is NavigationScreenAction.OnYawRightAction -> navigationViewModel.sendNewMoveRelYaw(onAction.relativeYaw.toFloat())
+                            is NavigationScreenAction.OnNewJoystickInteraction -> {
+                                val dualRateX = onAction.x * dualRateAggressiveness.toDouble()
+                                val dualRateY = onAction.y * dualRateAggressiveness.toDouble()
+
+                                val roundedX = BigDecimal(dualRateX).setScale(2, RoundingMode.HALF_UP).toFloat() * 100
+                                val roundedY = BigDecimal(dualRateY).setScale(2, RoundingMode.HALF_UP).toFloat() * 100
+
+                                Log.i("JoystickCompose","${roundedX.toInt()}, ${roundedY.toInt()}")
+                                navigationViewModel.newCoordinatesJoystick(roundedX.toInt(),roundedY.toInt())
+                            }
                         }
-                    )
+                    }
                 }
             }
-
         }.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.joystickThrottle.setFixedCenter(true)
-        binding.joystickDirection.setFixedCenter(true)
         binding.btnBackward.text = getString(R.string.control_move_placeholder_backward).format(0.5f)
         binding.btnForward.text = getString(R.string.control_move_placeholder_forward).format(0.5f)
         setupListener()
@@ -96,19 +102,6 @@ class NavigationFragment : Fragment() {
 
     @SuppressLint("ClickableViewAccessibility")
     private fun setupListener(){
-
-        binding.joystickDirection.setOnMoveListener{ angle, relValue ->
-            joyAxisX = (relValue * (90 - angle).sign * dualRateAggressiveness).toInt()
-            navigationViewModel.newCoordinatesJoystick(joyAxisX,joyAxisY)
-            Log.i("calibrate","Y: $joyAxisX")
-        }
-
-        binding.joystickThrottle.setOnMoveListener{ angle, relValue ->
-            joyAxisY = (relValue * (180 - angle).sign * dualRateAggressiveness).toInt()
-            navigationViewModel.newCoordinatesJoystick(joyAxisX,joyAxisY)
-            Log.i("calibrate","Y: $joyAxisY")
-        }
-
         binding.compassView.setOnCompassDragListener {
             disableCompassSet = true
             jobSendYawCommand?.cancel()
@@ -144,17 +137,17 @@ class NavigationFragment : Fragment() {
             binding.btnForward.text = getString(R.string.control_move_placeholder_forward).format(distanceForward)
         }
 
-        binding.seekbarLeft.onProgressChangedListener =
-            ProgressListener { progress ->
-                leftDirection = -(MIN_DIR + ((progress / 100f) * (MAX_DIR - MIN_DIR))).toInt()
-//                binding.btnYawLeft.text = getString(R.string.control_move_placeholder_direction).format(leftDirection)
-            }
-
-        binding.seekbarRight.onProgressChangedListener =
-            ProgressListener { progress ->
-                rightDirection = (MIN_DIR + ((progress / 100f) * (MAX_DIR - MIN_DIR))).toInt()
-//                binding.btnYawRight.text = getString(R.string.control_move_placeholder_direction).format(rightDirection)
-            }
+//        binding.seekbarLeft.onProgressChangedListener =
+//            ProgressListener { progress ->
+//                leftAngleDir.value = -(MIN_DIR + ((progress / 100f) * (MAX_DIR - MIN_DIR))).toInt()
+////                binding.btnYawLeft.text = getString(R.string.control_move_placeholder_direction).format(leftDirection)
+//            }
+//
+//        binding.seekbarRight.onProgressChangedListener =
+//            ProgressListener { progress ->
+//                rightAngleDir.value = (MIN_DIR + ((progress / 100f) * (MAX_DIR - MIN_DIR))).toInt()
+////                binding.btnYawRight.text = getString(R.string.control_move_placeholder_direction).format(rightDirection)
+//            }
 
         binding.btnForward.setOnClickListener {
             navigationViewModel.sendNewMovePosition(distanceForward)
@@ -175,7 +168,8 @@ class NavigationFragment : Fragment() {
 
     private fun setupObserver(){
         navigationViewModel.joyVisible.observe(viewLifecycleOwner) {
-            binding.navigationVisible.isVisible = it ?: false
+//            binding.navigationVisible.isVisible = it ?: false
+            binding.navigationVisible.isVisible = true      // TODO: borrar
         }
 
         navigationViewModel.dynamicData.observe(viewLifecycleOwner) {

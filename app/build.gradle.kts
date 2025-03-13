@@ -93,8 +93,6 @@ dependencies {
 
     implementation(libs.kotlinx.serialization.json)
 
-    implementation("com.github.controlwear:virtual-joystick-android:master-SNAPSHOT")
-
     // Plotter
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 
@@ -108,9 +106,6 @@ dependencies {
 
     // Compass view
     implementation("com.github.kix2902:CompassView:master-SNAPSHOT")
-
-    // seekbar
-    implementation("com.github.marcinmoskala:ArcSeekBar:0.31")
 }
 
 kapt {
