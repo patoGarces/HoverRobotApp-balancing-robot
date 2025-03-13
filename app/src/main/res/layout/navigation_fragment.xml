@@ -32,18 +32,6 @@
         tools:text="0.1mts backward"
         />
 
-    <com.marcinmoskala.arcseekbar.ArcSeekBar
-        android:id="@+id/seekbar_left"
-        android:layout_width="180dp"
-        android:layout_height="180dp"
-        app:progressColor="@color/red"
-        app:progressWidth="2dp"
-        app:thumb="@drawable/seek_bar_thumb"
-        app:layout_constraintTop_toTopOf="@id/joystick_throttle"
-        app:layout_constraintBottom_toBottomOf="@id/joystick_throttle"
-        app:layout_constraintStart_toStartOf="@id/joystick_throttle"
-        app:layout_constraintEnd_toEndOf="@id/joystick_throttle"/>
-
     <FrameLayout
         android:id="@+id/frame_backward"
         android:layout_width="48dp"
@@ -67,28 +55,9 @@
             style="@style/styleSlider"
             app:trackHeight="5dp"
             app:thumbHeight="14dp"
-            app:progressColor="@color/red"
             app:labelBehavior="gone"
-            app:thumb="@drawable/seek_bar_thumb"/>
+            />
     </FrameLayout>
-
-    <io.github.controlwear.virtual.joystick.android.JoystickView
-        android:id="@+id/joystick_throttle"
-        android:layout_width="120dp"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_marginStart="32dp"
-        android:elevation="1dp"
-        app:JV_buttonSizeRatio="40%"
-        app:JV_backgroundSizeRatio="60%"
-        app:JV_buttonImage="@mipmap/ic_analog_foreground"
-        app:JV_borderColor="@color/white"
-        app:JV_backgroundColor="@color/transparent"
-        app:JV_borderWidth="2dp"
-        app:JV_buttonDirection="vertical"
-        app:layout_constraintBottom_toTopOf="@id/compass_view"
-        app:layout_constraintStart_toEndOf="@id/frame_backward"
-        app:JV_fixedCenter="false"/>
 
     <Button
         android:id="@+id/btn_forward"
@@ -104,18 +73,6 @@
         app:layout_constraintBottom_toTopOf="@id/frame_forward"
         tools:text="0.1mts forward"
         />
-
-    <com.marcinmoskala.arcseekbar.ArcSeekBar
-        android:id="@+id/seekbar_right"
-        android:layout_width="180dp"
-        android:layout_height="180dp"
-        app:progressColor="@color/red"
-        app:progressWidth="2dp"
-        app:thumb="@drawable/seek_bar_thumb"
-        app:layout_constraintTop_toTopOf="@id/joystick_direction"
-        app:layout_constraintBottom_toBottomOf="@id/joystick_direction"
-        app:layout_constraintStart_toStartOf="@id/joystick_direction"
-        app:layout_constraintEnd_toEndOf="@id/joystick_direction"/>
 
     <FrameLayout
         android:id="@+id/frame_forward"
@@ -140,27 +97,8 @@
             style="@style/styleSlider"
             app:trackHeight="5dp"
             app:thumbHeight="14dp"
-            app:progressColor="@color/red"
-            app:labelBehavior="gone"
-            app:thumb="@drawable/seek_bar_thumb"/>
+            app:labelBehavior="gone"/>
     </FrameLayout>
-
-    <io.github.controlwear.virtual.joystick.android.JoystickView
-        android:id="@+id/joystick_direction"
-        android:layout_width="120dp"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_marginEnd="32dp"
-        app:JV_buttonSizeRatio="40%"
-        app:JV_backgroundSizeRatio="60%"
-        app:JV_buttonImage="@mipmap/ic_analog_foreground"
-        app:JV_borderColor="@color/white"
-        app:JV_backgroundColor="@color/transparent"
-        app:JV_borderWidth="2dp"
-        app:JV_buttonDirection="horizontal"
-        app:layout_constraintBottom_toTopOf="@id/compass_view"
-        app:layout_constraintEnd_toStartOf="@id/frame_forward"
-        app:JV_fixedCenter="false"/>
 
     <com.redinput.compassview.CompassView
         android:id="@+id/compass_view"
@@ -178,12 +116,12 @@
 
     <androidx.compose.ui.platform.ComposeView
         android:id="@+id/compose_view"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
         app:layout_constraintBottom_toTopOf="@id/compass_view"
-        app:layout_constraintStart_toEndOf="@id/joystick_throttle"
-        app:layout_constraintEnd_toStartOf="@id/joystick_direction"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         />
 
 
@@ -191,7 +129,7 @@
         android:id="@+id/navigation_visible"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:constraint_referenced_ids="btn_backward,btn_forward,joystick_direction,joystick_throttle,seekbar_left,seekbar_right,compose_view,frame_backward,frame_forward"
+        app:constraint_referenced_ids="btn_backward,btn_forward,compose_view,compose_view,frame_backward,frame_forward"
         />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
