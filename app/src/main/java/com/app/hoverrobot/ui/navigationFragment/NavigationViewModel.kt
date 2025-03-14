@@ -1,5 +1,7 @@
 package com.app.hoverrobot.ui.navigationFragment
 
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -23,10 +25,6 @@ class NavigationViewModel @Inject constructor(
     private val commsRepository: CommsRepository,
     private val storeSettings: StoreSettings
 ) : ViewModel() {
-
-    private var _joyVisible: MutableLiveData<Boolean?> = MutableLiveData()
-    val joyVisible: LiveData<Boolean?> get() = _joyVisible
-
     private var _dynamicData: MutableLiveData<RobotDynamicData> = MutableLiveData()
     val dynamicData: LiveData<RobotDynamicData> get() = _dynamicData
 
@@ -36,8 +34,8 @@ class NavigationViewModel @Inject constructor(
     private var _aggressivenessLevel: MutableLiveData<Int> = MutableLiveData(0)
     val aggressivenessLevel: LiveData<Int> = _aggressivenessLevel
 
-    private val isRobotConnected: Boolean
-        get() = commsRepository.connectionState.value.status == StatusConnection.CONNECTED
+    var isRobotConnected: MutableState<Boolean> = mutableStateOf(false)
+        internal set
 
     private val _isRobotStabilized = MutableStateFlow(false)
     val isRobotStabilized: StateFlow<Boolean> = _isRobotStabilized
@@ -45,7 +43,7 @@ class NavigationViewModel @Inject constructor(
     init {
         ioScope.launch {
             commsRepository.connectionState.collect {
-                _joyVisible.postValue(isRobotConnected)
+                isRobotConnected.value = it.status == StatusConnection.CONNECTED
             }
         }
 
@@ -84,7 +82,7 @@ class NavigationViewModel @Inject constructor(
     }
 
     fun newCoordinatesJoystick(axisX: Int, axisY: Int) {
-        if (isRobotConnected) {
+        if (isRobotConnected.value) {
             commsRepository.sendDirectionControl(DirectionControl(axisX.toShort(), axisY.toShort()))
         }
     }
@@ -93,25 +91,25 @@ class NavigationViewModel @Inject constructor(
         val command =
             if (isBackward) CommandsRobot.MOVE_BACKWARD else CommandsRobot.MOVE_FORWARD
 
-        if (isRobotConnected) {
+        if (isRobotConnected.value) {
             commsRepository.sendCommand(command, distanceInMts)
         }
     }
 
     fun sendNewMoveAbsYaw(desiredAngle: Float) {
-        if (isRobotConnected) {
+        if (isRobotConnected.value) {
             commsRepository.sendCommand(CommandsRobot.MOVE_ABS_YAW, desiredAngle)
         }
     }
 
     fun sendNewMoveRelYaw(angle: Float) {
-        if (isRobotConnected) {
+        if (isRobotConnected.value) {
             commsRepository.sendCommand(CommandsRobot.MOVE_REL_YAW, angle)
         }
     }
 
     fun sendDearmedCommand() {
-        if (isRobotConnected) {
+        if (isRobotConnected.value) {
             commsRepository.sendCommand(CommandsRobot.DEARMED)
         }
     }

@@ -1,7 +1,6 @@
 package com.app.hoverrobot.ui.navigationFragment
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -49,6 +48,7 @@ class NavigationFragment : Fragment() {
 
             NavigationScreen(
                 isRobotStabilized = navigationViewModel.isRobotStabilized.collectAsState().value,
+                isRobotConnected = navigationViewModel.isRobotConnected.value,
                 newDegress = actualYawAngle
             ) { onAction ->
                 when (onAction) {
@@ -57,7 +57,6 @@ class NavigationFragment : Fragment() {
                     is OnYawRightAction -> navigationViewModel.sendNewMoveRelYaw(onAction.relativeYaw.toFloat())
                     is OnNewDragCompassInteraction -> navigationViewModel.sendNewMoveAbsYaw(onAction.newDegress)
                     is NavigationScreenAction.OnFixedDistance -> {
-                        Log.d("DistanceFixed",onAction.meters.toString())
                         navigationViewModel.sendNewMovePosition(
                             abs(onAction.meters),
                             onAction.meters < 0
@@ -65,16 +64,9 @@ class NavigationFragment : Fragment() {
                     }
 
                     is OnNewJoystickInteraction -> {
-                        val dualRateX = onAction.x * dualRateAggressiveness.toDouble()
-                        val dualRateY = onAction.y * dualRateAggressiveness.toDouble()
-
-                        Log.i(
-                            "JoystickCompose",
-                            "${dualRateX.round().toInt()}, ${dualRateY.round().toInt()}"
-                        )
                         navigationViewModel.newCoordinatesJoystick(
-                            dualRateX.round().toInt(),
-                            dualRateY.round().toInt()
+                            (onAction.x * dualRateAggressiveness.toDouble()).round().toInt(),
+                            (onAction.y * dualRateAggressiveness.toDouble()).round().toInt()
                         )
                     }
                 }
@@ -89,10 +81,6 @@ class NavigationFragment : Fragment() {
     }
 
     private fun setupObserver() {
-        navigationViewModel.joyVisible.observe(viewLifecycleOwner) {
-//            binding.navigationVisible.isVisible = it ?: false
-        }
-
 //        navigationViewModel.pointCloud.observe(viewLifecycleOwner) {
 //
 //            Log.d(TAG,"Nuevo punto: [${it.last().x},${it.last().y}]")
