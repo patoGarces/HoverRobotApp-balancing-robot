@@ -2,6 +2,13 @@
     <string name="app_name">HoverRobot</string>
     <string name="action_settings">Settings</string>
 
+
+    <!--    Dialogs-->
+    <string name="dialog_warning_distance">¡Advertencia! El robot se moverá al confirmar.</string>
+    <string name="dialog_action_confirm">Confirmar</string>
+    <string name="dialog_action_cancel">Cancelar</string>
+    <string name="dialog_action_title">Distancia</string>
+
     <!--    Status Data fragment-->
     <string name="title_status_fragment">Estado general</string>
     <string name="title_aggressiveness">Agresividad:</string>
@@ -79,9 +86,9 @@
     <string name="status_robot_error_battery">Error battery</string>
 
     <!--    Navigation Fragment-->
-    <string name="control_move_placeholder_forward">%.02fmts forward</string>
-    <string name="control_move_placeholder_backward">%.02fmts backward</string>
     <string name="control_move_placeholder_direction">%d°</string>
+    <string name="title_forward">Avanzar</string>
+    <string name="title_backward">Retroceder</string>
 
     <!--    Analisis Fragment-->
     <string name="dataset_title">Datasets</string>
