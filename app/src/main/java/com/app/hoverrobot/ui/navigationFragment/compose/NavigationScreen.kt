@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -35,26 +36,24 @@ import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreenAction.O
 import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreenAction.OnYawRightAction
 import kotlinx.coroutines.delay
 import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
+import com.app.hoverrobot.ui.composeUtils.DistancePickerDialog
+import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreenAction.OnFixedDistance
 
-
-sealed class NavigationScreenAction {
-    data class OnYawLeftAction(val relativeYaw: Int): NavigationScreenAction()
-    data class OnYawRightAction(val relativeYaw: Int): NavigationScreenAction()
-    data object OnDearmedAction: NavigationScreenAction()
-    data class OnNewDragCompassInteraction(val newDegress: Float): NavigationScreenAction()
-    data class OnNewJoystickInteraction(val x: Float, val y: Float): NavigationScreenAction()
-}
 
 @Composable
 fun NavigationScreen(
     isRobotStabilized: Boolean,
     newDegress: State<Int>,
+    enableSeekbarsYaw: Boolean = false,
     onActionScreen: (NavigationScreenAction) -> Unit
 ) {
     var joystickX by remember { mutableFloatStateOf(0F) }
     var joystickY by remember { mutableFloatStateOf(0F) }
     var leftAngleDir by remember { mutableIntStateOf(1) }
     var rightAngleDir by remember { mutableIntStateOf(1) }
+    var showDialog by remember { mutableStateOf(false) }
+    var isForwardMove by remember { mutableStateOf(true) }
 
     LaunchedEffect(isRobotStabilized) {
         while (isRobotStabilized) {
@@ -63,15 +62,72 @@ fun NavigationScreen(
         }
     }
 
-    Column {
+    if (showDialog) {
+        DistancePickerDialog(
+            directionTitle = if (isForwardMove) R.string.title_forward else R.string.title_backward,
+            initialDistance = 1F,
+            onDismiss = { showDialog = false },
+            onConfirm = { meters ->
+                showDialog = false
+                val dirMeters = if (isForwardMove) meters else -meters
+                onActionScreen(OnFixedDistance(dirMeters))
+            },
+        )
+    }
+
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Bottom
+    ) {
+
+        Row(Modifier.fillMaxWidth().padding(horizontal = 32.dp),Arrangement.SpaceBetween) {
+            OutlinedButton(
+                modifier = Modifier
+                    .wrapContentSize()
+                    .background(Color.Transparent),
+                onClick = {
+                    isForwardMove = false
+                    showDialog = true
+                },
+                shape = RoundedCornerShape(8.dp),
+                border = BorderStroke(1.dp, Color.White)
+            ) {
+                Text(
+                    text = stringResource(R.string.title_backward),
+                    color = Color.White
+                )
+            }
+
+            OutlinedButton(
+                modifier = Modifier
+                    .wrapContentSize()
+                    .widthIn(80.dp)
+                    .background(Color.Transparent),
+                onClick = {
+                    isForwardMove = true
+                    showDialog = true
+                },
+                shape = RoundedCornerShape(8.dp),
+                border = BorderStroke(1.dp, Color.White)
+            ) {
+                Text(
+                    text = stringResource(R.string.title_forward),
+                    color = Color.White
+                )
+            }
+        }
         Row(
-            modifier = Modifier.padding(horizontal = 32.dp),
+            modifier = Modifier
+                .padding(horizontal = 32.dp)
+                .padding(bottom = 32.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Bottom
         ) {
             Box(Modifier.padding(top = 8.dp)) {
                 JoystickAnalogCompose(
-                    modifier = Modifier.align(Alignment.Center).zIndex(1F),
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .zIndex(1F),
                     size = 100.dp,
                     dotSize = 50.dp,
                     fixedDirection = FixedDirection.VERTICAL
@@ -79,11 +135,13 @@ fun NavigationScreen(
                     joystickY = y
                 }
 
-                ArcSeekBar(
-                    modifier = Modifier.align(Alignment.TopCenter),
-                    range = 1F..180F,
-                    sizeArc = 140.dp
-                ) { leftAngleDir = -it.toInt() }
+                if (enableSeekbarsYaw) {
+                    ArcSeekBar(
+                        modifier = Modifier.align(Alignment.TopCenter),
+                        range = 1F..180F,
+                        sizeArc = 140.dp
+                    ) { leftAngleDir = -it.toInt() }
+                }
             }
 
             Column(
@@ -115,7 +173,9 @@ fun NavigationScreen(
             Box(Modifier.padding(top = 8.dp)) {
 
                 JoystickAnalogCompose(
-                    modifier = Modifier.align(Alignment.Center).zIndex(1F),
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .zIndex(1F),
                     size = 100.dp,
                     dotSize = 50.dp,
                     fixedDirection = FixedDirection.HORIZONTAL
@@ -123,14 +183,17 @@ fun NavigationScreen(
                     joystickX = x
                 }
 
-                ArcSeekBar(
-                    modifier = Modifier.align(Alignment.TopCenter),
-                    range = 1F..180F,
-                    sizeArc = 140.dp
-                ) { rightAngleDir = it.toInt() }
+                if (enableSeekbarsYaw) {
+                    ArcSeekBar(
+                        modifier = Modifier.align(Alignment.TopCenter),
+                        range = 1F..180F,
+                        sizeArc = 140.dp
+                    ) { rightAngleDir = it.toInt() }
+                }
             }
         }
 
+        // TODO: revisar por que al mostrar este composable se rompe la preview
         CompassComposable(newDegress) {
             onActionScreen(OnNewDragCompassInteraction(it))
         }
@@ -140,6 +203,7 @@ fun NavigationScreen(
 @Composable
 private fun YawControlButtons(
     isRobotStabilized: Boolean,
+    enableSeekbarsYaw: Boolean = false,
     yawLeftText: String,
     yawLeftOnClick: () -> Unit,
     yawRightText: String,
@@ -151,19 +215,21 @@ private fun YawControlButtons(
         Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        OutlinedButton(
-            modifier = Modifier
-                .wrapContentSize()
-                .widthIn(80.dp)
-                .background(Color.Transparent),
-            onClick = yawLeftOnClick,
-            shape = RoundedCornerShape(8.dp),
-            border = BorderStroke(1.dp, Color.White)
-        ) {
-            Text(
-                text = yawLeftText,
-                color = Color.White
-            )
+        if (enableSeekbarsYaw) {
+            OutlinedButton(
+                modifier = Modifier
+                    .wrapContentSize()
+                    .widthIn(80.dp)
+                    .background(Color.Transparent),
+                onClick = yawLeftOnClick,
+                shape = RoundedCornerShape(8.dp),
+                border = BorderStroke(1.dp, Color.White)
+            ) {
+                Text(
+                    text = yawLeftText,
+                    color = Color.White
+                )
+            }
         }
 
         if (isRobotStabilized) {
@@ -184,19 +250,21 @@ private fun YawControlButtons(
             }
         }
 
-        OutlinedButton(
-            modifier = Modifier
-                .wrapContentSize()
-                .widthIn(80.dp)
-                .background(Color.Transparent),
-            onClick = yawRightOnClick,
-            shape = RoundedCornerShape(8.dp),
-            border = BorderStroke(1.dp, Color.White)
-        ) {
-            Text(
-                text = yawRightText,
-                color = Color.White
-            )
+        if (enableSeekbarsYaw) {
+            OutlinedButton(
+                modifier = Modifier
+                    .wrapContentSize()
+                    .widthIn(80.dp)
+                    .background(Color.Transparent),
+                onClick = yawRightOnClick,
+                shape = RoundedCornerShape(8.dp),
+                border = BorderStroke(1.dp, Color.White)
+            ) {
+                Text(
+                    text = yawRightText,
+                    color = Color.White
+                )
+            }
         }
     }
 }

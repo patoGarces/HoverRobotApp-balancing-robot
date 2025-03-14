@@ -1,7 +1,5 @@
 package com.app.hoverrobot.ui.navigationFragment
 
-import android.annotation.SuppressLint
-import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -9,144 +7,113 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
-import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.map
-import com.app.hoverrobot.R
-import com.app.hoverrobot.databinding.NavigationFragmentBinding
 import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreen
+import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreenAction
 import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreenAction.OnDearmedAction
 import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreenAction.OnNewDragCompassInteraction
 import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreenAction.OnNewJoystickInteraction
 import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreenAction.OnYawLeftAction
 import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreenAction.OnYawRightAction
-import com.github.mikephil.charting.charts.ScatterChart
 import com.github.mikephil.charting.data.Entry
-import com.github.mikephil.charting.data.ScatterData
 import com.github.mikephil.charting.data.ScatterDataSet
-import com.github.mikephil.charting.utils.EntryXComparator
 import java.math.BigDecimal
 import java.math.RoundingMode
-import java.util.Collections
+import kotlin.math.abs
 
 class NavigationFragment : Fragment() {
 
-    private val navigationViewModel : NavigationViewModel by viewModels(ownerProducer = { requireActivity() })
-
-    private lateinit var _binding : NavigationFragmentBinding
-    private val binding get() = _binding
-
-    private var distanceBackward: Float = 0.5f
-    private var distanceForward: Float = 0.5f
+    private val navigationViewModel: NavigationViewModel by viewModels(ownerProducer = { requireActivity() })
 
     private var entryDataPoints: ArrayList<Entry> = ArrayList()
     private lateinit var scatterDataset: ScatterDataSet
 
     private val dualRateAggressiveness: Float
-        get() = AggressivenessLevels.getLevelPercent(navigationViewModel.aggressivenessLevel.value ?: 0) ?: 0F
-
-    private val TAG = "ControlFragment"
+        get() = AggressivenessLevels.getLevelPercent(
+            navigationViewModel.aggressivenessLevel.value ?: 0
+        ) ?: 0F
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
-        _binding = NavigationFragmentBinding.inflate(inflater,container,false)
-        return binding.apply {
-            composeView.apply {
-                setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-                composeView.setContent {
+    ) = ComposeView(requireContext()).apply {
+        setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+        setContent {
+            val actualYawAngle = navigationViewModel.dynamicData
+                .map { it.yawAngle.toInt() }
+                .observeAsState(initial = 0)
 
-                    val actualYawAngle = navigationViewModel.dynamicData
-                        .map { it.yawAngle.toInt() }
-                        .observeAsState(initial = 0)
+            NavigationScreen(
+                isRobotStabilized = navigationViewModel.isRobotStabilized.collectAsState().value,
+                newDegress = actualYawAngle
+            ) { onAction ->
+                when (onAction) {
+                    is OnDearmedAction -> navigationViewModel.sendDearmedCommand()
+                    is OnYawLeftAction -> navigationViewModel.sendNewMoveRelYaw(onAction.relativeYaw.toFloat())
+                    is OnYawRightAction -> navigationViewModel.sendNewMoveRelYaw(onAction.relativeYaw.toFloat())
+                    is OnNewDragCompassInteraction -> navigationViewModel.sendNewMoveAbsYaw(onAction.newDegress)
+                    is NavigationScreenAction.OnFixedDistance -> {
+                        Log.d("DistanceFixed",onAction.meters.toString())
+                        navigationViewModel.sendNewMovePosition(
+                            abs(onAction.meters),
+                            onAction.meters < 0
+                        )
+                    }
 
-                    NavigationScreen(
-                        isRobotStabilized = navigationViewModel.isRobotStabilized.collectAsState().value,
-                        newDegress = actualYawAngle
-                    ) { onAction ->
-                        when (onAction) {
-                            is OnDearmedAction -> navigationViewModel.sendDearmedCommand()
-                            is OnYawLeftAction -> navigationViewModel.sendNewMoveRelYaw(onAction.relativeYaw.toFloat())
-                            is OnYawRightAction -> navigationViewModel.sendNewMoveRelYaw(onAction.relativeYaw.toFloat())
-                            is OnNewDragCompassInteraction -> navigationViewModel.sendNewMoveAbsYaw(onAction.newDegress)
-                            is OnNewJoystickInteraction -> {
-                                val dualRateX = onAction.x * dualRateAggressiveness.toDouble()
-                                val dualRateY = onAction.y * dualRateAggressiveness.toDouble()
+                    is OnNewJoystickInteraction -> {
+                        val dualRateX = onAction.x * dualRateAggressiveness.toDouble()
+                        val dualRateY = onAction.y * dualRateAggressiveness.toDouble()
 
-                                val roundedX = BigDecimal(dualRateX).setScale(2, RoundingMode.HALF_UP).toFloat() * 100
-                                val roundedY = BigDecimal(dualRateY).setScale(2, RoundingMode.HALF_UP).toFloat() * 100
-
-                                Log.i("JoystickCompose","${roundedX.toInt()}, ${roundedY.toInt()}")
-                                navigationViewModel.newCoordinatesJoystick(roundedX.toInt(),roundedY.toInt())
-                            }
-                        }
+                        Log.i(
+                            "JoystickCompose",
+                            "${dualRateX.round().toInt()}, ${dualRateY.round().toInt()}"
+                        )
+                        navigationViewModel.newCoordinatesJoystick(
+                            dualRateX.round().toInt(),
+                            dualRateY.round().toInt()
+                        )
                     }
                 }
             }
-        }.root
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        binding.btnBackward.text = getString(R.string.control_move_placeholder_backward).format(0.5f)
-        binding.btnForward.text = getString(R.string.control_move_placeholder_forward).format(0.5f)
-        setupListener()
         setupObserver()
-        initGraph()
+//        initGraph()
     }
 
-    @SuppressLint("ClickableViewAccessibility")
-    private fun setupListener() {
-        binding.sliderBackward.addOnChangeListener { _,progress,_ ->
-            distanceBackward = (MIN_DISTANCE + ((progress / 100f) * (MAX_DISTANCE - MIN_DISTANCE))).round(2)
-            binding.btnBackward.text = getString(R.string.control_move_placeholder_backward).format(distanceBackward)
-        }
-
-        binding.sliderForward.addOnChangeListener { _,progress,_ ->
-            distanceForward = (MIN_DISTANCE + ((progress / 100f) * (MAX_DISTANCE - MIN_DISTANCE))).round(2)
-            binding.btnForward.text = getString(R.string.control_move_placeholder_forward).format(distanceForward)
-        }
-
-        binding.btnForward.setOnClickListener {
-            navigationViewModel.sendNewMovePosition(distanceForward)
-        }
-
-        binding.btnBackward.setOnClickListener {
-            navigationViewModel.sendNewMovePosition(distanceBackward,true)
-        }
-    }
-
-    private fun setupObserver(){
+    private fun setupObserver() {
         navigationViewModel.joyVisible.observe(viewLifecycleOwner) {
 //            binding.navigationVisible.isVisible = it ?: false
-            binding.navigationVisible.isVisible = true      // TODO: borrar
         }
 
-        navigationViewModel.pointCloud.observe(viewLifecycleOwner) {
-
-            Log.d(TAG,"Nuevo punto: [${it.last().x},${it.last().y}]")
-            entryDataPoints.add(Entry(it.last().x, it.last().y))
-
-            Collections.sort(entryDataPoints, EntryXComparator())
-
-            val dataSet = ScatterDataSet(entryDataPoints, "").apply {
-                color = Color.RED
-                scatterShapeSize = 10f
-                setScatterShape(ScatterChart.ScatterShape.CIRCLE)
-            }
-
-            scatterDataset.notifyDataSetChanged()
-            binding.scatterChart.data = ScatterData(dataSet)
-            binding.scatterChart.notifyDataSetChanged()
-            binding.scatterChart.invalidate()
-        }
+//        navigationViewModel.pointCloud.observe(viewLifecycleOwner) {
+//
+//            Log.d(TAG,"Nuevo punto: [${it.last().x},${it.last().y}]")
+//            entryDataPoints.add(Entry(it.last().x, it.last().y))
+//
+//            Collections.sort(entryDataPoints, EntryXComparator())
+//
+//            val dataSet = ScatterDataSet(entryDataPoints, "").apply {
+//                color = Color.RED
+//                scatterShapeSize = 10f
+//                setScatterShape(ScatterChart.ScatterShape.CIRCLE)
+//            }
+//
+//            scatterDataset.notifyDataSetChanged()
+//            binding.scatterChart.data = ScatterData(dataSet)
+//            binding.scatterChart.notifyDataSetChanged()
+//            binding.scatterChart.invalidate()
     }
+}
 
-    private fun initGraph() {
+//    private fun initGraph() {
 //        val entries = mutableListOf<Entry>()
 
 //        for (i in 0..100) {
@@ -162,28 +129,24 @@ class NavigationFragment : Fragment() {
 //            setScatterShape(ScatterChart.ScatterShape.CIRCLE)
 //        }
 
-        scatterDataset = ScatterDataSet(entryDataPoints, "").apply {
-//            color = Color.BLUE
-            color = Color.RED
-            scatterShapeSize = 10f
-            setScatterShape(ScatterChart.ScatterShape.CIRCLE)
-        }
+//        scatterDataset = ScatterDataSet(entryDataPoints, "").apply {
+////            color = Color.BLUE
+//            color = Color.RED
+//            scatterShapeSize = 10f
+//            setScatterShape(ScatterChart.ScatterShape.CIRCLE)
+//        }
+//
+//        binding.scatterChart.setTouchEnabled(false)
+//        binding.scatterChart.description.isEnabled = false
+//        binding.scatterChart.legend.isEnabled = false
+////        binding.scatterChart.data = ScatterData(dataSet)
+//        binding.scatterChart.invalidate()
+//    }
 
-        binding.scatterChart.setTouchEnabled(false)
-        binding.scatterChart.description.isEnabled = false
-        binding.scatterChart.legend.isEnabled = false
-//        binding.scatterChart.data = ScatterData(dataSet)
-        binding.scatterChart.invalidate()
-    }
-
-    private fun Float.round(decimals: Int = 2): Float = "%.${decimals}f".format(this).toFloat()
-}
-
-private const val MIN_DISTANCE = 0.1f
-private const val MAX_DISTANCE = 1f
-
-private const val MIN_DIR = 1f
-private const val MAX_DIR = 180f
+private fun Float.round(decimals: Int = 2): Float = "%.${decimals}f".format(this).toFloat()
+private fun Double.round(decimals: Int = 2): Float =
+    BigDecimal(this).setScale(decimals, RoundingMode.HALF_UP).toFloat() * 100
+//}
 
 enum class AggressivenessLevels(val normalizePercent: Float) {
     SOFT(0.3F),

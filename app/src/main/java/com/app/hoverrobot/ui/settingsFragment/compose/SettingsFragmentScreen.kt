@@ -1,12 +1,9 @@
 package com.app.hoverrobot.ui.settingsFragment.compose
 
-import android.util.Log
 import androidx.annotation.StringRes
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -15,11 +12,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.input.TextFieldState
@@ -34,13 +28,12 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MenuAnchorType
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -63,6 +56,7 @@ import com.app.hoverrobot.data.models.comms.asPidSettings
 import com.app.hoverrobot.data.models.comms.isDiffWithOriginalLocalConfig
 import com.app.hoverrobot.data.utils.StatusRobot
 import com.app.hoverrobot.ui.composeUtils.CustomOutlinedButton
+import com.app.hoverrobot.ui.composeUtils.CustomSlider
 
 @Composable
 fun SettingsFragmentScreen(
@@ -383,10 +377,9 @@ private fun SliderParam(
     stepSize: Float = 0.01F,
     onValueChange: (Float) -> Unit
 ) {
-    var actualValue by remember { mutableStateOf(initialValue) }
+    var actualValue by remember { mutableFloatStateOf(initialValue) }
 
     LaunchedEffect(initialValue) {
-        Log.i("NewSettings", "refresh initial value: $initialValue, actualValue: $actualValue")
         actualValue = initialValue
     }
 
@@ -408,56 +401,15 @@ private fun SliderParam(
                 .padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(Modifier.weight(1F)) {
-
-                Box(
-                    modifier = Modifier
-                        .height(5.dp)
-                        .fillMaxWidth()
-                        .align(Alignment.CenterStart)
-                        .background(
-                            Color.Gray,
-                            RoundedCornerShape(2.dp)
-                        )
-                )
-
-                Box(
-                    modifier = Modifier
-                        .height(5.dp)
-                        .fillMaxWidth(fraction = (actualValue - range.start) / (range.endInclusive - range.start))
-                        .align(Alignment.CenterStart)
-                        .background(
-                            Color.Red,
-                            RoundedCornerShape(2.dp)
-                        )
-                )
-
-                Slider(
-                    value = actualValue,
-                    onValueChange = {
-                        actualValue = it
-                    },
-                    steps = ((range.endInclusive - range.start) / stepSize).toInt() - 1,
-                    onValueChangeFinished = { onValueChange(actualValue) },
-                    valueRange = range,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(20.dp),
-                    colors = SliderDefaults.colors(
-                        activeTickColor = Color.Transparent,
-                        inactiveTickColor = Color.Transparent,
-                        inactiveTrackColor = Color.Transparent,
-                        activeTrackColor = Color.Transparent,
-                    ),
-                    thumb = {
-                        Box(
-                            Modifier
-                                .size(18.dp)
-                                .align(Alignment.Center)
-                                .background(Color.Red, CircleShape)
-                        )
-                    }
-                )
+            CustomSlider(
+                modifier = Modifier.weight(1F),
+                initialValue = actualValue,
+                range = range,
+                stepSize = stepSize,
+                onUpdateValue = { actualValue = it }
+            ) {
+                actualValue = it
+                onValueChange(it)
             }
 
             Text(
