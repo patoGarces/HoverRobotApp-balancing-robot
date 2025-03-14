@@ -1,4 +1,4 @@
-package com.app.hoverrobot.data.utils
+package com.app.hoverrobot.ui.composeUtils
 
 import android.graphics.Color
 import androidx.compose.foundation.layout.fillMaxSize

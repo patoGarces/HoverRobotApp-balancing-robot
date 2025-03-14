@@ -1,40 +1,34 @@
 package com.app.hoverrobot.ui.analisisFragment
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
-import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.app.hoverrobot.R
 import com.app.hoverrobot.data.models.comms.RobotDynamicData
 import com.app.hoverrobot.data.models.comms.RobotLocalConfig
-import com.app.hoverrobot.databinding.AnalisisFragmentBinding
-import com.app.hoverrobot.ui.analisisFragment.compose.LogScreen
-import com.app.hoverrobot.ui.analisisFragment.compose.SettingsMenuActions
-import com.app.hoverrobot.ui.analisisFragment.compose.SettingsMenuScreen
+import com.app.hoverrobot.ui.analisisFragment.compose.AnalisisScreen
+import com.app.hoverrobot.ui.analisisFragment.compose.AnalisisScreenActions
 import com.app.hoverrobot.ui.analisisFragment.resources.EntriesMaps.datasetColors
 import com.app.hoverrobot.ui.analisisFragment.resources.EntriesMaps.datasetLabels
 import com.app.hoverrobot.ui.analisisFragment.resources.EntriesMaps.updateWithFrame
 import com.app.hoverrobot.ui.analisisFragment.resources.LineDataKeys
 import com.app.hoverrobot.ui.analisisFragment.resources.SelectedDataset
-import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.components.LimitLine
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
-import com.github.mikephil.charting.highlight.Highlight
-import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 
-class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
+class AnalisisFragment : Fragment() {
 
     private val analisisViewModel: AnalisisViewModel by viewModels(ownerProducer = { requireActivity() })
-
-    private lateinit var _binding: AnalisisFragmentBinding
-    private val binding get() = _binding
 
     private var initTimeStamp: Long = 0
     private var selectedDataset: SelectedDataset? = SelectedDataset.DATASET_IMU
@@ -44,10 +38,10 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
 
     private val datasetKeys = LineDataKeys.entries.toList()
 
-    private var actualLimitScale = 90F
+    private var actualLineData = mutableStateOf<LineData?>(null)
+    private var limixAxis = mutableFloatStateOf(100F)
 
     private var isAnalisisPaused = false
-    private var isAutoScaleEnabled = false
 
     private val robotConfig: RobotLocalConfig?
         get() = analisisViewModel.newRobotConfig.value
@@ -55,54 +49,38 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
+    ) = ComposeView(requireContext()).apply {
+        setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+        setContent {
+            AnalisisScreen(
+                dynamicData = analisisViewModel.newDataAnalisis.observeAsState(),
+                actualLineData = actualLineData,
+                statusRobot = analisisViewModel.statusCode,
+                limitAxis = limixAxis
+            ) { onAction ->
+                when (onAction) {
+                    is AnalisisScreenActions.OnDatasetChange -> {
+                        selectedDataset = onAction.selectedDataset
+                    }
 
-        _binding = AnalisisFragmentBinding.inflate(inflater, container, false)
+                    is AnalisisScreenActions.OnPauseChange -> {
+                        isAnalisisPaused = onAction.isPaused
+                    }
 
-        binding.logsComposeView.apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-
-                LogScreen(newStatusRobot = analisisViewModel.statusCode)
-            }
-        }
-
-        binding.settingsChart.apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                SettingsMenuScreen { onAction ->
-                    when (onAction) {
-                        is SettingsMenuActions.OnAutoScaleChange -> {
-                            setAutoScale(onAction.isEnable)
-                        }
-
-                        is SettingsMenuActions.OnDatasetChange -> {
-                            selectedDataset = onAction.selectedDataset
-
-                            binding.chart.isVisible = selectedDataset != null
-                            binding.logsComposeView.isVisible = selectedDataset == null
-                        }
-
-                        is SettingsMenuActions.OnPauseChange -> {
-                            isAnalisisPaused = onAction.isPaused
-                        }
-
-                        is SettingsMenuActions.OnClearData -> {
-                            entryMap.values.forEach { it.clear() }
-                        }
+                    is AnalisisScreenActions.OnClearData -> {
+                        entryMap.values.forEach { it.clear() }
                     }
                 }
             }
         }
-        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        setupChart()
         initDatasets()
         setupObserver()
+
+        initTimeStamp = System.currentTimeMillis()
     }
 
     private fun setupObserver() {
@@ -113,50 +91,6 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
                     newDynamicFrame(it)
                 }
             }
-        }
-    }
-
-    private fun setupChart() {
-        with(binding.chart) {
-            setDrawGridBackground(false)
-            description.isEnabled = false
-            setDrawBorders(true)
-            configureAxes()
-            enableTouchAndZoom()
-            configureLegend()
-        }
-        initTimeStamp = System.currentTimeMillis()
-    }
-
-    private fun configureAxes() {
-        with(binding.chart) {
-            axisLeft.isEnabled = true
-            axisLeft.setDrawAxisLine(true)
-            axisLeft.setDrawGridLines(true)
-            axisRight.isEnabled = true
-            axisRight.setDrawAxisLine(true)
-            axisRight.setDrawGridLines(true)
-            xAxis.setDrawAxisLine(true)
-            xAxis.setDrawGridLines(true)
-        }
-    }
-
-    private fun enableTouchAndZoom() {
-        with(binding.chart) {
-            setTouchEnabled(true)
-            isDragEnabled = true
-            setScaleEnabled(true)
-            setPinchZoom(false)
-        }
-    }
-
-    private fun configureLegend() {
-        with(binding.chart.legend) {
-            verticalAlignment = Legend.LegendVerticalAlignment.TOP
-            horizontalAlignment = Legend.LegendHorizontalAlignment.RIGHT
-            orientation = Legend.LegendOrientation.VERTICAL
-            form = Legend.LegendForm.CIRCLE
-            setDrawInside(true)
         }
     }
 
@@ -183,42 +117,25 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
         }
     }
 
-    private fun setAutoScale(autoScale: Boolean) {
-        with(binding) {
-            if (!autoScale) {
-                chart.axisLeft.axisMinimum = -actualLimitScale
-                chart.axisLeft.axisMaximum = actualLimitScale
-                chart.axisRight.axisMinimum = -actualLimitScale
-                chart.axisRight.axisMaximum = actualLimitScale
-            } else {
-                chart.axisLeft.resetAxisMaximum()
-                chart.axisLeft.resetAxisMinimum()
-                chart.axisRight.resetAxisMaximum()
-                chart.axisRight.resetAxisMinimum()
-            }
-        }
-        isAutoScaleEnabled = autoScale
-    }
-
     private fun newDynamicFrame(newFrame: RobotDynamicData) {
-        with(binding) {
-            tvAnglePitch.text = getString(R.string.placeholder_pitch, newFrame.pitchAngle)
-            tvAngleRoll.text = getString(R.string.placeholder_roll, newFrame.rollAngle)
-            tvAngleYaw.text = getString(R.string.placeholder_yaw, newFrame.yawAngle)
-            tvParamCenter.text = getString(R.string.placeholder_center, newFrame.centerAngle)
-            tvPosition.text = getString(R.string.placeholder_position, newFrame.posInMeters)
+//        with(binding) {
+//            tvAnglePitch.text = getString(R.string.placeholder_pitch, newFrame.pitchAngle)
+//            tvAngleRoll.text = getString(R.string.placeholder_roll, newFrame.rollAngle)
+//            tvAngleYaw.text = getString(R.string.placeholder_yaw, newFrame.yawAngle)
+//            tvParamCenter.text = getString(R.string.placeholder_center, newFrame.centerAngle)
+//            tvPosition.text = getString(R.string.placeholder_position, newFrame.posInMeters)
 
             val actualTimeInSec = ((System.currentTimeMillis() - initTimeStamp).toFloat()) / 1000
             entryMap.updateWithFrame(actualTimeInSec, newFrame)
 
             lineDataMap.values.forEach { it.notifyDataSetChanged() }
             updateDataset(selectedDataset)
-        }
+//        }
     }
 
     private fun updateDataset(selectedDataset: SelectedDataset?) {
         selectedDataset?.let {
-            binding.chart.data = when (selectedDataset) {
+                actualLineData.value = when (selectedDataset) {
                 SelectedDataset.DATASET_IMU -> {
                     setImuMode()
                     LineData(
@@ -276,30 +193,17 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
                 }
             }
         }
-        binding.chart.notifyDataSetChanged()
-        binding.chart.invalidate()
     }
-
-    override fun onValueSelected(e: Entry?, h: Highlight?) {
-        Log.i(
-            "VAL SELECTED",
-            "Value: " + e?.y + ", xIndex: " + e?.x + ", DataSet index: " + h?.dataSetIndex
-        )
-    }
-
-    override fun onNothingSelected() {}
 
     private fun setMotorControlMode() {
-        actualLimitScale = 1000F
-        setAutoScale(isAutoScaleEnabled)
-        binding.chart.axisLeft.removeAllLimitLines()
+        limixAxis.floatValue = 1000F
+//        binding.chart.axisLeft.removeAllLimitLines()
     }
 
     private fun setImuMode() {
 
-        actualLimitScale = 180F
-        setAutoScale(isAutoScaleEnabled)
-        binding.chart.axisLeft.removeAllLimitLines()
+        limixAxis.floatValue = 180F
+//        binding.chart.axisLeft.removeAllLimitLines()
         val colorSafetyLimits = requireContext().getColor(R.color.status_turquesa)
 
         robotConfig?.let { robotConfig ->
@@ -310,7 +214,7 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
             centerAngleLimitLine.labelPosition = LimitLine.LimitLabelPosition.LEFT_TOP
             centerAngleLimitLine.textSize = 10f
             centerAngleLimitLine.lineColor = requireContext().getColor(R.color.status_blue)
-            binding.chart.axisLeft.addLimitLine(centerAngleLimitLine)
+//            binding.chart.axisLeft.addLimitLine(centerAngleLimitLine)
 
             val upperLimitLine =
                 LimitLine(
@@ -322,7 +226,7 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
             upperLimitLine.labelPosition = LimitLine.LimitLabelPosition.LEFT_TOP
             upperLimitLine.textSize = 10f
             upperLimitLine.lineColor = colorSafetyLimits
-            binding.chart.axisLeft.addLimitLine(upperLimitLine)
+//            binding.chart.axisLeft.addLimitLine(upperLimitLine)
 
             val lowerLimitLine = LimitLine(
                 robotConfig.centerAngle - robotConfig.safetyLimits,
@@ -333,14 +237,13 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
             lowerLimitLine.labelPosition = LimitLine.LimitLabelPosition.LEFT_TOP
             lowerLimitLine.textSize = 10f
             lowerLimitLine.lineColor = colorSafetyLimits
-            binding.chart.axisLeft.addLimitLine(lowerLimitLine)
+//            binding.chart.axisLeft.addLimitLine(lowerLimitLine)
         }
     }
 
     private fun setPidAngleMode() {
-        actualLimitScale = 15F
-        setAutoScale(isAutoScaleEnabled)
-        binding.chart.axisLeft.removeAllLimitLines()
+        limixAxis.floatValue = 15F
+//        binding.chart.axisLeft.removeAllLimitLines()
 
         robotConfig?.let { robotConfig ->
             val centerAngleLimitLine = LimitLine(robotConfig.centerAngle, "center Angle")
@@ -349,14 +252,13 @@ class AnalisisFragment : Fragment(), OnChartValueSelectedListener {
             centerAngleLimitLine.labelPosition = LimitLine.LimitLabelPosition.LEFT_TOP
             centerAngleLimitLine.textSize = 10f
             centerAngleLimitLine.lineColor = requireContext().getColor(R.color.status_blue)
-            binding.chart.axisLeft.addLimitLine(centerAngleLimitLine)
+//            binding.chart.axisLeft.addLimitLine(centerAngleLimitLine)
         }
     }
 
     private fun setPidMode(limit: Float) {
-        actualLimitScale = limit
-        setAutoScale(isAutoScaleEnabled)
-        binding.chart.axisLeft.removeAllLimitLines()
+        limixAxis.floatValue = limit
+//        binding.chart.axisLeft.removeAllLimitLines()
     }
 }
 

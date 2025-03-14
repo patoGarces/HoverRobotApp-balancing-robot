@@ -71,6 +71,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.material.icons.extended)
 
     // Dependencias adicionales de Compose
     implementation(libs.androidx.runtime.livedata)
