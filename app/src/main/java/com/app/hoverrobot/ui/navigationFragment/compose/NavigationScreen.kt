@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -21,7 +20,6 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -37,6 +35,10 @@ import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreenAction.O
 import kotlinx.coroutines.delay
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Alignment
+import com.app.hoverrobot.data.models.comms.PointCloudItem
+import com.app.hoverrobot.data.utils.ScatterChartCompose
+import com.app.hoverrobot.ui.composeUtils.ArcSeekBar
 import com.app.hoverrobot.ui.composeUtils.DistancePickerDialog
 import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreenAction.OnFixedDistance
 
@@ -45,8 +47,10 @@ import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreenAction.O
 fun NavigationScreen(
     isRobotStabilized: Boolean,
     isRobotConnected: Boolean,
+    newPointCloudItem: State<PointCloudItem?>,
     newDegress: State<Int>,
     enableSeekbarsYaw: Boolean = false,
+    disableCompass: Boolean = false,
     onActionScreen: (NavigationScreenAction) -> Unit
 ) {
     var joystickX by remember { mutableFloatStateOf(0F) }
@@ -78,127 +82,134 @@ fun NavigationScreen(
         )
     }
 
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Bottom
-    ) {
+    Box {
+        ScatterChartCompose(newPointCloudItem)
 
-        Row(Modifier.fillMaxWidth().padding(horizontal = 32.dp),Arrangement.SpaceBetween) {
-            OutlinedButton(
-                modifier = Modifier
-                    .wrapContentSize()
-                    .background(Color.Transparent),
-                onClick = {
-                    isForwardMove = false
-                    showDialog = true
-                },
-                shape = RoundedCornerShape(8.dp),
-                border = BorderStroke(1.dp, Color.White)
-            ) {
-                Text(
-                    text = stringResource(R.string.title_backward),
-                    color = Color.White
-                )
-            }
-
-            OutlinedButton(
-                modifier = Modifier
-                    .wrapContentSize()
-                    .widthIn(80.dp)
-                    .background(Color.Transparent),
-                onClick = {
-                    isForwardMove = true
-                    showDialog = true
-                },
-                shape = RoundedCornerShape(8.dp),
-                border = BorderStroke(1.dp, Color.White)
-            ) {
-                Text(
-                    text = stringResource(R.string.title_forward),
-                    color = Color.White
-                )
-            }
-        }
-        Row(
-            modifier = Modifier
-                .padding(horizontal = 32.dp)
-                .padding(bottom = 32.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Bottom
-        ) {
-            Box(Modifier.padding(top = 8.dp)) {
-                JoystickAnalogCompose(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .zIndex(1F),
-                    size = 100.dp,
-                    dotSize = 50.dp,
-                    fixedDirection = FixedDirection.VERTICAL
-                ) { x: Float, y: Float ->
-                    joystickY = y
-                }
-
-                if (enableSeekbarsYaw) {
-                    ArcSeekBar(
-                        modifier = Modifier.align(Alignment.TopCenter),
-                        range = 1F..180F,
-                        sizeArc = 140.dp
-                    ) { leftAngleDir = -it.toInt() }
-                }
-            }
-
-            Column(
+        Column(Modifier.align(Alignment.BottomCenter)) {
+            Row(
                 Modifier
-                    .padding(horizontal = 32.dp)
-                    .weight(1F),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp),
+                Arrangement.SpaceBetween
             ) {
-                YawControlButtons(
-                    isRobotStabilized = isRobotStabilized,
-                    yawLeftText = stringResource(
-                        R.string.control_move_placeholder_direction,
-                        leftAngleDir
-                    ),
-                    yawLeftOnClick = {
-                        onActionScreen(OnYawLeftAction(leftAngleDir))
-                    },
-                    yawRightText = stringResource(
-                        R.string.control_move_placeholder_direction,
-                        rightAngleDir
-                    ),
-                    yawRightOnClick = {
-                        onActionScreen(OnYawRightAction(rightAngleDir))
-                    },
-                    onDearmedClick = { onActionScreen(OnDearmedAction) }
-                )
-            }
-
-            Box(Modifier.padding(top = 8.dp)) {
-
-                JoystickAnalogCompose(
+                OutlinedButton(
                     modifier = Modifier
-                        .align(Alignment.Center)
-                        .zIndex(1F),
-                    size = 100.dp,
-                    dotSize = 50.dp,
-                    fixedDirection = FixedDirection.HORIZONTAL
-                ) { x: Float, y: Float ->
-                    joystickX = x
+                        .wrapContentSize()
+                        .background(Color.Transparent),
+                    onClick = {
+                        isForwardMove = false
+                        showDialog = true
+                    },
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(1.dp, Color.White)
+                ) {
+                    Text(
+                        text = stringResource(R.string.title_backward),
+                        color = Color.White
+                    )
                 }
 
-                if (enableSeekbarsYaw) {
-                    ArcSeekBar(
-                        modifier = Modifier.align(Alignment.TopCenter),
-                        range = 1F..180F,
-                        sizeArc = 140.dp
-                    ) { rightAngleDir = it.toInt() }
+                OutlinedButton(
+                    modifier = Modifier
+                        .wrapContentSize()
+                        .widthIn(80.dp)
+                        .background(Color.Transparent),
+                    onClick = {
+                        isForwardMove = true
+                        showDialog = true
+                    },
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(1.dp, Color.White)
+                ) {
+                    Text(
+                        text = stringResource(R.string.title_forward),
+                        color = Color.White
+                    )
                 }
             }
-        }
+            Row(
+                modifier = Modifier
+                    .padding(horizontal = 32.dp)
+                    .padding(bottom = 32.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Bottom
+            ) {
+                Box(Modifier.padding(top = 8.dp)) {
+                    JoystickAnalogCompose(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .zIndex(1F),
+                        size = 100.dp,
+                        dotSize = 50.dp,
+                        fixedDirection = FixedDirection.VERTICAL
+                    ) { x: Float, y: Float ->
+                        joystickY = y
+                    }
 
-        // TODO: revisar por que al mostrar este composable se rompe la preview
-        CompassComposable(newDegress) {
-            onActionScreen(OnNewDragCompassInteraction(it))
+                    if (enableSeekbarsYaw) {
+                        ArcSeekBar(
+                            modifier = Modifier.align(Alignment.TopCenter),
+                            range = 1F..180F,
+                            sizeArc = 140.dp
+                        ) { leftAngleDir = -it.toInt() }
+                    }
+                }
+
+                Column(
+                    Modifier
+                        .padding(horizontal = 32.dp)
+                        .weight(1F),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    YawControlButtons(
+                        isRobotStabilized = isRobotStabilized,
+                        yawLeftText = stringResource(
+                            R.string.control_move_placeholder_direction,
+                            leftAngleDir
+                        ),
+                        yawLeftOnClick = {
+                            onActionScreen(OnYawLeftAction(leftAngleDir))
+                        },
+                        yawRightText = stringResource(
+                            R.string.control_move_placeholder_direction,
+                            rightAngleDir
+                        ),
+                        yawRightOnClick = {
+                            onActionScreen(OnYawRightAction(rightAngleDir))
+                        },
+                        onDearmedClick = { onActionScreen(OnDearmedAction) }
+                    )
+                }
+
+                Box(Modifier.padding(top = 8.dp)) {
+
+                    JoystickAnalogCompose(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .zIndex(1F),
+                        size = 100.dp,
+                        dotSize = 50.dp,
+                        fixedDirection = FixedDirection.HORIZONTAL
+                    ) { x: Float, y: Float ->
+                        joystickX = x
+                    }
+
+                    if (enableSeekbarsYaw) {
+                        ArcSeekBar(
+                            modifier = Modifier.align(Alignment.TopCenter),
+                            range = 1F..180F,
+                            sizeArc = 140.dp
+                        ) { rightAngleDir = it.toInt() }
+                    }
+                }
+            }
+
+            // TODO: revisar por que al mostrar este composable se rompe la preview
+            if (!disableCompass) {
+                CompassComposable(newDegress) {
+                    onActionScreen(OnNewDragCompassInteraction(it))
+                }
+            }
         }
     }
 }
@@ -278,6 +289,7 @@ private fun YawControlButtons(
 )
 fun NavigationButtonPreview() {
     val dummySetDegress = remember { mutableIntStateOf(0) }
+    val dummyPointCloudItem = remember { mutableStateOf(PointCloudItem()) }
     Column(
         Modifier
             .padding(16.dp)
@@ -285,8 +297,10 @@ fun NavigationButtonPreview() {
     ) {
         NavigationScreen(
             newDegress = dummySetDegress,
-            isRobotConnected = false,
+            newPointCloudItem = dummyPointCloudItem,
+            isRobotConnected = true,
             isRobotStabilized = true,
+            disableCompass = true
         ) { }
     }
 }

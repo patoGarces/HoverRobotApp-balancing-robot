@@ -15,6 +15,7 @@ import com.app.hoverrobot.data.utils.StatusConnection
 import com.app.hoverrobot.data.utils.StatusRobot
 import com.app.hoverrobot.data.utils.ToolBox.ioScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -28,8 +29,8 @@ class NavigationViewModel @Inject constructor(
     private var _dynamicData: MutableLiveData<RobotDynamicData> = MutableLiveData()
     val dynamicData: LiveData<RobotDynamicData> get() = _dynamicData
 
-    private var _pointCloud: MutableLiveData<List<PointCloudItem>> = MutableLiveData()
-    val pointCloud: LiveData<List<PointCloudItem>> = _pointCloud
+    private var _pointCloud: MutableLiveData<PointCloudItem> = MutableLiveData()
+    val pointCloud: LiveData<PointCloudItem> = _pointCloud
 
     private var _aggressivenessLevel: MutableLiveData<Int> = MutableLiveData(0)
     val aggressivenessLevel: LiveData<Int> = _aggressivenessLevel
@@ -59,16 +60,14 @@ class NavigationViewModel @Inject constructor(
             _aggressivenessLevel.postValue(storeSettings.getAggressiveness())
         }
 
-        // TODO: aca recibo cada punto de la nube
+//        // TODO: aca recibo cada punto de la nube
 //        ioScope.launch {
 //            for (i in 0..10000) {
 //                _pointCloud.postValue(
-//                    listOf(
-//                        PointCloudItem(
-//                            x = ((Math.random()-0.5) * 10).toFloat(),
-//                            y = ((Math.random()-0.5) * 10).toFloat(),
-//                            ""
-//                        )
+//                    PointCloudItem(
+//                        x = ((Math.random()-0.5) * 10).toFloat(),
+//                        y = ((Math.random()-0.5) * 10).toFloat(),
+//                        ""
 //                    )
 //                )
 //                delay(100)
