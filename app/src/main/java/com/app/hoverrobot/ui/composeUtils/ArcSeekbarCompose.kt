@@ -1,6 +1,5 @@
-package com.app.hoverrobot.ui.navigationFragment.compose
+package com.app.hoverrobot.ui.composeUtils
 
-import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Column
