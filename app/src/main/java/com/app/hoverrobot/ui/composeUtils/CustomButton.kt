@@ -6,11 +6,13 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -26,22 +28,27 @@ import androidx.compose.ui.unit.dp
 import com.app.hoverrobot.R
 
 @Composable
-fun CustomOutlinedButton(
+fun CustomButton(
     @StringRes title: Int,
-    height: Dp = 50.dp,
+    modifier: Modifier = Modifier,
+    filled: Boolean = false,
+    color: Color = Color.Red,
+    height: Dp = 35.dp,
     enable: Boolean = true,
     isLoading: Boolean = false,
     onClick: () -> Unit
 ) {
     OutlinedButton(
-        modifier = Modifier
+        modifier = modifier
             .widthIn(min = 100.dp)
-            .height(35.dp)
-            .background(Color.Transparent)
-            .padding(horizontal = 8.dp),
+            .height(height),
         onClick = onClick,
+        enabled = enable,
         shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.dp, Color.Red),
+        border = BorderStroke(1.dp, color),
+        colors = ButtonDefaults.outlinedButtonColors(
+            containerColor = if (filled) color else Color.Transparent
+        ),
         contentPadding = PaddingValues(horizontal = 8.dp)
     ) {
         AnimatedContent(
@@ -54,7 +61,7 @@ fun CustomOutlinedButton(
                 ) {
                     CircularProgressIndicator(
                         Modifier.size(30.dp),
-                        color = Color.Red,
+                        color = color,
                         strokeWidth = 3.dp
                     )
                 }
@@ -71,19 +78,32 @@ fun CustomOutlinedButton(
 
 @Preview
 @Composable
-private fun OutlinedButtonPreview() {
+private fun CustomButtonPreview() {
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        CustomOutlinedButton(
+        CustomButton(
             title = R.string.btn_clear_title
         ) { }
 
-        CustomOutlinedButton(
+        Spacer(Modifier.height(8.dp))
+
+        CustomButton(
+            title = R.string.btn_clear_title,
+            filled = true
+        ) { }
+
+        Spacer(Modifier.height(8.dp))
+
+
+        CustomButton(
             title = R.string.btn_pid_sync,
             enable = false
         ) { }
 
-        CustomOutlinedButton(
+        Spacer(Modifier.height(8.dp))
+
+
+        CustomButton(
             title = R.string.btn_clear_title,
             isLoading = true
         ) { }

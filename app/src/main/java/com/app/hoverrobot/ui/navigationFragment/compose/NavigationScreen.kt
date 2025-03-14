@@ -37,7 +37,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import com.app.hoverrobot.data.models.comms.PointCloudItem
-import com.app.hoverrobot.data.utils.ScatterChartCompose
+import com.app.hoverrobot.ui.composeUtils.ScatterChartCompose
 import com.app.hoverrobot.ui.composeUtils.ArcSeekBar
 import com.app.hoverrobot.ui.composeUtils.DistancePickerDialog
 import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreenAction.OnFixedDistance

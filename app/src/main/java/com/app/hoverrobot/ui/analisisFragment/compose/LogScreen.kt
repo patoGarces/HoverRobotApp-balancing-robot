@@ -17,10 +17,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -36,19 +39,13 @@ import com.app.hoverrobot.data.utils.StatusMapper.colorFromRes
 import com.app.hoverrobot.data.utils.StatusMapper.colorStatusLog
 import com.app.hoverrobot.data.utils.StatusRobot
 import com.app.hoverrobot.data.utils.formatMillisToDate
+import kotlin.collections.mutableListOf
 
 @Composable
 fun LogScreen(
-    newStatusRobot: State<StatusRobot?>,
+    listOfLogs: MutableList<Triple<Long, StatusRobot, String?>>
 ) {
-    val listOfLogs = remember { mutableStateListOf<Triple<Long,StatusRobot,String?>>() }
     val scrollState = rememberLazyListState()
-
-    LaunchedEffect(newStatusRobot.value) {
-        newStatusRobot.value?.let {
-            listOfLogs.add(0, Triple(System.currentTimeMillis(), it, null))
-        }
-    }
 
     Box(
         modifier = Modifier
@@ -110,11 +107,15 @@ fun LogScreen(
 @Composable
 private fun LogScreenPreview() {
 
-    val simulatedLog = remember { mutableStateOf<StatusRobot?>(
-            StatusRobot.INIT
+    val simulatedLog = remember {
+        mutableListOf<Triple<Long, StatusRobot, String?>>(
+            Triple(0L, StatusRobot.INIT, null),
+            Triple(0L, StatusRobot.ARMED, null),
+            Triple(0L, StatusRobot.CHARGING, null),
+            Triple(0L, StatusRobot.ERROR_BATTERY, null)
         )
     }
     Column {
-        LogScreen(newStatusRobot = simulatedLog)
+        LogScreen(listOfLogs = simulatedLog)
     }
 }

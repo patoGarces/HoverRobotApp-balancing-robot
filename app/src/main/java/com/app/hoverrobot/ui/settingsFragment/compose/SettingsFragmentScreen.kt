@@ -55,7 +55,7 @@ import com.app.hoverrobot.data.models.comms.RobotLocalConfig
 import com.app.hoverrobot.data.models.comms.asPidSettings
 import com.app.hoverrobot.data.models.comms.isDiffWithOriginalLocalConfig
 import com.app.hoverrobot.data.utils.StatusRobot
-import com.app.hoverrobot.ui.composeUtils.CustomOutlinedButton
+import com.app.hoverrobot.ui.composeUtils.CustomButton
 import com.app.hoverrobot.ui.composeUtils.CustomSlider
 
 @Composable
@@ -207,17 +207,17 @@ private fun PidSettingsCardHeader(
 
         Spacer(Modifier.weight(1F))
 
-        CustomOutlinedButton(
+        CustomButton(
             title = R.string.btn_pid_reset,
             enable = enablePidReset
         ) { onPidReset() }
 
-        CustomOutlinedButton(
+        CustomButton(
             title = R.string.btn_pid_save,
             enable = enablePidSave
         ) { buttonSaveEnable = onPidSave() }
 
-        CustomOutlinedButton(
+        CustomButton(
             title = R.string.btn_pid_sync
         ) { onPidSync() }
 
@@ -341,10 +341,10 @@ private fun GeneralSettingsItem(
 
         Spacer(Modifier.weight(1F))
 
-        CustomOutlinedButton(firstButtonTitle, onClick = onClickFirst, isLoading = isLoading)
+        CustomButton(firstButtonTitle, onClick = onClickFirst, isLoading = isLoading)
 
         secondButtonTitle?.let { title ->
-            CustomOutlinedButton(title, onClick = onClickSecond ?: {}, isLoading = isLoading)
+            CustomButton(title, onClick = onClickSecond ?: {}, isLoading = isLoading)
         }
     }
 
