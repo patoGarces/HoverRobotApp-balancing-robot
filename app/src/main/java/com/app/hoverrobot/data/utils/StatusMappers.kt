@@ -5,6 +5,7 @@ import androidx.annotation.ColorRes
 import androidx.compose.ui.graphics.Color
 import androidx.core.content.ContextCompat
 import com.app.hoverrobot.R
+import com.app.hoverrobot.ui.composeUtils.CustomColors
 
 object StatusMapper {
     private val mapStatusConnectionString = mapOf(
@@ -73,13 +74,16 @@ object StatusMapper {
         else mapStatusRobotColor[this] ?: R.color.status_red
     }
 
-    fun StatusRobot.colorStatusLog(): Int {
-        return  mapStatusRobotColor[this] ?: R.color.status_red
-    }
-
-    fun Context.colorFromRes(@ColorRes colorRes: Int): Color {
-        return Color(ContextCompat.getColor(this, colorRes))
-    }
+    fun StatusRobot.toColor(): Color =
+        when (this) {
+            StatusRobot.INIT -> CustomColors.StatusOrange
+            StatusRobot.DISABLE -> Color.Gray
+            StatusRobot.ARMED -> CustomColors.StatusTurquesa
+            StatusRobot.STABILIZED -> CustomColors.StatusBlue
+            StatusRobot.CHARGING -> CustomColors.StatusOrange
+            StatusRobot.TEST_MODE -> CustomColors.StatusOrange
+            else -> CustomColors.StatusRed
+        }
 }
 
 enum class StatusConnection {
