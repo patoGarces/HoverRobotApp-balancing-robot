@@ -44,6 +44,7 @@ import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreenAction.O
 @Composable
 fun NavigationScreen(
     isRobotStabilized: Boolean,
+    isRobotConnected: Boolean,
     newDegress: State<Int>,
     enableSeekbarsYaw: Boolean = false,
     onActionScreen: (NavigationScreenAction) -> Unit
@@ -61,6 +62,8 @@ fun NavigationScreen(
             delay(50)
         }
     }
+
+    if (!isRobotConnected) return
 
     if (showDialog) {
         DistancePickerDialog(
@@ -282,6 +285,7 @@ fun NavigationButtonPreview() {
     ) {
         NavigationScreen(
             newDegress = dummySetDegress,
+            isRobotConnected = false,
             isRobotStabilized = true,
         ) { }
     }
