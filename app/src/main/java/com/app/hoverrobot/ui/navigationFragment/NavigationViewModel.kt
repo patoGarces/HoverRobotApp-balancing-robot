@@ -15,7 +15,6 @@ import com.app.hoverrobot.data.utils.StatusConnection
 import com.app.hoverrobot.data.utils.StatusRobot
 import com.app.hoverrobot.data.utils.ToolBox.ioScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -26,6 +25,7 @@ class NavigationViewModel @Inject constructor(
     private val commsRepository: CommsRepository,
     private val storeSettings: StoreSettings
 ) : ViewModel() {
+
     private var _dynamicData: MutableLiveData<RobotDynamicData> = MutableLiveData()
     val dynamicData: LiveData<RobotDynamicData> get() = _dynamicData
 

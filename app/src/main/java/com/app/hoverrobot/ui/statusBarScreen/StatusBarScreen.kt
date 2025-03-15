@@ -1,5 +1,7 @@
-package com.app.hoverrobot.ui.statusBarFragment
+package com.app.hoverrobot.ui.statusBarScreen
 
+import android.content.Intent
+import android.provider.Settings
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -11,10 +13,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -22,59 +20,64 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.app.hoverrobot.R
-import com.app.hoverrobot.data.models.Battery
-import com.app.hoverrobot.data.models.comms.ConnectionState
 import com.app.hoverrobot.data.utils.StatusConnection
 import com.app.hoverrobot.data.utils.StatusMapper.toColor
 import com.app.hoverrobot.data.utils.StatusMapper.toStringRes
 import com.app.hoverrobot.data.utils.StatusRobot
 import com.app.hoverrobot.ui.composeUtils.CustomButton
 import com.app.hoverrobot.ui.composeUtils.CustomTextStyles
+import androidx.compose.ui.platform.LocalContext
+import com.app.hoverrobot.ui.statusBarScreen.composables.BatteryIndicator
+import com.app.hoverrobot.ui.statusBarScreen.composables.NetworkIndicators
 
 @Composable
-fun StatusBarScreen(
-    statusRobot: State<StatusRobot>,
-    connectionState: State<ConnectionState>,
-    batteryState: State<Battery>,
-    tempImu: State<Float>,
-    onClickState: () -> Unit
-) {
+fun StatusBarScreen(statusBarViewModel: StatusBarViewModel = hiltViewModel()) {
+
+    val context = LocalContext.current
     Row (
-        modifier = Modifier.fillMaxWidth().height(35.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(35.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Row(Modifier.weight(1F).fillMaxHeight(), horizontalArrangement = Arrangement.Start) {
+        Row(
+            Modifier
+                .weight(1F)
+                .fillMaxHeight(), horizontalArrangement = Arrangement.Start) {
             NetworkIndicators(
                 Modifier,
-                connectionState
+                statusBarViewModel.connectionState
             )
         }
 
         CustomButton(
             modifier = Modifier.widthIn(min = 200.dp),
-            title = stringResource(statusRobot.value.toStringRes(connectionState.value.status)).uppercase(),
-            color = statusRobot.value.toColor(connectionState.value.status),
-            onClick = onClickState
+            title = stringResource(statusBarViewModel.statusRobot.toStringRes(statusBarViewModel.connectionState.status)).uppercase(),
+            color = statusBarViewModel.statusRobot.toColor(statusBarViewModel.connectionState.status),
+            onClick = { context.startActivity(Intent(Settings.ACTION_WIFI_SETTINGS)) }
         )
 
         Row(Modifier.weight(1F), horizontalArrangement = Arrangement.End) {
             
             TempIndicator(
                 modifier = Modifier,
-                tempImu = tempImu
+                tempImu = statusBarViewModel.tempImu
             )
 
             VerticalDivider(
-                modifier = Modifier.fillMaxHeight().padding(vertical = 8.dp),
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .padding(vertical = 8.dp),
                 thickness = 1.dp,
                 color = Color.Red
             )
 
             BatteryIndicator(
-                batteryState = batteryState,
-                isConnected = connectionState.value.status == StatusConnection.CONNECTED,
-                isMcbOff = statusRobot.value == StatusRobot.ERROR_MCB_CONNECTION
+                batteryState = statusBarViewModel.battery,
+                isConnected = statusBarViewModel.connectionState.status == StatusConnection.CONNECTED,
+                isMcbOff = statusBarViewModel.statusRobot == StatusRobot.ERROR_MCB_CONNECTION
             )
         }
     }
@@ -83,7 +86,7 @@ fun StatusBarScreen(
 @Composable
 private fun TempIndicator(
     modifier: Modifier,
-    tempImu: State<Float>
+    tempImu: Float
 ) {
 
     Row(
@@ -101,7 +104,7 @@ private fun TempIndicator(
 
         Text(
             modifier = Modifier,
-            text = stringResource(R.string.placeholder_temp,tempImu.value),
+            text = stringResource(R.string.placeholder_temp,tempImu),
             style = CustomTextStyles.textStyle16Bold
         )
     }
@@ -114,15 +117,15 @@ private fun TempIndicator(
 @Composable
 fun StatusBarScreenPreview() {
 
-    val dummyStatusRobot = remember { mutableStateOf(StatusRobot.INIT) }
-    val dummyStatusConnection = remember { mutableStateOf(ConnectionState()) }
-    val dummyTempImu = remember { mutableFloatStateOf(19.2F) }
-    val dummyBattery = remember { mutableStateOf(Battery()) }
+//    val dummyStatusRobot = remember { mutableStateOf(StatusRobot.INIT) }
+//    val dummyStatusConnection = remember { mutableStateOf(ConnectionState()) }
+//    val dummyTempImu = remember { mutableFloatStateOf(19.2F) }
+//    val dummyBattery = remember { mutableStateOf(Battery()) }
 
     StatusBarScreen(
-        statusRobot = dummyStatusRobot,
-        connectionState = dummyStatusConnection,
-        tempImu = dummyTempImu,
-        batteryState = dummyBattery
-    ) { }
+//        statusRobot = dummyStatusRobot,
+//        connectionState = dummyStatusConnection,
+//        tempImu = dummyTempImu,
+//        batteryState = dummyBattery
+    )
 }
