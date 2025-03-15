@@ -229,7 +229,7 @@ fun SettingsChartMenuScreen(
 
             item {
                 CustomButton(
-                    title = R.string.btn_clear_title,
+                    title = stringResource(R.string.btn_clear_title),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(8.dp),

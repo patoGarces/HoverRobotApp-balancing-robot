@@ -208,17 +208,20 @@ private fun PidSettingsCardHeader(
         Spacer(Modifier.weight(1F))
 
         CustomButton(
-            title = R.string.btn_pid_reset,
+            title = stringResource(R.string.btn_pid_reset),
+            modifier = Modifier.padding(horizontal = 8.dp),
             enable = enablePidReset
         ) { onPidReset() }
 
         CustomButton(
-            title = R.string.btn_pid_save,
+            title = stringResource(R.string.btn_pid_save),
+            modifier = Modifier.padding(horizontal = 8.dp),
             enable = enablePidSave
         ) { buttonSaveEnable = onPidSave() }
 
         CustomButton(
-            title = R.string.btn_pid_sync
+            title = stringResource(R.string.btn_pid_sync),
+            modifier = Modifier.padding(horizontal = 8.dp),
         ) { onPidSync() }
 
         ExposedDropdownMenuBox(
@@ -341,10 +344,10 @@ private fun GeneralSettingsItem(
 
         Spacer(Modifier.weight(1F))
 
-        CustomButton(firstButtonTitle, onClick = onClickFirst, isLoading = isLoading)
+        CustomButton(stringResource(firstButtonTitle), onClick = onClickFirst, isLoading = isLoading)
 
         secondButtonTitle?.let { title ->
-            CustomButton(title, onClick = onClickSecond ?: {}, isLoading = isLoading)
+            CustomButton(stringResource(title), onClick = onClickSecond ?: {}, isLoading = isLoading)
         }
     }
 

@@ -20,8 +20,7 @@
     <string name="title_mainboard_temp">Mainboard</string>
     <string name="title_imu_temp">IMU</string>
 
-    <string name="battery_voltage_unknown">-V</string>
-    <string name="battery_percent_unknown">-%</string>
+    <string name="variable_not_available">N/A</string>
 
     <!--    Placeholders-->
     <string name="placeholder_battery_percent">%s %%</string>

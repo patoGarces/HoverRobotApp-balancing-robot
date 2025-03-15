@@ -27,15 +27,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.app.hoverrobot.R
 import com.app.hoverrobot.data.utils.StatusConnection
-import com.app.hoverrobot.data.utils.StatusMapper.colorRes
-import com.app.hoverrobot.data.utils.StatusMapper.stringRes
+import com.app.hoverrobot.data.utils.StatusMapper.toColor
+import com.app.hoverrobot.data.utils.StatusMapper.toStringRes
 import com.app.hoverrobot.data.utils.StatusRobot
 
 @Composable
@@ -67,14 +66,14 @@ fun StatusDataScreen(
 
         NormalComponent(
             title = stringResource(R.string.title_status_robot),
-            value = stringResource(statusRobot.stringRes(statusConnection)),
-            colorOutline = colorResource(statusRobot.colorRes(statusConnection)),
+            value = stringResource(statusRobot.toStringRes(statusConnection)),
+            colorOutline = statusRobot.toColor(statusConnection),
         ) { }
 
         NormalComponent(
             title = stringResource(R.string.title_connection_status),
-            value = stringResource(statusConnection.stringRes()),
-            colorOutline = colorResource(statusConnection.colorRes())
+            value = stringResource(statusConnection.toStringRes()),
+            colorOutline = statusConnection.toColor()
         ) {
             onNewAction(OnActionStatusDataScreen.OnActionOpenNetworkSettings)
         }
