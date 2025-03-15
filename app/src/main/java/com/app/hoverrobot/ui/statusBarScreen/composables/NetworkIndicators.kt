@@ -1,4 +1,4 @@
-package com.app.hoverrobot.ui.statusBarFragment
+package com.app.hoverrobot.ui.statusBarScreen.composables
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,9 +10,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -28,7 +25,7 @@ import com.app.hoverrobot.ui.composeUtils.CustomTextStyles.textStyle16Bold
 @Composable
 fun NetworkIndicators(
     modifier: Modifier,
-    connectionState: State<ConnectionState>
+    connectionState: ConnectionState
 ) {
 
     Row(
@@ -38,7 +35,7 @@ fun NetworkIndicators(
     ) {
 
         Icon(
-            painter = painterResource(id = strengthIconMapper(connectionState.value.strength)),
+            painter = painterResource(id = strengthIconMapper(connectionState.strength)),
             modifier = Modifier.fillMaxHeight(),
             tint = Color.White,
             contentDescription = ""
@@ -46,7 +43,7 @@ fun NetworkIndicators(
 
         Text(
             modifier = Modifier.padding(start = 8.dp),
-            text = stringResource(R.string.placeholder_rssi,connectionState.value.rssi),
+            text = stringResource(R.string.placeholder_rssi,connectionState.rssi),
             style = textStyle16Bold
         )
 
@@ -57,7 +54,7 @@ fun NetworkIndicators(
         )
 
         Text(
-            text = stringResource(R.string.placeholder_packets_rate,connectionState.value.receiverPacketRates),
+            text = stringResource(R.string.placeholder_packets_rate,connectionState.receiverPacketRates),
             style = textStyle16Bold
         )
     }
@@ -67,11 +64,10 @@ fun NetworkIndicators(
 @Composable
 private fun NetworkIndicatorsPreview() {
 
-    val dummyConnectionState = remember { mutableStateOf(ConnectionState()) }
     Column {
         NetworkIndicators(
             Modifier.height(35.dp),
-            connectionState = dummyConnectionState
+            connectionState = ConnectionState()
         )
     }
 }

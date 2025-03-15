@@ -1,7 +1,6 @@
-package com.app.hoverrobot.ui.statusBarFragment
+package com.app.hoverrobot.ui.statusBarScreen
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.app.hoverrobot.data.models.Battery
 import com.app.hoverrobot.data.models.comms.ConnectionState
@@ -12,45 +11,42 @@ import com.app.hoverrobot.data.utils.StatusRobot
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 
 @HiltViewModel
-class StatusBarViewModel @Inject constructor(
+open class StatusBarViewModel @Inject constructor(
     private val commsRepository: CommsRepository
 ): ViewModel() {
 
-    private var _battery = MutableLiveData(Battery(false,0,0F))
-    val battery : LiveData<Battery> = _battery
+    var battery by mutableStateOf(Battery())
 
-    private var _tempImu = MutableLiveData(0F)
-    val tempImu : LiveData<Float> = _tempImu
+    var tempImu by mutableFloatStateOf(0F)
 
-    private var _statusRobot = MutableLiveData(StatusRobot.INIT)
-    val statusRobot : LiveData<StatusRobot> = _statusRobot
+    var statusRobot by mutableStateOf(StatusRobot.INIT)
 
-    private var _connectionState = MutableLiveData<ConnectionState>()
-    val connectionState: LiveData<ConnectionState> = _connectionState
+    var connectionState by mutableStateOf(ConnectionState())
 
     init {
         ioScope.launch {
             commsRepository.dynamicDataRobotFlow.collect {
-                _battery.postValue(
-                    Battery(
+                battery = Battery(
                         it.isCharging,
                         it.batVoltage.toPercentLevel(),
                         it.batVoltage
                     )
-                )
-                _tempImu.postValue(it.tempImu)
-                _statusRobot.postValue(it.statusCode)
+
+                tempImu = it.tempImu
+                statusRobot = it.statusCode
             }
         }
 
 
         ioScope.launch {
             commsRepository.connectionState.collect {
-                _connectionState.postValue(it)
+                connectionState = it
             }
         }
     }
-
 }

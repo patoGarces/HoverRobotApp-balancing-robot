@@ -23,7 +23,8 @@ import com.app.hoverrobot.ui.navigationFragment.NavigationFragment
 import com.app.hoverrobot.ui.navigationFragment.NavigationViewModel
 import com.app.hoverrobot.ui.settingsFragment.SettingsFragment
 import com.app.hoverrobot.ui.settingsFragment.SettingsFragmentViewModel
-import com.app.hoverrobot.ui.statusBarFragment.StatusBarViewModel
+import com.app.hoverrobot.ui.statusBarScreen.StatusBarScreen
+import com.app.hoverrobot.ui.statusBarScreen.StatusBarViewModel
 import com.app.hoverrobot.ui.statusDataScreen.StatusDataViewModel
 import com.app.hoverrobot.ui.statusDataScreen.StatusDataScreen
 import com.google.android.material.tabs.TabLayoutMediator
@@ -46,6 +47,12 @@ class MainActivity : AppCompatActivity() {
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // TODO: esto vuela cuando se migre todo a compose
+        val composeView = findViewById<ComposeView>(R.id.statusBarView)
+        composeView.setContent {
+            StatusBarScreen()
+        }
 
 //        webViewSetup()
         setupViewPagerAndTabLayout()
@@ -75,7 +82,7 @@ class MainActivity : AppCompatActivity() {
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
                 // Controlar la visibilidad del StatusBarFragment
-                binding.statusBarContainer.isVisible = position != 0
+                binding.statusBarView.isVisible = position != 0
             }
         })
 
