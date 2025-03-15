@@ -1,5 +1,7 @@
-package com.app.hoverrobot.ui.statusDataFragment.compose
+package com.app.hoverrobot.ui.statusDataScreen
 
+import android.content.Intent
+import android.provider.Settings
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -15,36 +17,43 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.app.hoverrobot.BuildConfig
 import com.app.hoverrobot.R
-import com.app.hoverrobot.data.utils.StatusConnection
 import com.app.hoverrobot.data.utils.StatusMapper.toColor
 import com.app.hoverrobot.data.utils.StatusMapper.toStringRes
-import com.app.hoverrobot.data.utils.StatusRobot
 import com.app.hoverrobot.ui.composeUtils.CustomButton
 import com.app.hoverrobot.ui.composeUtils.CustomSelectorComponent
 import com.app.hoverrobot.ui.composeUtils.CustomTextStyles
+import com.app.hoverrobot.ui.composeUtils.TemperatureComponent
+import com.app.hoverrobot.ui.navigationFragment.NavigationViewModel
 
 @Composable
 fun StatusDataScreen(
-    statusRobot: StatusRobot,
-    statusConnection: StatusConnection,
-    defaultAggressiveness: Int,
-    mainboardTemp: Float?,
-    motorControllerTemp: Float?,
-    imuTemp: Float?,
-    version: String,
-    localIp: String?,
-    onOpenNetworkSettings: () -> Unit,
-    onAggressivenessChange: (Int) -> Unit
-
+    statusDataViewModel: StatusDataViewModel = hiltViewModel(),
+    navigationViewModel: NavigationViewModel = hiltViewModel(),
 ) {
+
+    
+    /*
+     * TODO: pendientes:
+     *  - Lllamar a startActivity
+     * - Bug en temperaturas: nunca son null, y tampoco vuelven a null al desconectarse
+     * - migrar a mutable state el aggresivenessLevel
+     */
+
+    val context = LocalContext.current
+    val defaultAggressiveness = navigationViewModel.aggressivenessLevel.observeAsState(0).value
+
     Column(
         Modifier
             .fillMaxSize()
@@ -59,21 +68,21 @@ fun StatusDataScreen(
             defaultOption = defaultAggressiveness,
             options = options
         ) { optionSelected ->
-            onAggressivenessChange(optionSelected)
+            navigationViewModel.setLevelAggressiveness(optionSelected)
         }
 
         NormalSection(
             title = R.string.title_status_robot,
-            buttonText = statusRobot.toStringRes(statusConnection),
-            colorOutline = statusRobot.toColor(statusConnection),
+            buttonText = statusDataViewModel.gralStatus.toStringRes(statusDataViewModel.statusConnection),
+            colorOutline = statusDataViewModel.gralStatus.toColor(statusDataViewModel.statusConnection),
         ) { }
 
         NormalSection(
             title = R.string.title_connection_status,
-            buttonText = statusConnection.toStringRes(),
-            colorOutline = statusConnection.toColor()
+            buttonText = statusDataViewModel.statusConnection.toStringRes(),
+            colorOutline = statusDataViewModel.statusConnection.toColor()
         ) {
-            onOpenNetworkSettings()
+            context.startActivity(Intent(Settings.ACTION_WIFI_SETTINGS))
         }
 
         Row(
@@ -85,21 +94,24 @@ fun StatusDataScreen(
         ) {
             TemperatureComponent(
                 R.string.title_mainboard_temp,
-                mainboardTemp
+                statusDataViewModel.mainboardTemp
             )
 
             TemperatureComponent(
                 R.string.title_motorboard_temp,
-                motorControllerTemp
+                statusDataViewModel.motorControllerTemp
             )
 
             TemperatureComponent(
                 R.string.title_imu_temp,
-                imuTemp
+                statusDataViewModel.imuTemp
             )
         }
 
-        VersionAndIp(version, localIp)
+        VersionAndIp(
+            version = stringResource(R.string.version_placeholder,BuildConfig.VERSION_NAME),
+            localIp = statusDataViewModel.localIp
+        )
     }
 }
 
@@ -209,16 +221,16 @@ private fun AggressivenessScreenPreview() {
             .background(Color.Black)
     ) {
         StatusDataScreen(
-            statusRobot = StatusRobot.STABILIZED,
-            statusConnection = StatusConnection.CONNECTED,
-            defaultAggressiveness = 0,
-            mainboardTemp = 12.5F,
-            motorControllerTemp = 50F,
-            imuTemp = 80F,
-            version = "V1.2.3",
-            localIp = "255.255.255.255",
-            onAggressivenessChange = {},
-            onOpenNetworkSettings = {}
+//            statusRobot = StatusRobot.STABILIZED,
+//            statusConnection = StatusConnection.CONNECTED,
+//            defaultAggressiveness = 0,
+//            mainboardTemp = 12.5F,
+//            motorControllerTemp = 50F,
+//            imuTemp = 80F,
+//            version = "V1.2.3",
+//            localIp = "255.255.255.255",
+//            onAggressivenessChange = {},
+//            onOpenNetworkSettings = {}
         )
     }
 }
