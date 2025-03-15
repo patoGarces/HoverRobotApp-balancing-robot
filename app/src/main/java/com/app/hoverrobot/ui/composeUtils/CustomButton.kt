@@ -29,7 +29,7 @@ import com.app.hoverrobot.R
 
 @Composable
 fun CustomButton(
-    @StringRes title: Int,
+    title: String,
     modifier: Modifier = Modifier,
     filled: Boolean = false,
     color: Color = Color.Red,
@@ -67,7 +67,7 @@ fun CustomButton(
                 }
             } else {
                 Text(
-                    text = stringResource(title),
+                    text = title,
                     color = if (enable) Color.White else Color.Gray,
                     textAlign = TextAlign.Center
                 )
@@ -82,13 +82,13 @@ private fun CustomButtonPreview() {
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         CustomButton(
-            title = R.string.btn_clear_title
+            title = stringResource(R.string.btn_clear_title)
         ) { }
 
         Spacer(Modifier.height(8.dp))
 
         CustomButton(
-            title = R.string.btn_clear_title,
+            title = stringResource(R.string.btn_clear_title),
             filled = true
         ) { }
 
@@ -96,7 +96,7 @@ private fun CustomButtonPreview() {
 
 
         CustomButton(
-            title = R.string.btn_pid_sync,
+            title = stringResource(R.string.btn_pid_sync),
             enable = false
         ) { }
 
@@ -104,7 +104,7 @@ private fun CustomButtonPreview() {
 
 
         CustomButton(
-            title = R.string.btn_clear_title,
+            title = stringResource(R.string.btn_clear_title),
             isLoading = true
         ) { }
     }

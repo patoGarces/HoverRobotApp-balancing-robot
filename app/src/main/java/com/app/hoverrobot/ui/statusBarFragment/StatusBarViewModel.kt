@@ -5,10 +5,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.app.hoverrobot.data.models.Battery
 import com.app.hoverrobot.data.models.comms.ConnectionState
+import com.app.hoverrobot.data.models.toPercentLevel
 import com.app.hoverrobot.data.utils.ToolBox.ioScope
 import com.app.hoverrobot.data.repositories.CommsRepository
 import com.app.hoverrobot.data.utils.StatusRobot
-import com.app.hoverrobot.data.utils.ToolBox.toPercentLevel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject

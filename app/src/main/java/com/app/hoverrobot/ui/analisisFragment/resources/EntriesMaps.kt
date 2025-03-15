@@ -2,7 +2,7 @@ package com.app.hoverrobot.ui.analisisFragment.resources
 
 import com.app.hoverrobot.R
 import com.app.hoverrobot.data.models.comms.RobotDynamicData
-import com.app.hoverrobot.data.utils.ToolBox.toPercentLevel
+import com.app.hoverrobot.data.models.toPercentLevel
 import com.github.mikephil.charting.data.Entry
 
 object EntriesMaps {
