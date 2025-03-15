@@ -20,14 +20,14 @@ class StatusDataViewModel @Inject constructor(
     private var _gralStatus = MutableLiveData(StatusRobot.INIT)
     val gralStatus: LiveData<StatusRobot> = _gralStatus
 
-    private var _motorControllerTemp = MutableLiveData(0F)
-    val motorControllerTemp: LiveData<Float> = _motorControllerTemp
+    private var _motorControllerTemp = MutableLiveData<Float?>(null)
+    val motorControllerTemp: LiveData<Float?> = _motorControllerTemp
 
-    private var _mainboardTemp = MutableLiveData(0F)
-    val mainboardTemp: LiveData<Float> = _mainboardTemp
+    private var _mainboardTemp = MutableLiveData<Float?>(null)
+    val mainboardTemp: LiveData<Float?> = _mainboardTemp
 
-    private var _imuTemp = MutableLiveData(0F)
-    val imuTemp: LiveData<Float> = _imuTemp
+    private var _imuTemp = MutableLiveData<Float?>(null)
+    val imuTemp: LiveData<Float?> = _imuTemp
 
     private var _batteryStatus = MutableLiveData(Battery(false,0, 0F))
     val batteryStatus: LiveData<Battery> = _batteryStatus

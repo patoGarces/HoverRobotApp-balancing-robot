@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.app.hoverrobot.R
 import com.app.hoverrobot.data.models.comms.ConnectionState
 import com.app.hoverrobot.data.utils.ImagebuttonsMappers.strengthIconMapper
-import com.app.hoverrobot.ui.composeUtils.CustomTextStyles.textStyleStatusBar
+import com.app.hoverrobot.ui.composeUtils.CustomTextStyles.textStyle16Bold
 
 @Composable
 fun NetworkIndicators(
@@ -47,7 +47,7 @@ fun NetworkIndicators(
         Text(
             modifier = Modifier.padding(start = 8.dp),
             text = stringResource(R.string.placeholder_rssi,connectionState.value.rssi),
-            style = textStyleStatusBar
+            style = textStyle16Bold
         )
 
         VerticalDivider(
@@ -58,7 +58,7 @@ fun NetworkIndicators(
 
         Text(
             text = stringResource(R.string.placeholder_packets_rate,connectionState.value.receiverPacketRates),
-            style = textStyleStatusBar
+            style = textStyle16Bold
         )
     }
 }

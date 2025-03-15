@@ -138,11 +138,10 @@ private fun PidSettingsCard(
     Column(
         Modifier
             .fillMaxWidth()
-            .height(250.dp)
-            .border(width = 2.dp, color = Color.White, shape = RoundedCornerShape(8.dp))
-            .verticalScroll(rememberScrollState())
+            .padding(vertical = 8.dp)
+            .border(width = 1.dp, color = Color.White, shape = RoundedCornerShape(8.dp))
     ) {
-        Column(Modifier.padding(vertical = 8.dp)) {
+        Column(Modifier.padding(vertical = 16.dp)) {
             SliderParam(
                 nameId = R.string.pid_parameter_p_title,
                 initialValue = newPidSettings.kp
@@ -164,7 +163,10 @@ private fun PidSettingsCard(
 
             SliderParam(
                 nameId = R.string.pid_parameter_center_title,
-                edgeIndicators = Pair(stringResource(R.string.pid_center_back),stringResource(R.string.pid_center_front)),
+                edgeIndicators = Pair(
+                    stringResource(R.string.pid_center_back),
+                    stringResource(R.string.pid_center_front)
+                ),
                 initialValue = newPidSettings.centerAngle,
                 range = -10F..10F
             ) { newCenterAngle ->
@@ -300,7 +302,7 @@ private fun GeneralSettingsCard(
         Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
-            .border(width = 2.dp, color = Color.White, shape = RoundedCornerShape(8.dp))
+            .border(width = 1.dp, color = Color.White, shape = RoundedCornerShape(8.dp))
     ) {
         GeneralSettingsItem(
             titleItem = R.string.general_commands_calibrate_imu_title,
@@ -389,7 +391,7 @@ private fun SliderParam(
     Column(
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = 32.dp)
+            .padding(horizontal = 16.dp)
     ) {
         Text(
             text = stringResource(nameId),

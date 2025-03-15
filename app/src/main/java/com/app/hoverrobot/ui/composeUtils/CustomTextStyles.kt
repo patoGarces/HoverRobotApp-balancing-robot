@@ -7,10 +7,24 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 
 object CustomTextStyles {
-    val textStyleStatusBar = TextStyle(
+    val textStyle16Bold = TextStyle(
         fontSize = 16.sp,
         color = Color.White,
         fontWeight = FontWeight.Bold,
+        textAlign = TextAlign.Center
+    )
+
+    val textStyle14Bold = TextStyle(
+        fontSize = 14.sp,
+        color = Color.White,
+        fontWeight = FontWeight.Bold,
+        textAlign = TextAlign.Center
+    )
+
+    val textStyle14Normal = TextStyle(
+        fontSize = 14.sp,
+        color = Color.White,
+        fontWeight = FontWeight.Normal,
         textAlign = TextAlign.Center
     )
 }

@@ -27,7 +27,7 @@ import com.app.hoverrobot.data.models.BATTERY_LEVEL_LOW
 import com.app.hoverrobot.data.models.BATTERY_LEVEL_MEDIUM
 import com.app.hoverrobot.data.models.Battery
 import com.app.hoverrobot.ui.composeUtils.CustomColors
-import com.app.hoverrobot.ui.composeUtils.CustomTextStyles.textStyleStatusBar
+import com.app.hoverrobot.ui.composeUtils.CustomTextStyles.textStyle16Bold
 
 val Float.inNormalRange: Boolean
     get() = this in 30F..50F
@@ -93,7 +93,7 @@ fun BatteryIndicator(
     ) {
         Text(
             text = batteryVoltageText,
-            style = textStyleStatusBar
+            style = textStyle16Bold
         )
 
         Icon(
@@ -107,7 +107,7 @@ fun BatteryIndicator(
 
         Text(
             text = batteryPercentText,
-            style = textStyleStatusBar
+            style = textStyle16Bold
         )
     }
 }

@@ -12,6 +12,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.ClearAll
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -30,18 +32,19 @@ import androidx.compose.ui.unit.sp
 import com.app.hoverrobot.data.utils.StatusMapper.toColor
 import com.app.hoverrobot.data.utils.StatusRobot
 import com.app.hoverrobot.data.utils.formatMillisToDate
+import com.app.hoverrobot.ui.composeUtils.CustomFloatingButton
+import java.nio.file.WatchEvent
 import kotlin.collections.mutableListOf
 
 @Composable
 fun LogScreen(
+    modifier: Modifier,
     listOfLogs: MutableList<Triple<Long, StatusRobot, String?>>
 ) {
     val scrollState = rememberLazyListState()
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
+        modifier = modifier
             .border(border = BorderStroke(1.dp, Color.White), shape = RoundedCornerShape(8.dp))
     ) {
         LazyColumn(
@@ -57,7 +60,12 @@ fun LogScreen(
                             append("${listOfLogs[log].first.formatMillisToDate()} ")
                         }
                         // Mensaje en negrita
-                        withStyle(style = SpanStyle(color = listOfLogs[log].second.toColor(), fontWeight = FontWeight.Bold)) {
+                        withStyle(
+                            style = SpanStyle(
+                                color = listOfLogs[log].second.toColor(),
+                                fontWeight = FontWeight.Bold
+                            )
+                        ) {
                             append("${listOfLogs[log].second.name} ")
                         }
                         // Descripción en blanco
@@ -73,19 +81,11 @@ fun LogScreen(
             }
         }
 
-        IconButton(
-            onClick = { listOfLogs.clear() },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp)
-                .border(width = 2.dp, color = Color.Red, shape = CircleShape)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Clear,
-                tint = Color.White,
-                contentDescription = "Clear logs"
-            )
-        }
+        CustomFloatingButton(
+            modifier = Modifier.align(Alignment.BottomEnd),
+            icon = Icons.Default.Delete,
+            color = Color.Red
+        ) { listOfLogs.clear() }
     }
 }
 
@@ -104,6 +104,9 @@ private fun LogScreenPreview() {
         )
     }
     Column {
-        LogScreen(listOfLogs = simulatedLog)
+        LogScreen(
+            modifier = Modifier,
+            listOfLogs = simulatedLog
+        )
     }
 }

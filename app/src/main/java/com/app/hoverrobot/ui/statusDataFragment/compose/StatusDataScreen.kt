@@ -1,29 +1,20 @@
 package com.app.hoverrobot.ui.statusDataFragment.compose
 
-import androidx.compose.foundation.BorderStroke
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -36,76 +27,79 @@ import com.app.hoverrobot.data.utils.StatusConnection
 import com.app.hoverrobot.data.utils.StatusMapper.toColor
 import com.app.hoverrobot.data.utils.StatusMapper.toStringRes
 import com.app.hoverrobot.data.utils.StatusRobot
+import com.app.hoverrobot.ui.composeUtils.CustomButton
+import com.app.hoverrobot.ui.composeUtils.CustomSelectorComponent
+import com.app.hoverrobot.ui.composeUtils.CustomTextStyles
 
 @Composable
 fun StatusDataScreen(
     statusRobot: StatusRobot,
     statusConnection: StatusConnection,
     defaultAggressiveness: Int,
-    mainboardTemp: Float,
-    motorControllerTemp: Float,
-    imuTemp: Float,
+    mainboardTemp: Float?,
+    motorControllerTemp: Float?,
+    imuTemp: Float?,
     version: String,
     localIp: String?,
-    onNewAction: (OnActionStatusDataScreen) -> Unit
+    onOpenNetworkSettings: () -> Unit,
+    onAggressivenessChange: (Int) -> Unit
+
 ) {
     Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+        Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         TitleScreen(stringResource(R.string.title_status_fragment))
 
-        val options = listOf("Suave","Moderado","Agresivo")
-        SelectorComponent(
-            stringResource(R.string.title_aggressiveness),
-            defaultAggressiveness,
-            options
+        val options = listOf("Suave", "Moderado", "Agresivo")
+        SelectorSection (
+            title = stringResource(R.string.title_aggressiveness),
+            defaultOption = defaultAggressiveness,
+            options = options
         ) { optionSelected ->
-            onNewAction(OnActionStatusDataScreen.OnAggressivenessChange(optionSelected))
+            onAggressivenessChange(optionSelected)
         }
 
-        NormalComponent(
-            title = stringResource(R.string.title_status_robot),
-            value = stringResource(statusRobot.toStringRes(statusConnection)),
+        NormalSection(
+            title = R.string.title_status_robot,
+            buttonText = statusRobot.toStringRes(statusConnection),
             colorOutline = statusRobot.toColor(statusConnection),
         ) { }
 
-        NormalComponent(
-            title = stringResource(R.string.title_connection_status),
-            value = stringResource(statusConnection.toStringRes()),
+        NormalSection(
+            title = R.string.title_connection_status,
+            buttonText = statusConnection.toStringRes(),
             colorOutline = statusConnection.toColor()
         ) {
-            onNewAction(OnActionStatusDataScreen.OnActionOpenNetworkSettings)
+            onOpenNetworkSettings()
         }
 
         Row(
-            Modifier.fillMaxWidth().weight(1f),
+            Modifier
+                .fillMaxWidth()
+                .weight(1f),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            if (mainboardTemp != 0.0F) {
-                TemperatureComponent(
-                    stringResource(R.string.title_mainboard_temp),
-                    mainboardTemp
-                )
-            }
+            TemperatureComponent(
+                R.string.title_mainboard_temp,
+                mainboardTemp
+            )
 
-            if (motorControllerTemp != 0.0F) {
-                TemperatureComponent(
-                    stringResource(R.string.title_motorboard_temp),
-                    motorControllerTemp
-                )
-            }
+            TemperatureComponent(
+                R.string.title_motorboard_temp,
+                motorControllerTemp
+            )
 
-            if (imuTemp != 0.0F) {
-                TemperatureComponent(
-                    stringResource(R.string.title_imu_temp),
-                    imuTemp
-                )
-            }
+            TemperatureComponent(
+                R.string.title_imu_temp,
+                imuTemp
+            )
         }
 
-        VersionAndIp(version,localIp)
+        VersionAndIp(version, localIp)
     }
 }
 
@@ -126,98 +120,31 @@ private fun TitleScreen(text: String) {
 }
 
 @Composable
-private fun SelectorComponent(
-    title: String,
-    defaultOption: Int,
-    options: List<String>,
-    optionSelected: (Int) -> Unit
-) {
-    var selectedIndex by remember { mutableIntStateOf(defaultOption) }
-
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = title,
-            color = Color.White
-        )
-
-        SingleChoiceSegmentedButtonRow(
-            Modifier.width(280.dp)
-        ) {
-            options.forEachIndexed { index, label ->
-                SegmentedButton(
-                    colors = SegmentedButtonDefaults.colors(
-                        activeContainerColor = Color.Red,               // Color de fondo cuando está seleccionado
-                        inactiveContainerColor = Color.Transparent,     // Color de fondo cuando no está seleccionado
-                        activeContentColor = Color.White,               // Color del texto cuando está seleccionado
-                        inactiveContentColor = Color.White              // Color del texto cuando no está seleccionado
-                    ),
-                    selected = selectedIndex == index,
-                    onClick = {
-                        selectedIndex = index
-                        optionSelected(index)
-                              },
-                    shape = SegmentedButtonDefaults.itemShape(
-                        index = index,
-                        count = options.size
-                    ),
-                    label = {
-                        Text(
-                            color = Color.White,
-                            text = label,
-                            fontSize = 14.sp
-                        )
-                    }
-                )
-            }
-        }
-    }
-
-    HorizontalDivider(
-        Modifier.padding(horizontal = 8.dp),
-        thickness = 1.dp
-    )
-}
-
-@Composable
-private fun NormalComponent(
-    title: String,
-    value: String,
+private fun NormalSection(
+    @StringRes title: Int,
+    @StringRes buttonText: Int,
     colorOutline: Color,
     onClick: () -> Unit
 ) {
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 16.dp, vertical = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = title,
-            color = Color.White
+            text = stringResource(title),
+            color = Color.White,
+            style = CustomTextStyles.textStyle14Normal
         )
 
-        Button(
-            modifier = Modifier.background(Color.Transparent),
-            shape = RoundedCornerShape(8.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Transparent,
-                contentColor = Color.White
-            ),
-            border = BorderStroke(2.dp,colorOutline),
-            onClick = onClick,
-        ) {
-            Text(
-                text = value,
-                fontSize = 14.sp
-            )
-        }
+        CustomButton(
+            title = stringResource(buttonText),
+            modifier = Modifier.widthIn(min = 200.dp),
+            color = colorOutline,
+            onClick = onClick
+        )
     }
 
     HorizontalDivider(
@@ -227,11 +154,44 @@ private fun NormalComponent(
 }
 
 @Composable
-private fun VersionAndIp(version: String,localIp: String?) {
+fun SelectorSection(
+    title: String,
+    defaultOption: Int,
+    options: List<String>,
+    optionSelected: (Int) -> Unit
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .height(40.dp)
+            .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = title,
+            style = CustomTextStyles.textStyle14Normal
+        )
+
+        CustomSelectorComponent(
+            defaultOption = defaultOption,
+            options = options,
+            optionSelected = optionSelected,
+        )
+    }
+
+    HorizontalDivider(
+        Modifier.padding(horizontal = 8.dp),
+        thickness = 1.dp
+    )
+}
+
+@Composable
+private fun VersionAndIp(version: String, localIp: String?) {
 
     Text(
         modifier = Modifier.padding(vertical = 4.dp),
-        text = version + if(!localIp.isNullOrEmpty() ) " - Local ip: $localIp" else "",
+        text = version + if (!localIp.isNullOrEmpty()) " - Local ip: $localIp" else "",
         fontSize = 14.sp,
         color = Color.White
     )
@@ -256,12 +216,9 @@ private fun AggressivenessScreenPreview() {
             motorControllerTemp = 50F,
             imuTemp = 80F,
             version = "V1.2.3",
-            localIp = "255.255.255.255"
-        ) { }
+            localIp = "255.255.255.255",
+            onAggressivenessChange = {},
+            onOpenNetworkSettings = {}
+        )
     }
-}
-
-sealed class OnActionStatusDataScreen {
-    data class OnAggressivenessChange(val level: Int): OnActionStatusDataScreen()
-    data object OnActionOpenNetworkSettings: OnActionStatusDataScreen()
 }

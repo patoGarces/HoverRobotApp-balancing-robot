@@ -1,6 +1,5 @@
 package com.app.hoverrobot.ui.statusBarFragment
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -103,7 +102,7 @@ private fun TempIndicator(
         Text(
             modifier = Modifier,
             text = stringResource(R.string.placeholder_temp,tempImu.value),
-            style = CustomTextStyles.textStyleStatusBar
+            style = CustomTextStyles.textStyle16Bold
         )
     }
 }
