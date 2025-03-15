@@ -118,19 +118,11 @@ class AnalisisFragment : Fragment() {
     }
 
     private fun newDynamicFrame(newFrame: RobotDynamicData) {
-//        with(binding) {
-//            tvAnglePitch.text = getString(R.string.placeholder_pitch, newFrame.pitchAngle)
-//            tvAngleRoll.text = getString(R.string.placeholder_roll, newFrame.rollAngle)
-//            tvAngleYaw.text = getString(R.string.placeholder_yaw, newFrame.yawAngle)
-//            tvParamCenter.text = getString(R.string.placeholder_center, newFrame.centerAngle)
-//            tvPosition.text = getString(R.string.placeholder_position, newFrame.posInMeters)
+        val actualTimeInSec = ((System.currentTimeMillis() - initTimeStamp).toFloat()) / 1000
+        entryMap.updateWithFrame(actualTimeInSec, newFrame)
 
-            val actualTimeInSec = ((System.currentTimeMillis() - initTimeStamp).toFloat()) / 1000
-            entryMap.updateWithFrame(actualTimeInSec, newFrame)
-
-            lineDataMap.values.forEach { it.notifyDataSetChanged() }
-            updateDataset(selectedDataset)
-//        }
+        lineDataMap.values.forEach { it.notifyDataSetChanged() }
+        updateDataset(selectedDataset)
     }
 
     private fun updateDataset(selectedDataset: SelectedDataset?) {

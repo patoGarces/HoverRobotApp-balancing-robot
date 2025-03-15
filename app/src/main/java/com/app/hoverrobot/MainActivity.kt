@@ -1,12 +1,16 @@
 package com.app.hoverrobot
 
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.ComposeView
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
@@ -19,10 +23,9 @@ import com.app.hoverrobot.ui.navigationFragment.NavigationFragment
 import com.app.hoverrobot.ui.navigationFragment.NavigationViewModel
 import com.app.hoverrobot.ui.settingsFragment.SettingsFragment
 import com.app.hoverrobot.ui.settingsFragment.SettingsFragmentViewModel
-import com.app.hoverrobot.ui.statusBarFragment.StatusBarFragment
 import com.app.hoverrobot.ui.statusBarFragment.StatusBarViewModel
-import com.app.hoverrobot.ui.statusDataFragment.StatusDataFragment
-import com.app.hoverrobot.ui.statusDataFragment.StatusDataViewModel
+import com.app.hoverrobot.ui.statusDataScreen.StatusDataViewModel
+import com.app.hoverrobot.ui.statusDataScreen.StatusDataScreen
 import com.google.android.material.tabs.TabLayoutMediator
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -90,11 +93,27 @@ class MainActivity : AppCompatActivity() {
 
         override fun createFragment(position: Int): Fragment {
             return when (position) {
-                0 -> StatusDataFragment()
+                0 -> ComposeFragment { StatusDataScreen() }
                 1 -> NavigationFragment()
                 2 -> AnalisisFragment()
                 3 -> SettingsFragment()
                 else -> throw IllegalArgumentException("Invalid position: $position")
+            }
+        }
+    }
+
+    class ComposeFragment(
+        private val composable: @Composable () -> Unit
+    ) : Fragment() {
+        override fun onCreateView(
+            inflater: LayoutInflater, container: ViewGroup?,
+            savedInstanceState: Bundle?
+        ): View? {
+            // Devolver un ComposeView que inflará el Composable que pasamos
+            return ComposeView(requireContext()).apply {
+                setContent {
+                    composable()
+                }
             }
         }
     }

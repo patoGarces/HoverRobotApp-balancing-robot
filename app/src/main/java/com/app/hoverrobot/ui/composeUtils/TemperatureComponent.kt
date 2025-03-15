@@ -1,4 +1,4 @@
-package com.app.hoverrobot.ui.statusDataFragment.compose
+package com.app.hoverrobot.ui.composeUtils
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.Canvas
@@ -26,17 +26,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.app.hoverrobot.R
-import com.app.hoverrobot.ui.composeUtils.CustomTextStyles
-import kotlin.math.max
 
 @Composable
 fun TemperatureComponent(
     @StringRes title: Int,
-    temp: Float?,
+    temp: Float,
     minTemp: Float = 0f,
     maxTemp: Float = 100f
 ) {
-    val progress = ((temp ?: maxTemp) - minTemp) / (maxTemp - minTemp)
+    val progress = (temp - minTemp) / (maxTemp - minTemp)
     val brush = Brush.sweepGradient(
         colors = listOf(Color.Blue, Color(0xFFFFA500), Color.Red),
     )
@@ -68,7 +66,7 @@ fun TemperatureComponent(
                 }
             }
 
-            if (temp == null) {
+            if (temp == 0F) {
                 CircularProgressIndicator(
                     Modifier.size(30.dp),
                     color = Color.White,
@@ -96,6 +94,6 @@ private fun TemperatureComponentPreview() {
         TemperatureComponent(title = R.string.title_mainboard_temp, temp = 5f, 0f, 100f)
         TemperatureComponent(title = R.string.title_motorboard_temp, temp = 32f, 0f, 100f)
         TemperatureComponent(title = R.string.title_imu_temp, temp = 90f, 0f, 100f)
-        TemperatureComponent(title = R.string.title_imu_temp, temp = null, 0f, 100f)
+        TemperatureComponent(title = R.string.title_imu_temp, temp = 0F, 0f, 100f)
     }
 }

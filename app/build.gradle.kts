@@ -100,6 +100,7 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
 
     // Hilt
+    implementation(libs.androidx.hilt.navigation.compose)
     implementation (libs.hilt.android)
     debugImplementation(libs.androidx.ui.tooling)
     kapt (libs.hilt.compiler)
