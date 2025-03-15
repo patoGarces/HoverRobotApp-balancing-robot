@@ -16,7 +16,6 @@ import com.app.hoverrobot.R
 import com.app.hoverrobot.data.utils.StatusConnection
 import com.app.hoverrobot.data.utils.StatusRobot
 import com.app.hoverrobot.ui.navigationFragment.NavigationViewModel
-import com.app.hoverrobot.ui.statusDataFragment.compose.OnActionStatusDataScreen
 import com.app.hoverrobot.ui.statusDataFragment.compose.StatusDataScreen
 
 class StatusDataFragment : Fragment() {
@@ -34,19 +33,16 @@ class StatusDataFragment : Fragment() {
                     statusRobot = statusDataViewModel.gralStatus.observeAsState().value ?: StatusRobot.ERROR,
                     statusConnection = statusDataViewModel.statusConnection.observeAsState().value ?: StatusConnection.ERROR,
                     defaultAggressiveness = navigationViewModel.aggressivenessLevel.observeAsState().value ?: 0,
-                    mainboardTemp = statusDataViewModel.mainboardTemp.observeAsState().value ?: 0F,
-                    motorControllerTemp =  statusDataViewModel.motorControllerTemp.observeAsState().value ?: 0F,
-                    imuTemp =  statusDataViewModel.imuTemp.observeAsState().value ?: 0F,
+                    mainboardTemp = statusDataViewModel.mainboardTemp.observeAsState().value,
+                    motorControllerTemp =  statusDataViewModel.motorControllerTemp.observeAsState().value,
+                    imuTemp =  statusDataViewModel.imuTemp.observeAsState().value,
                     version = getString(R.string.version_placeholder,BuildConfig.VERSION_NAME),
                     localIp = statusDataViewModel.localIp.observeAsState().value,
-                ) {
-                    when(it) {
-                        is OnActionStatusDataScreen.OnAggressivenessChange -> navigationViewModel.setLevelAggressiveness(it.level)
-                        is OnActionStatusDataScreen.OnActionOpenNetworkSettings -> startActivity(
-                            Intent(Settings.ACTION_WIFI_SETTINGS)
-                        )
+                    onOpenNetworkSettings = { startActivity(Intent(Settings.ACTION_WIFI_SETTINGS)) },
+                    onAggressivenessChange = {
+                        navigationViewModel.setLevelAggressiveness(it)
                     }
-                }
+                )
             }
         }
     }

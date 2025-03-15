@@ -5,23 +5,16 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -39,7 +32,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -50,6 +42,9 @@ import androidx.compose.ui.unit.sp
 import com.app.hoverrobot.R
 import com.app.hoverrobot.data.models.comms.RobotDynamicData
 import com.app.hoverrobot.data.utils.StatusRobot
+import com.app.hoverrobot.ui.analisisFragment.compose.AnalisisScreenActions.OnClearData
+import com.app.hoverrobot.ui.analisisFragment.compose.AnalisisScreenActions.OnDatasetChange
+import com.app.hoverrobot.ui.analisisFragment.compose.AnalisisScreenActions.OnPauseChange
 import com.app.hoverrobot.ui.analisisFragment.resources.SelectedDataset
 import com.app.hoverrobot.ui.composeUtils.CustomButton
 import com.app.hoverrobot.ui.composeUtils.CustomColors
@@ -64,8 +59,8 @@ fun AnalisisScreen(
     statusRobot: State<StatusRobot?>,
     onActionAnalisisScreen: (AnalisisScreenActions) -> Unit
 ) {
-    var logMode by remember { mutableStateOf(false) }
-    var onPauseState by remember { mutableStateOf(false) }
+    var logMode by remember { mutableStateOf(true) }
+
     var isAutoScaled by remember { mutableStateOf(false) }
 
     val listOfLogs = remember { mutableStateListOf<Triple<Long, StatusRobot, String?>>() }
@@ -78,38 +73,38 @@ fun AnalisisScreen(
         }
     }
 
-    Row(Modifier.fillMaxSize()) {
-        Column(Modifier.weight(1F)) {
-            if (logMode) {
-                LogScreen(listOfLogs = listOfLogs)
-            } else {
-                Box {
-                    LineChartCompose(
-                        actualLineData,
-                        isAutoScaled = isAutoScaled,
-                        limitAxes = limitAxis
-                    )
-
-                    CustomFloatingButton(
-                        modifier = Modifier.align(Alignment.BottomEnd),
-                        icon = if (onPauseState) Icons.Filled.PlayArrow else Icons.Filled.Pause
-                    ) {
-                        onPauseState = !onPauseState
-                        onActionAnalisisScreen(AnalisisScreenActions.OnPauseChange(onPauseState))
-                    }
+    Row(
+        Modifier
+            .fillMaxSize()
+            .padding(8.dp)
+    ) {
+        if (logMode) {
+            LogScreen(
+                modifier = Modifier.weight(1F),
+                listOfLogs = listOfLogs
+            )
+        } else {
+            Column(Modifier.weight(1F)) {
+                LineChartCompose(
+                    modifier = Modifier.weight(1F),
+                    actualLineData = actualLineData,
+                    isAutoScaled = isAutoScaled,
+                    limitAxes = limitAxis
+                ) {
+                    onActionAnalisisScreen(OnPauseChange(it))
                 }
-            }
 
-            dynamicData.value?.let {
-                HighlightValues(dynamicData)
+                dynamicData.value?.let { HighlightValues(dynamicData) }
             }
         }
 
+        Spacer(Modifier.width(8.dp))
+
         SettingsChartMenuScreen(
-            onClearChart = { onActionAnalisisScreen(AnalisisScreenActions.OnClearData) },
+            onClearChart = { onActionAnalisisScreen(OnClearData) },
             onDatasetChange = {
                 logMode = it == null
-                onActionAnalisisScreen(AnalisisScreenActions.OnDatasetChange(it))
+                onActionAnalisisScreen(OnDatasetChange(it))
             },
             onAutoScaleChange = { isAutoScaled = it },
         )
@@ -121,7 +116,10 @@ private fun HighlightValues(dynamicItem: State<RobotDynamicData?>) {
     Row(
         Modifier
             .fillMaxWidth()
-            .height(40.dp), horizontalArrangement = Arrangement.SpaceEvenly
+            .padding(top = 8.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically
+
     ) {
         Text(
             text = stringResource(R.string.placeholder_pitch, dynamicItem.value!!.pitchAngle),
@@ -188,7 +186,9 @@ fun SettingsChartMenuScreen(
                         fontWeight = FontWeight.Bold
                     ),
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth().padding(8.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
                 )
             }
 
@@ -239,30 +239,6 @@ fun SettingsChartMenuScreen(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun CustomFloatingButton(
-    modifier: Modifier,
-    icon: ImageVector,
-    onClick: () -> Unit,
-) {
-    IconButton(
-        onClick = onClick,
-        modifier = modifier
-            .padding(16.dp)
-            .border(
-                width = 2.dp,
-                color = CustomColors.PurpleThemeDefault,
-                shape = CircleShape
-            )
-    ) {
-        Icon(
-            imageVector = icon,
-            tint = Color.White,
-            contentDescription = "Clear logs"
-        )
     }
 }
 
@@ -340,7 +316,30 @@ private fun SwitchItem(
 )
 @Composable
 private fun AnalisisScreenPreview() {
-    val dummyDynamicData = remember { mutableStateOf<RobotDynamicData?>(null) }
+    val mockRobotDynamicData = RobotDynamicData(
+        isCharging = false,
+        batVoltage = 39.2F,
+        tempImu = 36.5F,
+        tempMcb = 40.1F,
+        tempMainboard = 42.3F,
+        speedR = 10,
+        speedL = 10,
+        currentR = 1.2F,
+        currentL = 1.3F,
+        pitchAngle = 0.5F,
+        rollAngle = -1.2F,
+        yawAngle = 3.4F,
+        posInMeters = 12.7F,
+        outputYawControl = 0.8F,
+        setPointAngle = 0.0F,
+        setPointPos = 15.0F,
+        setPointYaw = 2.1F,
+        setPointSpeed = 5.0F,
+        centerAngle = -0.2F,
+        statusCode = StatusRobot.STABILIZED
+    )
+
+    val dummyDynamicData = remember { mutableStateOf<RobotDynamicData?>(mockRobotDynamicData) }
     val dummyLineData = remember { mutableStateOf<LineData?>(null) }
     val dummyStatusRobot = remember { mutableStateOf(StatusRobot.TEST_MODE) }
     val dummyLimitAxis = remember { mutableFloatStateOf(100F) }
