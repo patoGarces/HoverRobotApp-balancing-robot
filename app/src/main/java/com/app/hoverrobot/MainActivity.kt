@@ -46,12 +46,6 @@ class MainActivity : AppCompatActivity() {
 
 //        webViewSetup()
         setupViewPagerAndTabLayout()
-
-        if (savedInstanceState == null) {
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.statusBarContainer, StatusBarFragment())
-                .commit()
-        }
     }
 
     override fun onResume() {

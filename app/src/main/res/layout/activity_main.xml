@@ -20,6 +20,7 @@
         android:id="@+id/statusBarContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:name="com.app.hoverrobot.ui.statusBarFragment.StatusBarFragment"
         app:defaultNavHost="true"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
