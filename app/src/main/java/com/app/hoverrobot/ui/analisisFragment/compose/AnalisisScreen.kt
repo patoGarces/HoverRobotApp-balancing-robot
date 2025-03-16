@@ -59,7 +59,7 @@ fun AnalisisScreen(
     statusRobot: State<StatusRobot?>,
     onActionAnalisisScreen: (AnalisisScreenActions) -> Unit
 ) {
-    var logMode by remember { mutableStateOf(true) }
+    var logMode by remember { mutableStateOf(false) }
 
     var isAutoScaled by remember { mutableStateOf(false) }
 

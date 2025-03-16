@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.app.hoverrobot.BuildConfig
 import com.app.hoverrobot.R
+import com.app.hoverrobot.data.models.Aggressiveness
 import com.app.hoverrobot.data.utils.StatusMapper.toColor
 import com.app.hoverrobot.data.utils.StatusMapper.toStringRes
 import com.app.hoverrobot.ui.composeUtils.CustomButton
@@ -42,17 +43,7 @@ fun StatusDataScreen(
     statusDataViewModel: StatusDataViewModel = hiltViewModel(),
     navigationViewModel: NavigationViewModel = hiltViewModel(),
 ) {
-
-    
-    /*
-     * TODO: pendientes:
-     *  - Lllamar a startActivity
-     * - Bug en temperaturas: nunca son null, y tampoco vuelven a null al desconectarse
-     * - migrar a mutable state el aggresivenessLevel
-     */
-
     val context = LocalContext.current
-    val defaultAggressiveness = navigationViewModel.aggressivenessLevel.observeAsState(0).value
 
     Column(
         Modifier
@@ -65,10 +56,10 @@ fun StatusDataScreen(
         val options = listOf("Suave", "Moderado", "Agresivo")
         SelectorSection (
             title = stringResource(R.string.title_aggressiveness),
-            defaultOption = defaultAggressiveness,
+            defaultOption = navigationViewModel.getAggressivenessLevel().ordinal,
             options = options
         ) { optionSelected ->
-            navigationViewModel.setLevelAggressiveness(optionSelected)
+            navigationViewModel.setLevelAggressiveness(Aggressiveness.entries[optionSelected])
         }
 
         NormalSection(

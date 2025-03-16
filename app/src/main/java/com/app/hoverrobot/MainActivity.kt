@@ -19,8 +19,8 @@ import androidx.viewpager2.widget.ViewPager2
 import com.app.hoverrobot.databinding.ActivityMainBinding
 import com.app.hoverrobot.ui.analisisFragment.AnalisisFragment
 import com.app.hoverrobot.ui.analisisFragment.AnalisisViewModel
-import com.app.hoverrobot.ui.navigationFragment.NavigationFragment
 import com.app.hoverrobot.ui.navigationFragment.NavigationViewModel
+import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreen
 import com.app.hoverrobot.ui.settingsFragment.SettingsFragment
 import com.app.hoverrobot.ui.settingsFragment.SettingsFragmentViewModel
 import com.app.hoverrobot.ui.statusBarScreen.StatusBarScreen
@@ -101,7 +101,7 @@ class MainActivity : AppCompatActivity() {
         override fun createFragment(position: Int): Fragment {
             return when (position) {
                 0 -> ComposeFragment { StatusDataScreen() }
-                1 -> NavigationFragment()
+                1 -> ComposeFragment { NavigationScreen() }
                 2 -> AnalisisFragment()
                 3 -> SettingsFragment()
                 else -> throw IllegalArgumentException("Invalid position: $position")

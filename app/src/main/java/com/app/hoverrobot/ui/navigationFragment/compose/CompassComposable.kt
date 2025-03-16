@@ -19,7 +19,7 @@ import com.redinput.compassview.CompassView
 
 @Composable
 fun CompassComposable(
-    newDegress: State<Int>,
+    actualDegress: State<Int>,
     onDragCompass: (Float) -> Unit
 ) {
     var enableSetNewDegress by remember { mutableStateOf(true) }
@@ -35,7 +35,7 @@ fun CompassComposable(
                 setTextColor(ctx.getColor(R.color.white))
                 setTextSize(28)
                 setRangeDegrees(50F)
-                degrees = newDegress.value.toFloat()
+                degrees = actualDegress.value.toFloat()
 
                 // Acceso al mListener por reflection
                 val field = CompassView::class.java.getDeclaredField("mListener")
@@ -59,7 +59,7 @@ fun CompassComposable(
         },
         update = { compassView ->
             if (enableSetNewDegress) {
-                compassView.setDegrees(newDegress.value.toFloat())
+                compassView.setDegrees(actualDegress.value.toFloat())
             }
         }
     )
