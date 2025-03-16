@@ -1,5 +1,6 @@
 package com.app.hoverrobot.ui.navigationFragment.compose
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -34,40 +35,58 @@ import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreenAction.O
 import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreenAction.OnYawRightAction
 import kotlinx.coroutines.delay
 import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.map
 import com.app.hoverrobot.data.models.comms.PointCloudItem
 import com.app.hoverrobot.ui.composeUtils.ScatterChartCompose
 import com.app.hoverrobot.ui.composeUtils.ArcSeekBar
 import com.app.hoverrobot.ui.composeUtils.DistancePickerDialog
+import com.app.hoverrobot.ui.navigationFragment.NavigationViewModel
 import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreenAction.OnFixedDistance
+import java.math.BigDecimal
+import java.math.RoundingMode
+import kotlin.math.abs
+import kotlin.math.pow
+import kotlin.math.roundToInt
 
+
+// TODO: mover a Utils
+private fun Float.round(decimals: Int = 2): Float {
+    val factor = 10.0.pow(decimals.toDouble()).toFloat()
+    return (this * factor).roundToInt() / factor
+}
 
 @Composable
 fun NavigationScreen(
-    isRobotStabilized: Boolean,
-    isRobotConnected: Boolean,
-    newPointCloudItem: State<PointCloudItem?>,
-    newDegress: State<Int>,
+    navigationViewModel: NavigationViewModel = hiltViewModel(),
     enableSeekbarsYaw: Boolean = false,
     disableCompass: Boolean = false,
-    onActionScreen: (NavigationScreenAction) -> Unit
 ) {
-    var joystickX by remember { mutableFloatStateOf(0F) }
-    var joystickY by remember { mutableFloatStateOf(0F) }
+    var joystickX by remember { mutableIntStateOf(0) }
+    var joystickY by remember { mutableIntStateOf(0) }
     var leftAngleDir by remember { mutableIntStateOf(1) }
     var rightAngleDir by remember { mutableIntStateOf(1) }
     var showDialog by remember { mutableStateOf(false) }
     var isForwardMove by remember { mutableStateOf(true) }
+    var actualDegress = remember {
+        derivedStateOf { navigationViewModel.dynamicData?.yawAngle?.toInt() ?: 0 }
+    }
 
-    LaunchedEffect(isRobotStabilized) {
-        while (isRobotStabilized) {
-            onActionScreen(OnNewJoystickInteraction(joystickX, joystickY))
+    LaunchedEffect(navigationViewModel.isRobotStabilized) {
+        while (navigationViewModel.isRobotStabilized) {
+            navigationViewModel.newCoordinatesJoystick(
+                (joystickX * navigationViewModel.getAggressivenessLevel().normalizedFactor).round().toInt(),
+                (joystickY * navigationViewModel.getAggressivenessLevel().normalizedFactor).round().toInt()
+            )
             delay(50)
         }
     }
 
-    if (!isRobotConnected) return
+    if (!navigationViewModel.isRobotConnected) return
 
     if (showDialog) {
         DistancePickerDialog(
@@ -77,13 +96,17 @@ fun NavigationScreen(
             onConfirm = { meters ->
                 showDialog = false
                 val dirMeters = if (isForwardMove) meters else -meters
-                onActionScreen(OnFixedDistance(dirMeters))
+
+                navigationViewModel.sendNewMovePosition(
+                    abs(dirMeters),
+                    dirMeters < 0
+                )
             },
         )
     }
 
     Box {
-        ScatterChartCompose(newPointCloudItem)
+        ScatterChartCompose(navigationViewModel.pointCloud)
 
         Column(Modifier.align(Alignment.BottomCenter)) {
             Row(
@@ -143,7 +166,7 @@ fun NavigationScreen(
                         dotSize = 50.dp,
                         fixedDirection = FixedDirection.VERTICAL
                     ) { x: Float, y: Float ->
-                        joystickY = y
+                        joystickY = (y * 100F).toInt()
                     }
 
                     if (enableSeekbarsYaw) {
@@ -162,22 +185,22 @@ fun NavigationScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     YawControlButtons(
-                        isRobotStabilized = isRobotStabilized,
+                        isRobotStabilized = navigationViewModel.isRobotStabilized,
                         yawLeftText = stringResource(
                             R.string.control_move_placeholder_direction,
                             leftAngleDir
                         ),
                         yawLeftOnClick = {
-                            onActionScreen(OnYawLeftAction(leftAngleDir))
+                            navigationViewModel.sendNewMoveRelYaw(leftAngleDir.toFloat())
                         },
                         yawRightText = stringResource(
                             R.string.control_move_placeholder_direction,
                             rightAngleDir
                         ),
                         yawRightOnClick = {
-                            onActionScreen(OnYawRightAction(rightAngleDir))
+                            navigationViewModel.sendNewMoveRelYaw(rightAngleDir.toFloat())
                         },
-                        onDearmedClick = { onActionScreen(OnDearmedAction) }
+                        onDearmedClick = { navigationViewModel.sendDearmedCommand() }
                     )
                 }
 
@@ -191,7 +214,7 @@ fun NavigationScreen(
                         dotSize = 50.dp,
                         fixedDirection = FixedDirection.HORIZONTAL
                     ) { x: Float, y: Float ->
-                        joystickX = x
+                        joystickX = (x * 100F).toInt()
                     }
 
                     if (enableSeekbarsYaw) {
@@ -206,8 +229,8 @@ fun NavigationScreen(
 
             // TODO: revisar por que al mostrar este composable se rompe la preview
             if (!disableCompass) {
-                CompassComposable(newDegress) {
-                    onActionScreen(OnNewDragCompassInteraction(it))
+                CompassComposable(actualDegress = actualDegress) {
+                    navigationViewModel.sendNewMoveAbsYaw(it)
                 }
             }
         }
@@ -295,12 +318,12 @@ fun NavigationButtonPreview() {
             .padding(16.dp)
             .background(Color.Black)
     ) {
-        NavigationScreen(
-            newDegress = dummySetDegress,
-            newPointCloudItem = dummyPointCloudItem,
-            isRobotConnected = true,
-            isRobotStabilized = true,
-            disableCompass = true
-        ) { }
+//        NavigationScreen(
+//            newDegress = dummySetDegress,
+//            newPointCloudItem = dummyPointCloudItem,
+//            isRobotConnected = true,
+//            isRobotStabilized = true,
+//            disableCompass = true
+//        ) { }
     }
 }

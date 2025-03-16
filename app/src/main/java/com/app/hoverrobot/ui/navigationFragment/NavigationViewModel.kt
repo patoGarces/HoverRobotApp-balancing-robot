@@ -1,5 +1,6 @@
 package com.app.hoverrobot.ui.navigationFragment
 
+import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
@@ -15,10 +16,13 @@ import com.app.hoverrobot.data.utils.StatusConnection
 import com.app.hoverrobot.data.utils.StatusRobot
 import com.app.hoverrobot.data.utils.ToolBox.ioScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import com.app.hoverrobot.data.models.Aggressiveness
+import kotlinx.coroutines.runBlocking
 
 @HiltViewModel
 class NavigationViewModel @Inject constructor(
@@ -26,38 +30,31 @@ class NavigationViewModel @Inject constructor(
     private val storeSettings: StoreSettings
 ) : ViewModel() {
 
-    private var _dynamicData: MutableLiveData<RobotDynamicData> = MutableLiveData()
-    val dynamicData: LiveData<RobotDynamicData> get() = _dynamicData
-
-    private var _pointCloud: MutableLiveData<PointCloudItem> = MutableLiveData()
-    val pointCloud: LiveData<PointCloudItem> = _pointCloud
-
-    private var _aggressivenessLevel: MutableLiveData<Int> = MutableLiveData(0)
-    val aggressivenessLevel: LiveData<Int> = _aggressivenessLevel
-
-    var isRobotConnected: MutableState<Boolean> = mutableStateOf(false)
+    var dynamicData by mutableStateOf<RobotDynamicData?>(null)
         internal set
 
-    private val _isRobotStabilized = MutableStateFlow(false)
-    val isRobotStabilized: StateFlow<Boolean> = _isRobotStabilized
+    var pointCloud = mutableStateOf<PointCloudItem>(PointCloudItem())
+        internal set
+
+    var isRobotConnected by mutableStateOf(false)
+        internal set
+
+    var isRobotStabilized by mutableStateOf(false)
+        internal set
 
     init {
         ioScope.launch {
             commsRepository.connectionState.collect {
-                isRobotConnected.value = it.status == StatusConnection.CONNECTED
+                isRobotConnected  = it.status == StatusConnection.CONNECTED
             }
         }
 
         ioScope.launch {
             commsRepository.dynamicDataRobotFlow.collect {
-                _dynamicData.postValue(it)
-                _isRobotStabilized.value = it.statusCode == StatusRobot.STABILIZED
+                dynamicData = it
+                isRobotStabilized = it.statusCode == StatusRobot.STABILIZED
 
             }
-        }
-
-        ioScope.launch {
-            _aggressivenessLevel.postValue(storeSettings.getAggressiveness())
         }
 
 //        // TODO: aca recibo cada punto de la nube
@@ -75,13 +72,15 @@ class NavigationViewModel @Inject constructor(
 //        }
     }
 
-    fun setLevelAggressiveness(level: Int) {
-        _aggressivenessLevel.value = level
+    fun getAggressivenessLevel(): Aggressiveness = runBlocking { storeSettings.getAggressiveness() }
+
+    fun setLevelAggressiveness(level: Aggressiveness) {
         ioScope.launch { storeSettings.saveAggressiveness(level) }
     }
 
     fun newCoordinatesJoystick(axisX: Int, axisY: Int) {
-        if (isRobotConnected.value) {
+        Log.i("Aggressiveness","axisX: $axisX")
+        if (isRobotConnected) {
             commsRepository.sendDirectionControl(DirectionControl(axisX.toShort(), axisY.toShort()))
         }
     }
@@ -90,25 +89,25 @@ class NavigationViewModel @Inject constructor(
         val command =
             if (isBackward) CommandsRobot.MOVE_BACKWARD else CommandsRobot.MOVE_FORWARD
 
-        if (isRobotConnected.value) {
+        if (isRobotConnected) {
             commsRepository.sendCommand(command, distanceInMts)
         }
     }
 
     fun sendNewMoveAbsYaw(desiredAngle: Float) {
-        if (isRobotConnected.value) {
+        if (isRobotConnected) {
             commsRepository.sendCommand(CommandsRobot.MOVE_ABS_YAW, desiredAngle)
         }
     }
 
     fun sendNewMoveRelYaw(angle: Float) {
-        if (isRobotConnected.value) {
+        if (isRobotConnected) {
             commsRepository.sendCommand(CommandsRobot.MOVE_REL_YAW, angle)
         }
     }
 
     fun sendDearmedCommand() {
-        if (isRobotConnected.value) {
+        if (isRobotConnected) {
             commsRepository.sendCommand(CommandsRobot.DEARMED)
         }
     }
