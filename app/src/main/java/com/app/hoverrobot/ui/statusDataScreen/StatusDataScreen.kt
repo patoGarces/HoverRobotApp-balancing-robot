@@ -17,6 +17,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,8 +33,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.app.hoverrobot.BuildConfig
 import com.app.hoverrobot.R
 import com.app.hoverrobot.data.models.Aggressiveness
+import com.app.hoverrobot.data.utils.StatusConnection
 import com.app.hoverrobot.data.utils.StatusMapper.toColor
 import com.app.hoverrobot.data.utils.StatusMapper.toStringRes
+import com.app.hoverrobot.data.utils.StatusRobot
 import com.app.hoverrobot.ui.RobotStateViewModel
 import com.app.hoverrobot.ui.composeUtils.CustomButton
 import com.app.hoverrobot.ui.composeUtils.CustomSelectorComponent
@@ -38,9 +44,17 @@ import com.app.hoverrobot.ui.composeUtils.CustomTextStyles
 import com.app.hoverrobot.ui.composeUtils.TemperatureComponent
 
 @Composable
-fun StatusDataScreen(robotStateViewModel: RobotStateViewModel) {
-    val context = LocalContext.current
-
+fun StatusDataScreen(
+    statusRobot: StatusRobot,
+    statusConnection: StatusConnection,
+    defaultAggressiveness: Int,
+    mainboardTemp: Float,
+    motorControllerTemp: Float,
+    imuTemp: Float,
+    localIp: String?,
+    onOpenNetworkSettings: () -> Unit,
+    onAggressivenessChange: (Aggressiveness) -> Unit
+) {
     Column(
         Modifier
             .fillMaxSize()
@@ -50,26 +64,26 @@ fun StatusDataScreen(robotStateViewModel: RobotStateViewModel) {
         TitleScreen(stringResource(R.string.title_status_screen))
 
         val options = listOf("Suave", "Moderado", "Agresivo")
-        SelectorSection (
+        SelectorSection(
             title = stringResource(R.string.title_aggressiveness),
-            defaultOption = robotStateViewModel.getAggressivenessLevel().ordinal,
+            defaultOption = defaultAggressiveness,
             options = options
         ) { optionSelected ->
-            robotStateViewModel.setLevelAggressiveness(Aggressiveness.entries[optionSelected])
+            onAggressivenessChange(Aggressiveness.entries[optionSelected])
         }
 
         NormalSection(
             title = R.string.title_status_robot,
-            buttonText = robotStateViewModel.statusRobot.toStringRes(robotStateViewModel.connectionState.status),
-            colorOutline = robotStateViewModel.statusRobot.toColor(robotStateViewModel.connectionState.status),
+            buttonText = statusRobot.toStringRes(statusConnection),
+            colorOutline = statusRobot.toColor(statusConnection),
         ) { }
 
         NormalSection(
             title = R.string.title_connection_status,
-            buttonText = robotStateViewModel.connectionState.status.toStringRes(),
-            colorOutline = robotStateViewModel.connectionState.status.toColor()
+            buttonText = statusConnection.toStringRes(),
+            colorOutline = statusConnection.toColor()
         ) {
-            context.startActivity(Intent(Settings.ACTION_WIFI_SETTINGS))
+            onOpenNetworkSettings()
         }
 
         Row(
@@ -79,25 +93,16 @@ fun StatusDataScreen(robotStateViewModel: RobotStateViewModel) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            TemperatureComponent(
-                R.string.title_mainboard_temp,
-                robotStateViewModel.robotDynamicData?.tempMainboard ?: 0F
-            )
+            TemperatureComponent(title = R.string.title_mainboard_temp, temp = mainboardTemp)
 
-            TemperatureComponent(
-                R.string.title_motorboard_temp,
-                robotStateViewModel.robotDynamicData?.tempMcb ?: 0F
-            )
+            TemperatureComponent(title = R.string.title_motorboard_temp, temp = motorControllerTemp)
 
-            TemperatureComponent(
-                R.string.title_imu_temp,
-                robotStateViewModel.robotDynamicData?.tempImu ?: 0F
-            )
+            TemperatureComponent(title = R.string.title_imu_temp, temp = imuTemp)
         }
 
         VersionAndIp(
-            version = stringResource(R.string.version_placeholder,BuildConfig.VERSION_NAME),
-            localIp = robotStateViewModel.connectionState.ip
+            version = stringResource(R.string.version_placeholder, BuildConfig.VERSION_NAME),
+            localIp = localIp
         )
     }
 }
@@ -202,24 +207,21 @@ private fun VersionAndIp(version: String, localIp: String?) {
 )
 private fun AggressivenessScreenPreview() {
 
-
-    // TODO: arreglar preview
-//    Column(
-//        Modifier
-//            .fillMaxWidth()
-//            .background(Color.Black)
-//    ) {
-//        StatusDataScreen(
-////            statusRobot = StatusRobot.STABILIZED,
-////            statusConnection = StatusConnection.CONNECTED,
-////            defaultAggressiveness = 0,
-////            mainboardTemp = 12.5F,
-////            motorControllerTemp = 50F,
-////            imuTemp = 80F,
-////            version = "V1.2.3",
-////            localIp = "255.255.255.255",
-////            onAggressivenessChange = {},
-////            onOpenNetworkSettings = {}
-//        )
-//    }
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .background(Color.Black)
+    ) {
+        StatusDataScreen(
+            statusRobot = StatusRobot.STABILIZED,
+            statusConnection = StatusConnection.CONNECTED,
+            defaultAggressiveness = 0,
+            mainboardTemp = 12.5F,
+            motorControllerTemp = 50F,
+            imuTemp = 80F,
+            localIp = "255.255.255.255",
+            onAggressivenessChange = {},
+            onOpenNetworkSettings = {}
+        )
+    }
 }

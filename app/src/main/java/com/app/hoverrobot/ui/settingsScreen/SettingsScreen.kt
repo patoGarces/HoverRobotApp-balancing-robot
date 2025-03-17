@@ -47,23 +47,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.app.hoverrobot.R
-import com.app.hoverrobot.data.models.comms.CommandsRobot
 import com.app.hoverrobot.data.models.comms.PidParams
 import com.app.hoverrobot.data.models.comms.PidSettings
 import com.app.hoverrobot.data.models.comms.RobotLocalConfig
-import com.app.hoverrobot.data.models.comms.Wheel
 import com.app.hoverrobot.data.models.comms.asPidSettings
 import com.app.hoverrobot.data.models.comms.isDiffWithOriginalLocalConfig
 import com.app.hoverrobot.data.utils.StatusRobot
-import com.app.hoverrobot.ui.RobotStateViewModel
 import com.app.hoverrobot.ui.composeUtils.CustomButton
 import com.app.hoverrobot.ui.composeUtils.CustomSlider
 
 @Composable
 fun SettingsScreen(
-    robotStateViewModel: RobotStateViewModel = hiltViewModel()
+    localRobotConfig: RobotLocalConfig,
+    statusRobot: StatusRobot,
+    onPidSave: (PidSettings) -> Boolean,
+    onActionScreen: (SettingsScreenActions) -> Unit,
 ) {
     Column(
         Modifier
@@ -72,16 +71,16 @@ fun SettingsScreen(
             .verticalScroll(rememberScrollState())
     ) {
         PidSettingsCard(
-            originalLocalConfig = robotStateViewModel.localConfigFromRobot,
-            onSendPidSettings = { robotStateViewModel.sendNewPidSettings(it) },
-            onPidSave = { robotStateViewModel.saveLocalSettings(it) },
+            originalLocalConfig = localRobotConfig,
+            onSendPidSettings = { onActionScreen(SettingsScreenActions.OnNewSettings(it)) },
+            onPidSave = { onPidSave(it) },
         )
 
         GeneralSettingsCard(
-            statusRobot = robotStateViewModel.statusRobot,
-            onCalibrateImu = { robotStateViewModel.sendCommand(CommandsRobot.CALIBRATE_IMU) },
-            onCleanLeftMotor = { robotStateViewModel.sendCommand(CommandsRobot.CLEAN_WHEELS, Wheel.LEFT_WHEEL.ordinal.toFloat()) },
-            onCleanRightMotor = { robotStateViewModel.sendCommand(CommandsRobot.CLEAN_WHEELS, Wheel.RIGHT_WHEEL.ordinal.toFloat()) }
+            statusRobot = statusRobot,
+            onCalibrateImu = { onActionScreen(SettingsScreenActions.OnCalibrateImu) },
+            onCleanLeftMotor = { onActionScreen(SettingsScreenActions.OnCleanLeftMotor) },
+            onCleanRightMotor = { onActionScreen(SettingsScreenActions.OnCleanRightMotor) }
         )
     }
 }
@@ -426,7 +425,10 @@ private fun SliderParam(
         }
 
         edgeIndicators?.let {
-            Row(Modifier.fillMaxWidth().padding(start = 8.dp, end = 48.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(start = 8.dp, end = 48.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(
                     text = edgeIndicators.first,
                     color = Color.White,
@@ -449,21 +451,17 @@ private fun SliderParam(
 )
 private fun SettingsScreenPreview() {
 
-    // TODO: arreglar previews
-    val localConfig = remember {
-        mutableStateOf(
-            RobotLocalConfig(
-                pids = listOf(
-                    PidParams(1f, 2f, 3f)
-                ),
-                centerAngle = 4f,
-                safetyLimits = 5f
-            )
+    val localConfig = RobotLocalConfig(
+            pids = listOf(
+                PidParams(1f, 2f, 3f)
+            ),
+            centerAngle = 4f,
+            safetyLimits = 5f
         )
-    }
-//    SettingsScreen(
-//        initialRobotConfig = localConfig,
-//        statusRobot = StatusRobot.STABILIZED,
-//        onPidSave = { false }
-//    ) {}
+
+    SettingsScreen(
+        localRobotConfig = localConfig,
+        statusRobot = StatusRobot.STABILIZED,
+        onPidSave = { false }
+    ) {}
 }

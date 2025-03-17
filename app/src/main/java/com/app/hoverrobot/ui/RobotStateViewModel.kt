@@ -1,5 +1,7 @@
 package com.app.hoverrobot.ui
 
+import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -26,9 +28,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class RobotStateViewModel @Inject constructor(
-        private val commsRepository: CommsRepository,
-        private val storeSettings: StoreSettings
-): ViewModel() {
+    private val commsRepository: CommsRepository,
+    private val storeSettings: StoreSettings
+) : ViewModel() {
 
     var localConfigFromRobot by mutableStateOf(RobotLocalConfig())
         internal set
@@ -48,11 +50,13 @@ class RobotStateViewModel @Inject constructor(
     var pointCloud = mutableStateOf<PointCloudItem>(PointCloudItem())
         internal set
 
-    val isRobotStabilized: Boolean
-        get() = statusRobot == StatusRobot.STABILIZED
+    val isRobotStabilized: State<Boolean> = derivedStateOf {
+        statusRobot == StatusRobot.STABILIZED
+    }
 
-    val isRobotConnected: Boolean
-        get() = commsRepository.connectionState.value.status == StatusConnection.CONNECTED
+    val isRobotConnected: State<Boolean> = derivedStateOf {
+        connectionState.status == StatusConnection.CONNECTED
+    }
 
     init {
         ioScope.launch {
@@ -101,25 +105,23 @@ class RobotStateViewModel @Inject constructor(
 
 
     fun saveLocalSettings(newSetting: PidSettings): Boolean {
-        return if(sendNewPidSettings(newSetting))
+        return if (sendNewPidSettings(newSetting))
             sendCommand(CommandsRobot.SAVE_PARAMS_SETTINGS)
         else false
     }
 
-    fun sendNewPidSettings(newSetting : PidSettings): Boolean {
-        return if (isRobotConnected) {
+    fun sendNewPidSettings(newSetting: PidSettings): Boolean {
+        return if (isRobotConnected.value) {
             commsRepository.sendPidParams(newSetting)
             true
-        }
-        else false
+        } else false
     }
 
-    fun sendCommand(command: CommandsRobot,value: Float = 0F): Boolean {
-        return if (isRobotConnected) {
-            commsRepository.sendCommand(command,value)
+    fun sendCommand(command: CommandsRobot, value: Float = 0F): Boolean {
+        return if (isRobotConnected.value) {
+            commsRepository.sendCommand(command, value)
             true
-        }
-        else false
+        } else false
     }
 
     fun getAggressivenessLevel(): Aggressiveness = runBlocking { storeSettings.getAggressiveness() }
@@ -129,7 +131,7 @@ class RobotStateViewModel @Inject constructor(
     }
 
     fun newCoordinatesJoystick(axisX: Int, axisY: Int) {
-        if (isRobotConnected) {
+        if (isRobotConnected.value) {
             commsRepository.sendDirectionControl(DirectionControl(axisX.toShort(), axisY.toShort()))
         }
     }
@@ -138,25 +140,25 @@ class RobotStateViewModel @Inject constructor(
         val command =
             if (isBackward) CommandsRobot.MOVE_BACKWARD else CommandsRobot.MOVE_FORWARD
 
-        if (isRobotConnected) {
+        if (isRobotConnected.value) {
             commsRepository.sendCommand(command, distanceInMts)
         }
     }
 
     fun sendNewMoveAbsYaw(desiredAngle: Float) {
-        if (isRobotConnected) {
+        if (isRobotConnected.value) {
             commsRepository.sendCommand(CommandsRobot.MOVE_ABS_YAW, desiredAngle)
         }
     }
 
     fun sendNewMoveRelYaw(angle: Float) {
-        if (isRobotConnected) {
+        if (isRobotConnected.value) {
             commsRepository.sendCommand(CommandsRobot.MOVE_REL_YAW, angle)
         }
     }
 
     fun sendDearmedCommand() {
-        if (isRobotConnected) {
+        if (isRobotConnected.value) {
             commsRepository.sendCommand(CommandsRobot.DEARMED)
         }
     }
