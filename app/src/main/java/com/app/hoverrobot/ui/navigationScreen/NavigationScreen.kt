@@ -15,6 +15,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -27,26 +28,29 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.app.hoverrobot.R
 import kotlinx.coroutines.delay
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.app.hoverrobot.data.models.comms.PointCloudItem
-import com.app.hoverrobot.data.utils.ToolBox.round
-import com.app.hoverrobot.ui.RobotStateViewModel
 import com.app.hoverrobot.ui.composeUtils.ScatterChartCompose
 import com.app.hoverrobot.ui.composeUtils.ArcSeekBar
 import com.app.hoverrobot.ui.composeUtils.DistancePickerDialog
+import com.app.hoverrobot.ui.navigationScreen.NavigationScreenAction.OnDearmedAction
+import com.app.hoverrobot.ui.navigationScreen.NavigationScreenAction.OnNewDragCompassInteraction
+import com.app.hoverrobot.ui.navigationScreen.NavigationScreenAction.OnYawLeftAction
+import com.app.hoverrobot.ui.navigationScreen.NavigationScreenAction.OnYawRightAction
 import com.app.hoverrobot.ui.navigationScreen.compose.CompassComposable
 import com.app.hoverrobot.ui.navigationScreen.compose.FixedDirection
 import com.app.hoverrobot.ui.navigationScreen.compose.JoystickAnalogCompose
-import kotlin.math.abs
 
 @Composable
 fun NavigationScreen(
-    robotStateViewModel: RobotStateViewModel,
+    isRobotStabilized: State<Boolean>,
+    isRobotConnected: State<Boolean>,
+    newPointCloudItem: State<PointCloudItem?>,
+    actualDegress: State<Int>,
     enableSeekbarsYaw: Boolean = false,
     disableCompass: Boolean = false,
+    onActionScreen: (NavigationScreenAction) -> Unit
 ) {
     var joystickX by remember { mutableIntStateOf(0) }
     var joystickY by remember { mutableIntStateOf(0) }
@@ -54,21 +58,15 @@ fun NavigationScreen(
     var rightAngleDir by remember { mutableIntStateOf(1) }
     var showDialog by remember { mutableStateOf(false) }
     var isForwardMove by remember { mutableStateOf(true) }
-    var actualDegress = remember {
-        derivedStateOf { robotStateViewModel.robotDynamicData?.yawAngle?.toInt() ?: 0 }
-    }
 
-    LaunchedEffect(robotStateViewModel.isRobotStabilized) {
-        while (robotStateViewModel.isRobotStabilized) {
-            robotStateViewModel.newCoordinatesJoystick(
-                (joystickX * robotStateViewModel.getAggressivenessLevel().normalizedFactor).round().toInt(),
-                (joystickY * robotStateViewModel.getAggressivenessLevel().normalizedFactor).round().toInt()
-            )
+    LaunchedEffect(isRobotStabilized) {
+        while (isRobotStabilized.value) {
+            onActionScreen(NavigationScreenAction.OnNewJoystickInteraction(joystickX, joystickY))
             delay(50)
         }
     }
 
-    if (!robotStateViewModel.isRobotConnected) return
+    if (!isRobotConnected.value) return
 
     if (showDialog) {
         DistancePickerDialog(
@@ -78,17 +76,13 @@ fun NavigationScreen(
             onConfirm = { meters ->
                 showDialog = false
                 val dirMeters = if (isForwardMove) meters else -meters
-
-                robotStateViewModel.sendNewMovePosition(
-                    abs(dirMeters),
-                    dirMeters < 0
-                )
+                NavigationScreenAction.OnFixedDistance(dirMeters)
             },
         )
     }
 
     Box {
-        ScatterChartCompose(robotStateViewModel.pointCloud)
+        ScatterChartCompose(newPointCloudItem)
 
         Column(Modifier.align(Alignment.BottomCenter)) {
             Row(
@@ -167,22 +161,22 @@ fun NavigationScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     YawControlButtons(
-                        isRobotStabilized = robotStateViewModel.isRobotStabilized,
+                        isRobotStabilized = isRobotStabilized.value,
                         yawLeftText = stringResource(
                             R.string.control_move_placeholder_direction,
                             leftAngleDir
                         ),
                         yawLeftOnClick = {
-                            robotStateViewModel.sendNewMoveRelYaw(leftAngleDir.toFloat())
+                            onActionScreen(OnYawLeftAction(leftAngleDir))
                         },
                         yawRightText = stringResource(
                             R.string.control_move_placeholder_direction,
                             rightAngleDir
                         ),
                         yawRightOnClick = {
-                            robotStateViewModel.sendNewMoveRelYaw(rightAngleDir.toFloat())
+                            onActionScreen(OnYawRightAction(rightAngleDir))
                         },
-                        onDearmedClick = { robotStateViewModel.sendDearmedCommand() }
+                        onDearmedClick = { onActionScreen(OnDearmedAction) }
                     )
                 }
 
@@ -211,8 +205,8 @@ fun NavigationScreen(
 
             // TODO: revisar por que al mostrar este composable se rompe la preview
             if (!disableCompass) {
-                CompassComposable(actualDegress = actualDegress) {
-                    robotStateViewModel.sendNewMoveAbsYaw(it)
+                CompassComposable(actualDegress) {
+                    onActionScreen(OnNewDragCompassInteraction(it))
                 }
             }
         }
@@ -295,17 +289,20 @@ private fun YawControlButtons(
 fun NavigationButtonPreview() {
     val dummySetDegress = remember { mutableIntStateOf(0) }
     val dummyPointCloudItem = remember { mutableStateOf(PointCloudItem()) }
+    val dummyRobotConnected = remember { mutableStateOf(true) }
+    val dummyRobotStabilized = remember { mutableStateOf(true) }
+
     Column(
         Modifier
             .padding(16.dp)
             .background(Color.Black)
     ) {
-//        NavigationScreen(
-//            newDegress = dummySetDegress,
-//            newPointCloudItem = dummyPointCloudItem,
-//            isRobotConnected = true,
-//            isRobotStabilized = true,
-//            disableCompass = true
-//        ) { }
+        NavigationScreen(
+            actualDegress = dummySetDegress,
+            newPointCloudItem = dummyPointCloudItem,
+            isRobotConnected = dummyRobotConnected,
+            isRobotStabilized = dummyRobotStabilized,
+            disableCompass = true
+        ) { }
     }
 }

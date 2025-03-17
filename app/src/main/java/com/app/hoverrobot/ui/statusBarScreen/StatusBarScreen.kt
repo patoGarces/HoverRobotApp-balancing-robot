@@ -22,21 +22,26 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.app.hoverrobot.R
+import com.app.hoverrobot.data.models.Battery
+import com.app.hoverrobot.data.models.comms.ConnectionState
 import com.app.hoverrobot.data.utils.StatusConnection
 import com.app.hoverrobot.data.utils.StatusMapper.toColor
 import com.app.hoverrobot.data.utils.StatusMapper.toStringRes
 import com.app.hoverrobot.data.utils.StatusRobot
-import com.app.hoverrobot.ui.RobotStateViewModel
 import com.app.hoverrobot.ui.composeUtils.CustomButton
 import com.app.hoverrobot.ui.composeUtils.CustomTextStyles
 import com.app.hoverrobot.ui.statusBarScreen.composables.BatteryIndicator
 import com.app.hoverrobot.ui.statusBarScreen.composables.NetworkIndicators
 
 @Composable
-fun StatusBarScreen(robotStateViewModel: RobotStateViewModel) {
-
-    val context = LocalContext.current
-    Row (
+fun StatusBarScreen(
+    statusRobot: StatusRobot,
+    connectionState: ConnectionState,
+    batteryState: Battery,
+    tempImu: Float,
+    onClickBtnStatus: () -> Unit
+) {
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(35.dp),
@@ -45,25 +50,26 @@ fun StatusBarScreen(robotStateViewModel: RobotStateViewModel) {
         Row(
             Modifier
                 .weight(1F)
-                .fillMaxHeight(), horizontalArrangement = Arrangement.Start) {
+                .fillMaxHeight(), horizontalArrangement = Arrangement.Start
+        ) {
             NetworkIndicators(
                 Modifier,
-                robotStateViewModel.connectionState
+                connectionState
             )
         }
 
         CustomButton(
             modifier = Modifier.widthIn(min = 200.dp),
-            title = stringResource(robotStateViewModel.statusRobot.toStringRes(robotStateViewModel.connectionState.status)).uppercase(),
-            color = robotStateViewModel.statusRobot.toColor(robotStateViewModel.connectionState.status),
-            onClick = { context.startActivity(Intent(Settings.ACTION_WIFI_SETTINGS)) }
+            title = stringResource(statusRobot.toStringRes(connectionState.status)).uppercase(),
+            color = statusRobot.toColor(connectionState.status),
+            onClick = onClickBtnStatus
         )
 
         Row(Modifier.weight(1F), horizontalArrangement = Arrangement.End) {
-            
+
             TempIndicator(
                 modifier = Modifier,
-                tempImu = robotStateViewModel.robotDynamicData?.tempImu ?: 0F
+                tempImu = tempImu
             )
 
             VerticalDivider(
@@ -75,9 +81,9 @@ fun StatusBarScreen(robotStateViewModel: RobotStateViewModel) {
             )
 
             BatteryIndicator(
-                batteryState = robotStateViewModel.batteryState,
-                isConnected = robotStateViewModel.connectionState.status == StatusConnection.CONNECTED,
-                isMcbOff = robotStateViewModel.statusRobot == StatusRobot.ERROR_MCB_CONNECTION
+                batteryState = batteryState,
+                isConnected = connectionState.status == StatusConnection.CONNECTED,
+                isMcbOff = statusRobot == StatusRobot.ERROR_MCB_CONNECTION
             )
         }
     }
@@ -104,7 +110,7 @@ private fun TempIndicator(
 
         Text(
             modifier = Modifier,
-            text = stringResource(R.string.placeholder_temp,tempImu),
+            text = stringResource(R.string.placeholder_temp, tempImu),
             style = CustomTextStyles.textStyle16Bold
         )
     }
@@ -117,16 +123,10 @@ private fun TempIndicator(
 @Composable
 fun StatusBarScreenPreview() {
 
-    // TODO: arreglar preview!
-//    val dummyStatusRobot = remember { mutableStateOf(StatusRobot.INIT) }
-//    val dummyStatusConnection = remember { mutableStateOf(ConnectionState()) }
-//    val dummyTempImu = remember { mutableFloatStateOf(19.2F) }
-//    val dummyBattery = remember { mutableStateOf(Battery()) }
-
-//    StatusBarScreen(
-//        statusRobot = dummyStatusRobot,
-//        connectionState = dummyStatusConnection,
-//        tempImu = dummyTempImu,
-//        batteryState = dummyBattery
-//    )
+    StatusBarScreen(
+        statusRobot = StatusRobot.INIT,
+        connectionState = ConnectionState(),
+        tempImu = 23F,
+        batteryState = Battery()
+    ) { }
 }
