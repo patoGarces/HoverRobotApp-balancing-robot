@@ -1,4 +1,4 @@
-package com.app.hoverrobot.ui.navigationFragment.compose
+package com.app.hoverrobot.ui.navigationScreen.compose
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.detectDragGestures

@@ -1,6 +1,5 @@
-package com.app.hoverrobot.ui.navigationFragment.compose
+package com.app.hoverrobot.ui.navigationScreen
 
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -17,7 +16,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -28,41 +26,25 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.app.hoverrobot.R
-import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreenAction.OnDearmedAction
-import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreenAction.OnNewDragCompassInteraction
-import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreenAction.OnNewJoystickInteraction
-import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreenAction.OnYawLeftAction
-import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreenAction.OnYawRightAction
 import kotlinx.coroutines.delay
-import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.map
 import com.app.hoverrobot.data.models.comms.PointCloudItem
+import com.app.hoverrobot.data.utils.ToolBox.round
+import com.app.hoverrobot.ui.RobotStateViewModel
 import com.app.hoverrobot.ui.composeUtils.ScatterChartCompose
 import com.app.hoverrobot.ui.composeUtils.ArcSeekBar
 import com.app.hoverrobot.ui.composeUtils.DistancePickerDialog
-import com.app.hoverrobot.ui.navigationFragment.NavigationViewModel
-import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreenAction.OnFixedDistance
-import java.math.BigDecimal
-import java.math.RoundingMode
+import com.app.hoverrobot.ui.navigationScreen.compose.CompassComposable
+import com.app.hoverrobot.ui.navigationScreen.compose.FixedDirection
+import com.app.hoverrobot.ui.navigationScreen.compose.JoystickAnalogCompose
 import kotlin.math.abs
-import kotlin.math.pow
-import kotlin.math.roundToInt
-
-
-// TODO: mover a Utils
-private fun Float.round(decimals: Int = 2): Float {
-    val factor = 10.0.pow(decimals.toDouble()).toFloat()
-    return (this * factor).roundToInt() / factor
-}
 
 @Composable
 fun NavigationScreen(
-    navigationViewModel: NavigationViewModel = hiltViewModel(),
+    robotStateViewModel: RobotStateViewModel,
     enableSeekbarsYaw: Boolean = false,
     disableCompass: Boolean = false,
 ) {
@@ -73,20 +55,20 @@ fun NavigationScreen(
     var showDialog by remember { mutableStateOf(false) }
     var isForwardMove by remember { mutableStateOf(true) }
     var actualDegress = remember {
-        derivedStateOf { navigationViewModel.dynamicData?.yawAngle?.toInt() ?: 0 }
+        derivedStateOf { robotStateViewModel.robotDynamicData?.yawAngle?.toInt() ?: 0 }
     }
 
-    LaunchedEffect(navigationViewModel.isRobotStabilized) {
-        while (navigationViewModel.isRobotStabilized) {
-            navigationViewModel.newCoordinatesJoystick(
-                (joystickX * navigationViewModel.getAggressivenessLevel().normalizedFactor).round().toInt(),
-                (joystickY * navigationViewModel.getAggressivenessLevel().normalizedFactor).round().toInt()
+    LaunchedEffect(robotStateViewModel.isRobotStabilized) {
+        while (robotStateViewModel.isRobotStabilized) {
+            robotStateViewModel.newCoordinatesJoystick(
+                (joystickX * robotStateViewModel.getAggressivenessLevel().normalizedFactor).round().toInt(),
+                (joystickY * robotStateViewModel.getAggressivenessLevel().normalizedFactor).round().toInt()
             )
             delay(50)
         }
     }
 
-    if (!navigationViewModel.isRobotConnected) return
+    if (!robotStateViewModel.isRobotConnected) return
 
     if (showDialog) {
         DistancePickerDialog(
@@ -97,7 +79,7 @@ fun NavigationScreen(
                 showDialog = false
                 val dirMeters = if (isForwardMove) meters else -meters
 
-                navigationViewModel.sendNewMovePosition(
+                robotStateViewModel.sendNewMovePosition(
                     abs(dirMeters),
                     dirMeters < 0
                 )
@@ -106,7 +88,7 @@ fun NavigationScreen(
     }
 
     Box {
-        ScatterChartCompose(navigationViewModel.pointCloud)
+        ScatterChartCompose(robotStateViewModel.pointCloud)
 
         Column(Modifier.align(Alignment.BottomCenter)) {
             Row(
@@ -185,22 +167,22 @@ fun NavigationScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     YawControlButtons(
-                        isRobotStabilized = navigationViewModel.isRobotStabilized,
+                        isRobotStabilized = robotStateViewModel.isRobotStabilized,
                         yawLeftText = stringResource(
                             R.string.control_move_placeholder_direction,
                             leftAngleDir
                         ),
                         yawLeftOnClick = {
-                            navigationViewModel.sendNewMoveRelYaw(leftAngleDir.toFloat())
+                            robotStateViewModel.sendNewMoveRelYaw(leftAngleDir.toFloat())
                         },
                         yawRightText = stringResource(
                             R.string.control_move_placeholder_direction,
                             rightAngleDir
                         ),
                         yawRightOnClick = {
-                            navigationViewModel.sendNewMoveRelYaw(rightAngleDir.toFloat())
+                            robotStateViewModel.sendNewMoveRelYaw(rightAngleDir.toFloat())
                         },
-                        onDearmedClick = { navigationViewModel.sendDearmedCommand() }
+                        onDearmedClick = { robotStateViewModel.sendDearmedCommand() }
                     )
                 }
 
@@ -230,7 +212,7 @@ fun NavigationScreen(
             // TODO: revisar por que al mostrar este composable se rompe la preview
             if (!disableCompass) {
                 CompassComposable(actualDegress = actualDegress) {
-                    navigationViewModel.sendNewMoveAbsYaw(it)
+                    robotStateViewModel.sendNewMoveAbsYaw(it)
                 }
             }
         }

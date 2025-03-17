@@ -1,15 +1,19 @@
-package com.app.hoverrobot.ui.navigationFragment
+package com.app.hoverrobot.ui
 
-import android.util.Log
-import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import com.app.hoverrobot.data.models.Aggressiveness
+import com.app.hoverrobot.data.models.Battery
 import com.app.hoverrobot.data.models.comms.CommandsRobot
+import com.app.hoverrobot.data.models.comms.ConnectionState
 import com.app.hoverrobot.data.models.comms.DirectionControl
+import com.app.hoverrobot.data.models.comms.PidSettings
 import com.app.hoverrobot.data.models.comms.PointCloudItem
 import com.app.hoverrobot.data.models.comms.RobotDynamicData
+import com.app.hoverrobot.data.models.comms.RobotLocalConfig
+import com.app.hoverrobot.data.models.toPercentLevel
 import com.app.hoverrobot.data.repositories.CommsRepository
 import com.app.hoverrobot.data.repositories.StoreSettings
 import com.app.hoverrobot.data.utils.StatusConnection
@@ -17,43 +21,66 @@ import com.app.hoverrobot.data.utils.StatusRobot
 import com.app.hoverrobot.data.utils.ToolBox.ioScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import com.app.hoverrobot.data.models.Aggressiveness
 import kotlinx.coroutines.runBlocking
+import javax.inject.Inject
 
 @HiltViewModel
-class NavigationViewModel @Inject constructor(
-    private val commsRepository: CommsRepository,
-    private val storeSettings: StoreSettings
-) : ViewModel() {
+class RobotStateViewModel @Inject constructor(
+        private val commsRepository: CommsRepository,
+        private val storeSettings: StoreSettings
+): ViewModel() {
 
-    var dynamicData by mutableStateOf<RobotDynamicData?>(null)
+    var localConfigFromRobot by mutableStateOf(RobotLocalConfig())
+        internal set
+
+    var statusRobot by mutableStateOf<StatusRobot>(StatusRobot.INIT)
+        internal set
+
+    var batteryState by mutableStateOf<Battery>(Battery())
+        internal set
+
+    var robotDynamicData by mutableStateOf<RobotDynamicData?>(null)
+        internal set
+
+    var connectionState by mutableStateOf(ConnectionState())
         internal set
 
     var pointCloud = mutableStateOf<PointCloudItem>(PointCloudItem())
         internal set
 
-    var isRobotConnected by mutableStateOf(false)
-        internal set
+    val isRobotStabilized: Boolean
+        get() = statusRobot == StatusRobot.STABILIZED
 
-    var isRobotStabilized by mutableStateOf(false)
-        internal set
+    val isRobotConnected: Boolean
+        get() = commsRepository.connectionState.value.status == StatusConnection.CONNECTED
 
     init {
         ioScope.launch {
             commsRepository.connectionState.collect {
-                isRobotConnected  = it.status == StatusConnection.CONNECTED
+                connectionState = it
+            }
+        }
+
+        ioScope.launch {
+            commsRepository.robotLocalConfigFlow.collect {
+                it?.let { localConfig ->
+                    localConfigFromRobot = localConfig
+                }
             }
         }
 
         ioScope.launch {
             commsRepository.dynamicDataRobotFlow.collect {
-                dynamicData = it
-                isRobotStabilized = it.statusCode == StatusRobot.STABILIZED
+                robotDynamicData = it
+                it.let {
+                    statusRobot = it.statusCode
 
+                    batteryState = Battery(
+                        it.isCharging,
+                        it.batVoltage.toPercentLevel(),
+                        it.batVoltage
+                    )
+                }
             }
         }
 
@@ -72,6 +99,29 @@ class NavigationViewModel @Inject constructor(
 //        }
     }
 
+
+    fun saveLocalSettings(newSetting: PidSettings): Boolean {
+        return if(sendNewPidSettings(newSetting))
+            sendCommand(CommandsRobot.SAVE_PARAMS_SETTINGS)
+        else false
+    }
+
+    fun sendNewPidSettings(newSetting : PidSettings): Boolean {
+        return if (isRobotConnected) {
+            commsRepository.sendPidParams(newSetting)
+            true
+        }
+        else false
+    }
+
+    fun sendCommand(command: CommandsRobot,value: Float = 0F): Boolean {
+        return if (isRobotConnected) {
+            commsRepository.sendCommand(command,value)
+            true
+        }
+        else false
+    }
+
     fun getAggressivenessLevel(): Aggressiveness = runBlocking { storeSettings.getAggressiveness() }
 
     fun setLevelAggressiveness(level: Aggressiveness) {
@@ -79,7 +129,6 @@ class NavigationViewModel @Inject constructor(
     }
 
     fun newCoordinatesJoystick(axisX: Int, axisY: Int) {
-        Log.i("Aggressiveness","axisX: $axisX")
         if (isRobotConnected) {
             commsRepository.sendDirectionControl(DirectionControl(axisX.toShort(), axisY.toShort()))
         }

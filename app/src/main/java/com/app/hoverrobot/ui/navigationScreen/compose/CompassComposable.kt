@@ -1,4 +1,4 @@
-package com.app.hoverrobot.ui.navigationFragment.compose
+package com.app.hoverrobot.ui.navigationScreen.compose
 
 import android.view.MotionEvent
 import androidx.compose.foundation.layout.fillMaxWidth
