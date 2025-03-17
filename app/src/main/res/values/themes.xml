@@ -4,48 +4,4 @@
     </style>
 
     <style name="Theme.HoverRobot" parent="Base.Theme.HoverRobot" />
-
-    <!--    Estilos textview de statusData Fragment-->
-    <style name="styleTvStatusData" parent="Widget.AppCompat.TextView">
-        <item name="android:height">35dp</item>
-        <item name="android:textSize">14sp</item>
-        <item name="android:textColor">@color/white</item>
-        <item name="android:gravity">center</item>
-        <item name="android:textAlignment">center</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:padding">4dp</item>
-        <item name="android:background">@drawable/background_btn_status</item>
-    </style>
-
-    <!--    Estilos textview de statusBar Fragment-->
-    <style name="styleTvStatusBar" parent="Widget.AppCompat.TextView">
-        <item name="android:textSize">14sp</item>
-        <item name="android:textColor">@color/white</item>
-        <item name="android:gravity">center</item>
-        <item name="android:layout_marginEnd">4dp</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:backgroundTint">#FFFFFFFF</item>
-    </style>
-
-    <!--    Estilo sliders de configuracion-->
-    <style name="styleSlider" parent="Widget.MaterialComponents.Slider">
-        <item name="android:layout_marginHorizontal">16dp</item>
-    </style>
-
-    <!--    Estilos textview general-->
-    <style name="style_text_14sp_bold" parent="Widget.AppCompat.TextView">
-        <item name="android:textSize">14sp</item>
-        <item name="android:textColor">@color/white</item>
-        <item name="android:gravity">center</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:backgroundTint">#FFFFFFFF</item>
-    </style>
-
-    <!--    Estilos textview general-->
-    <style name="style_text_14sp" parent="Widget.AppCompat.TextView">
-        <item name="android:textSize">14sp</item>
-        <item name="android:textColor">@color/white</item>
-        <item name="android:gravity">center</item>
-        <item name="android:backgroundTint">#FFFFFFFF</item>
-    </style>
 </resources>

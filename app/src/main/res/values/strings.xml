@@ -9,8 +9,8 @@
     <string name="dialog_action_cancel">Cancelar</string>
     <string name="dialog_action_title">Distancia</string>
 
-    <!--    Status Data fragment-->
-    <string name="title_status_fragment">Estado general</string>
+    <!--    Status Data screen-->
+    <string name="title_status_screen">Estado general</string>
     <string name="title_aggressiveness">Agresividad:</string>
     <string name="title_status_robot">Estado robot:</string>
     <string name="title_connection_status">Estado conexion:</string>
@@ -36,7 +36,7 @@
     <string name="tab_analisis">Analisis</string>
     <string name="tab_settings">Configuracion</string>
 
-    <!--    Settings Fragment-->
+    <!--    Settings screen-->
     <string name="pid_group_title">Ajustes PID</string>
     <string name="pid_parameter_p_title">Parametro P:</string>
     <string name="pid_parameter_i_title">Parametro I:</string>
@@ -84,12 +84,12 @@
     <string name="status_robot_error_hall_l">Error HALL L</string>
     <string name="status_robot_error_battery">Error battery</string>
 
-    <!--    Navigation Fragment-->
+    <!--    Navigation screen-->
     <string name="control_move_placeholder_direction">%d°</string>
     <string name="title_forward">Avanzar</string>
     <string name="title_backward">Retroceder</string>
 
-    <!--    Analisis Fragment-->
+    <!--    Analisis screen-->
     <string name="dataset_title">Datasets</string>
     <string name="placeholder_center">Center: %.2f</string>
     <string name="placeholder_position">Pos: %.2fmts</string>

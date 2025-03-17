@@ -1,128 +1,32 @@
 package com.app.hoverrobot
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.view.WindowManager
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import androidx.activity.viewModels
+import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.ComposeView
-import androidx.core.view.isVisible
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentActivity
-import androidx.viewpager2.adapter.FragmentStateAdapter
-import androidx.viewpager2.widget.ViewPager2
-import com.app.hoverrobot.databinding.ActivityMainBinding
-import com.app.hoverrobot.ui.analisisFragment.AnalisisFragment
-import com.app.hoverrobot.ui.analisisFragment.AnalisisViewModel
-import com.app.hoverrobot.ui.navigationFragment.NavigationViewModel
-import com.app.hoverrobot.ui.navigationFragment.compose.NavigationScreen
-import com.app.hoverrobot.ui.settingsFragment.SettingsFragment
-import com.app.hoverrobot.ui.settingsFragment.SettingsFragmentViewModel
-import com.app.hoverrobot.ui.statusBarScreen.StatusBarScreen
-import com.app.hoverrobot.ui.statusBarScreen.StatusBarViewModel
-import com.app.hoverrobot.ui.statusDataScreen.StatusDataViewModel
-import com.app.hoverrobot.ui.statusDataScreen.StatusDataScreen
-import com.google.android.material.tabs.TabLayoutMediator
+import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityMainBinding
-
-    private val statusBarViewModel: StatusBarViewModel by viewModels()
-    private val statusDataViewModel: StatusDataViewModel by viewModels()
-    private val navigationViewModel: NavigationViewModel by viewModels()
-    private val analisisViewModel: AnalisisViewModel by viewModels()
-    private val settingsFragmentViewModel: SettingsFragmentViewModel by viewModels()
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-
-        // TODO: esto vuela cuando se migre todo a compose
-        val composeView = findViewById<ComposeView>(R.id.statusBarView)
-        composeView.setContent {
-            StatusBarScreen()
+        setContent {
+            val navController = rememberNavController()
+            MainScreen(navController)
         }
-
 //        webViewSetup()
-        setupViewPagerAndTabLayout()
     }
 
     override fun onResume() {
         super.onResume()
         hideSystemBars()
-    }
-
-    private fun setupViewPagerAndTabLayout() {
-
-        binding.viewPager.adapter = ViewPagerAdapter(this)
-
-        val tabTitles = arrayOf(
-            getString(R.string.tab_status),
-            getString(R.string.tab_navigation),
-            getString(R.string.tab_analisis),
-            getString(R.string.tab_settings)
-        )
-
-        TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
-            tab.text = tabTitles[position]
-        }.attach()
-
-        binding.viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
-            override fun onPageSelected(position: Int) {
-                super.onPageSelected(position)
-                // Controlar la visibilidad del StatusBarFragment
-                binding.statusBarView.isVisible = position != 0
-            }
-        })
-
-        // Fragment default:
-        binding.viewPager.currentItem = 1
-        binding.viewPager.isUserInputEnabled = false
-
-    }
-
-    private inner class ViewPagerAdapter(fragmentActivity: FragmentActivity) :
-        FragmentStateAdapter(fragmentActivity) {
-        override fun getItemCount(): Int {
-            return 4
-        }
-
-        override fun createFragment(position: Int): Fragment {
-            return when (position) {
-                0 -> ComposeFragment { StatusDataScreen() }
-                1 -> ComposeFragment { NavigationScreen() }
-                2 -> AnalisisFragment()
-                3 -> SettingsFragment()
-                else -> throw IllegalArgumentException("Invalid position: $position")
-            }
-        }
-    }
-
-    class ComposeFragment(
-        private val composable: @Composable () -> Unit
-    ) : Fragment() {
-        override fun onCreateView(
-            inflater: LayoutInflater, container: ViewGroup?,
-            savedInstanceState: Bundle?
-        ): View? {
-            // Devolver un ComposeView que inflará el Composable que pasamos
-            return ComposeView(requireContext()).apply {
-                setContent {
-                    composable()
-                }
-            }
-        }
     }
 
     private fun webViewSetup(){
@@ -136,7 +40,6 @@ class MainActivity : AppCompatActivity() {
             settings.javaScriptEnabled = true
             settings.safeBrowsingEnabled = true
         }
-
     }
 
     private fun hideSystemBars() {

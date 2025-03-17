@@ -1,4 +1,4 @@
-package com.app.hoverrobot.ui.settingsFragment.compose
+package com.app.hoverrobot.ui.settingsScreen
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
@@ -31,7 +31,6 @@ import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -48,22 +47,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.app.hoverrobot.R
+import com.app.hoverrobot.data.models.comms.CommandsRobot
 import com.app.hoverrobot.data.models.comms.PidParams
 import com.app.hoverrobot.data.models.comms.PidSettings
 import com.app.hoverrobot.data.models.comms.RobotLocalConfig
+import com.app.hoverrobot.data.models.comms.Wheel
 import com.app.hoverrobot.data.models.comms.asPidSettings
 import com.app.hoverrobot.data.models.comms.isDiffWithOriginalLocalConfig
 import com.app.hoverrobot.data.utils.StatusRobot
+import com.app.hoverrobot.ui.RobotStateViewModel
 import com.app.hoverrobot.ui.composeUtils.CustomButton
 import com.app.hoverrobot.ui.composeUtils.CustomSlider
 
 @Composable
-fun SettingsFragmentScreen(
-    initialRobotConfig: State<RobotLocalConfig>,
-    statusRobot: StatusRobot,
-    onPidSave: (PidSettings) -> Boolean,
-    onActionScreen: (OnActionSettingsScreen) -> Unit,
+fun SettingsScreen(
+    robotStateViewModel: RobotStateViewModel = hiltViewModel()
 ) {
     Column(
         Modifier
@@ -72,28 +72,28 @@ fun SettingsFragmentScreen(
             .verticalScroll(rememberScrollState())
     ) {
         PidSettingsCard(
-            originalLocalConfig = initialRobotConfig,
-            onSendPidSettings = { onActionScreen(OnActionSettingsScreen.OnNewSettings(it)) },
-            onPidSave = { onPidSave(it) },
+            originalLocalConfig = robotStateViewModel.localConfigFromRobot,
+            onSendPidSettings = { robotStateViewModel.sendNewPidSettings(it) },
+            onPidSave = { robotStateViewModel.saveLocalSettings(it) },
         )
 
         GeneralSettingsCard(
-            statusRobot = statusRobot,
-            onCalibrateImu = { onActionScreen(OnActionSettingsScreen.OnCalibrateImu) },
-            onCleanLeftMotor = { onActionScreen(OnActionSettingsScreen.OnCleanLeftMotor) },
-            onCleanRightMotor = { onActionScreen(OnActionSettingsScreen.OnCleanRightMotor) }
+            statusRobot = robotStateViewModel.statusRobot,
+            onCalibrateImu = { robotStateViewModel.sendCommand(CommandsRobot.CALIBRATE_IMU) },
+            onCleanLeftMotor = { robotStateViewModel.sendCommand(CommandsRobot.CLEAN_WHEELS, Wheel.LEFT_WHEEL.ordinal.toFloat()) },
+            onCleanRightMotor = { robotStateViewModel.sendCommand(CommandsRobot.CLEAN_WHEELS, Wheel.RIGHT_WHEEL.ordinal.toFloat()) }
         )
     }
 }
 
 @Composable
 private fun PidSettingsCard(
-    originalLocalConfig: State<RobotLocalConfig>,
+    originalLocalConfig: RobotLocalConfig,
     onSendPidSettings: (PidSettings) -> Unit,
     onPidSave: (PidSettings) -> Boolean,
 ) {
     var indexPid by remember { mutableIntStateOf(0) }
-    var newPidSettings by remember { mutableStateOf(originalLocalConfig.value.asPidSettings(indexPid)) }
+    var newPidSettings by remember { mutableStateOf(originalLocalConfig.asPidSettings(indexPid)) }
     var enablePidSave by remember { mutableStateOf(false) }
     var enablePidReset by remember { mutableStateOf(false) }
 
@@ -106,15 +106,15 @@ private fun PidSettingsCard(
         Color.Yellow
     )
 
-    LaunchedEffect(originalLocalConfig.value) {
-        newPidSettings = originalLocalConfig.value.asPidSettings(indexPid)
-        enablePidReset = newPidSettings.isDiffWithOriginalLocalConfig(originalLocalConfig.value)
-        enablePidSave = newPidSettings.isDiffWithOriginalLocalConfig(originalLocalConfig.value)
+    LaunchedEffect(originalLocalConfig) {
+        newPidSettings = originalLocalConfig.asPidSettings(indexPid)
+        enablePidReset = newPidSettings.isDiffWithOriginalLocalConfig(originalLocalConfig)
+        enablePidSave = newPidSettings.isDiffWithOriginalLocalConfig(originalLocalConfig)
     }
 
     LaunchedEffect(newPidSettings) {
-        enablePidReset = newPidSettings.isDiffWithOriginalLocalConfig(originalLocalConfig.value)
-        enablePidSave = newPidSettings.isDiffWithOriginalLocalConfig(originalLocalConfig.value)
+        enablePidReset = newPidSettings.isDiffWithOriginalLocalConfig(originalLocalConfig)
+        enablePidSave = newPidSettings.isDiffWithOriginalLocalConfig(originalLocalConfig)
         onSendPidSettings(newPidSettings)
     }
 
@@ -124,13 +124,13 @@ private fun PidSettingsCard(
         onPidSync = { onSendPidSettings(newPidSettings) }, // simplemente reenvio el pidSetting
         enablePidReset = enablePidReset,
         onPidReset = {
-            newPidSettings = originalLocalConfig.value.asPidSettings(indexPid)
+            newPidSettings = originalLocalConfig.asPidSettings(indexPid)
             onSendPidSettings(newPidSettings)
         },
         outlineColor = listColor[indexPid],
         onIndexPidChange = {
             indexPid = it
-            newPidSettings = originalLocalConfig.value.asPidSettings(indexPid)
+            newPidSettings = originalLocalConfig.asPidSettings(indexPid)
             outlineColor = listColor[it]
         }
     )
@@ -447,8 +447,9 @@ private fun SliderParam(
 @Preview(
     device = "spec:width=411dp,height=891dp,dpi=420,isRound=false,chinSize=0dp,orientation=landscape"
 )
-private fun SettingsFragmentScreenPreview() {
+private fun SettingsScreenPreview() {
 
+    // TODO: arreglar previews
     val localConfig = remember {
         mutableStateOf(
             RobotLocalConfig(
@@ -460,9 +461,9 @@ private fun SettingsFragmentScreenPreview() {
             )
         )
     }
-    SettingsFragmentScreen(
-        initialRobotConfig = localConfig,
-        statusRobot = StatusRobot.STABILIZED,
-        onPidSave = { false }
-    ) {}
+//    SettingsScreen(
+//        initialRobotConfig = localConfig,
+//        statusRobot = StatusRobot.STABILIZED,
+//        onPidSave = { false }
+//    ) {}
 }
