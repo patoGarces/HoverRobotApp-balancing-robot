@@ -40,6 +40,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.app.hoverrobot.R
+import com.app.hoverrobot.data.models.comms.FrameRobotDynamicData
 import com.app.hoverrobot.data.models.comms.RobotDynamicData
 import com.app.hoverrobot.data.utils.StatusRobot
 import com.app.hoverrobot.ui.analisisFragment.compose.AnalisisScreenActions.OnClearData
@@ -53,7 +54,7 @@ import com.github.mikephil.charting.data.LineData
 
 @Composable
 fun AnalisisScreen(
-    dynamicData: State<RobotDynamicData?>,
+    lastDynamicData: State<FrameRobotDynamicData?>,
     actualLineData: State<LineData?>,
     limitAxis: State<Float>,
     statusRobot: State<StatusRobot?>,
@@ -94,7 +95,7 @@ fun AnalisisScreen(
                     onActionAnalisisScreen(OnPauseChange(it))
                 }
 
-                dynamicData.value?.let { HighlightValues(dynamicData) }
+                lastDynamicData.value?.robotData?.let { HighlightValues(it) }
             }
         }
 
@@ -112,7 +113,7 @@ fun AnalisisScreen(
 }
 
 @Composable
-private fun HighlightValues(dynamicItem: State<RobotDynamicData?>) {
+private fun HighlightValues(dynamicItem: RobotDynamicData) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -122,31 +123,31 @@ private fun HighlightValues(dynamicItem: State<RobotDynamicData?>) {
 
     ) {
         Text(
-            text = stringResource(R.string.placeholder_pitch, dynamicItem.value!!.pitchAngle),
+            text = stringResource(R.string.placeholder_pitch, dynamicItem.pitchAngle),
             color = Color.White,
             fontSize = 14.sp
         )
 
         Text(
-            text = stringResource(R.string.placeholder_roll, dynamicItem.value!!.rollAngle),
+            text = stringResource(R.string.placeholder_roll, dynamicItem.rollAngle),
             color = Color.White,
             fontSize = 14.sp
         )
 
         Text(
-            text = stringResource(R.string.placeholder_yaw, dynamicItem.value!!.yawAngle),
+            text = stringResource(R.string.placeholder_yaw, dynamicItem.yawAngle),
             color = Color.White,
             fontSize = 14.sp
         )
 
         Text(
-            text = stringResource(R.string.placeholder_center, dynamicItem.value!!.centerAngle),
+            text = stringResource(R.string.placeholder_center, dynamicItem.centerAngle),
             color = Color.White,
             fontSize = 14.sp
         )
 
         Text(
-            text = stringResource(R.string.placeholder_position, dynamicItem.value!!.posInMeters),
+            text = stringResource(R.string.placeholder_position, dynamicItem.posInMeters),
             color = Color.White,
             fontSize = 14.sp
         )
@@ -344,12 +345,13 @@ private fun AnalisisScreenPreview() {
     val dummyStatusRobot = remember { mutableStateOf(StatusRobot.TEST_MODE) }
     val dummyLimitAxis = remember { mutableFloatStateOf(100F) }
 
+//    TODO: arreglar
     Column {
-        AnalisisScreen(
-            actualLineData = dummyLineData,
-            dynamicData = dummyDynamicData,
-            limitAxis = dummyLimitAxis,
-            statusRobot = dummyStatusRobot
-        ) {}
+//        AnalisisScreen(
+//            actualLineData = dummyLineData,
+//            dynamicData = dummyDynamicData,
+//            limitAxis = dummyLimitAxis,
+//            statusRobot = dummyStatusRobot
+//        ) {}
     }
 }

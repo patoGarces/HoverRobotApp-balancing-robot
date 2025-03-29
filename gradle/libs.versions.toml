@@ -1,6 +1,6 @@
 [versions]
 activityCompose = "1.9.3"
-agp = "8.7.3"
+agp = "8.9.1"
 androidGifDrawable = "1.2.19"
 androidxMaterial = "1.7.6"
 datastorePreferences = "1.1.1"
