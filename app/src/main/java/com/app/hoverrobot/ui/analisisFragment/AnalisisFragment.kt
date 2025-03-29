@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -18,13 +20,9 @@ import com.app.hoverrobot.ui.analisisFragment.compose.AnalisisScreen
 import com.app.hoverrobot.ui.analisisFragment.compose.AnalisisScreenActions
 import com.app.hoverrobot.ui.analisisFragment.resources.EntriesMaps.datasetColors
 import com.app.hoverrobot.ui.analisisFragment.resources.EntriesMaps.datasetLabels
-import com.app.hoverrobot.ui.analisisFragment.resources.EntriesMaps.updateWithFrame
 import com.app.hoverrobot.ui.analisisFragment.resources.LineDataKeys
 import com.app.hoverrobot.ui.analisisFragment.resources.SelectedDataset
-import com.github.mikephil.charting.components.LimitLine
-import com.github.mikephil.charting.data.Entry
-import com.github.mikephil.charting.data.LineData
-import com.github.mikephil.charting.data.LineDataSet
+import ir.ehsannarmani.compose_charts.models.Line
 
 class AnalisisFragment : Fragment() {
 
@@ -33,12 +31,12 @@ class AnalisisFragment : Fragment() {
     private var initTimeStamp: Long = 0
     private var selectedDataset: SelectedDataset? = SelectedDataset.DATASET_IMU
 
-    private val entryMap: MutableMap<LineDataKeys, MutableList<Entry>> = mutableMapOf()
-    private val lineDataMap: MutableMap<LineDataKeys, LineDataSet> = mutableMapOf()
+//    private val entryMap: MutableMap<LineDataKeys, MutableList<Entry>> = mutableMapOf()
+//    private val lineDataMap: MutableMap<LineDataKeys, LineDataSet> = mutableMapOf()
 
     private val datasetKeys = LineDataKeys.entries.toList()
 
-    private var actualLineData = mutableStateOf<LineData?>(null)
+//    private var actualLineData = mutableStateOf<LineData?>(null)
     private var limixAxis = mutableFloatStateOf(100F)
 
     private var isAnalisisPaused = false
@@ -52,23 +50,27 @@ class AnalisisFragment : Fragment() {
     ) = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         setContent {
-            AnalisisScreen(
-                dynamicData = analisisViewModel.newDataAnalisis.observeAsState(),
-                actualLineData = actualLineData,
-                statusRobot = analisisViewModel.statusCode,
-                limitAxis = limixAxis
-            ) { onAction ->
-                when (onAction) {
-                    is AnalisisScreenActions.OnDatasetChange -> {
-                        selectedDataset = onAction.selectedDataset
-                    }
+            MaterialTheme {
 
-                    is AnalisisScreenActions.OnPauseChange -> {
-                        isAnalisisPaused = onAction.isPaused
-                    }
+                AnalisisScreen(
+//                    dynamicData = analisisViewModel.newDataAnalisis.observeAsState(),
+                    listDynamicData = analisisViewModel.listOfDynamicData.collectAsState(),
+                    statusRobot = analisisViewModel.statusCode,
+                    limitAxis = limixAxis
+                ) { onAction ->
+                    when (onAction) {
+                        is AnalisisScreenActions.OnDatasetChange -> {
+                            selectedDataset = onAction.selectedDataset
+                        }
 
-                    is AnalisisScreenActions.OnClearData -> {
-                        entryMap.values.forEach { it.clear() }
+                        is AnalisisScreenActions.OnPauseChange -> {
+                            isAnalisisPaused = onAction.isPaused
+                        }
+
+                        is AnalisisScreenActions.OnClearData -> {
+//                        entryMap.values.forEach { it.clear() }
+                            analisisViewModel.clearDynamicData()
+                        }
                     }
                 }
             }
@@ -88,7 +90,7 @@ class AnalisisFragment : Fragment() {
         analisisViewModel.newDataAnalisis.observe(viewLifecycleOwner) {
             it?.let {
                 if (!isAnalisisPaused) {
-                    newDynamicFrame(it)
+//                    newDynamicFrame(it)
                 }
             }
         }
@@ -99,11 +101,12 @@ class AnalisisFragment : Fragment() {
             val labelResId = datasetLabels[key] ?: R.string.dataset_default
             val colorResId = datasetColors[key] ?: R.color.black
 
-            entryMap[key] = mutableListOf()  // Inicializamos la lista
-            lineDataMap[key] = createLineDataSet(entryMap[key]!!, labelResId, colorResId)
+//            entryMap[key] = mutableListOf()  // Inicializamos la lista
+//            lineDataMap[key] = createLineDataSet(entryMap[key]!!, labelResId, colorResId)
         }
     }
 
+    /*
     private fun createLineDataSet(
         entry: List<Entry>,
         labelResId: Int,
@@ -252,5 +255,7 @@ class AnalisisFragment : Fragment() {
         limixAxis.floatValue = limit
 //        binding.chart.axisLeft.removeAllLimitLines()
     }
+
+     */
 }
 

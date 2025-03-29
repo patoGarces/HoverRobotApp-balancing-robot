@@ -27,4 +27,11 @@ object CustomTextStyles {
         fontWeight = FontWeight.Normal,
         textAlign = TextAlign.Center
     )
+
+    val textStyle12Normal = TextStyle(
+        fontSize = 12.sp,
+        color = Color.White,
+        fontWeight = FontWeight.Normal,
+        textAlign = TextAlign.Start
+    )
 }
