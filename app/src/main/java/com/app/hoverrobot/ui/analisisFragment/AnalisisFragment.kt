@@ -4,15 +4,16 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import com.app.hoverrobot.R
-import com.app.hoverrobot.data.models.comms.RobotDynamicData
+import com.app.hoverrobot.data.models.comms.FrameRobotDynamicData
 import com.app.hoverrobot.data.models.comms.RobotLocalConfig
 import com.app.hoverrobot.ui.analisisFragment.compose.AnalisisScreen
 import com.app.hoverrobot.ui.analisisFragment.compose.AnalisisScreenActions
@@ -25,12 +26,16 @@ import com.github.mikephil.charting.components.LimitLine
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 
 class AnalisisFragment : Fragment() {
 
     private val analisisViewModel: AnalisisViewModel by viewModels(ownerProducer = { requireActivity() })
 
-    private var initTimeStamp: Long = 0
     private var selectedDataset: SelectedDataset? = SelectedDataset.DATASET_IMU
 
     private val entryMap: MutableMap<LineDataKeys, MutableList<Entry>> = mutableMapOf()
@@ -52,8 +57,12 @@ class AnalisisFragment : Fragment() {
     ) = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         setContent {
+            val lastDynamicData = analisisViewModel.newDataAnalisis
+                .map { it.lastOrNull() } // Obtener el último elemento o null si está vacío
+                .collectAsState(initial = null)
+
             AnalisisScreen(
-                dynamicData = analisisViewModel.newDataAnalisis.observeAsState(),
+                lastDynamicData = lastDynamicData,
                 actualLineData = actualLineData,
                 statusRobot = analisisViewModel.statusCode,
                 limitAxis = limixAxis
@@ -79,18 +88,24 @@ class AnalisisFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         initDatasets()
         setupObserver()
-
-        initTimeStamp = System.currentTimeMillis()
     }
 
     private fun setupObserver() {
 
-        analisisViewModel.newDataAnalisis.observe(viewLifecycleOwner) {
-            it?.let {
-                if (!isAnalisisPaused) {
-                    newDynamicFrame(it)
-                }
+        lifecycleScope.launch {
+            // Primero proceso todos los frames que corrieron sin el fragment abierto
+            analisisViewModel.getStoredData().forEach { storedData ->
+                newDynamicFrame(storedData)
             }
+
+            // Una vez procesados los datos viejos, escucho los nuevos frames en tiempo real
+            analisisViewModel.newDataAnalisis
+                .onEach { newList ->
+                    if (!isAnalisisPaused && newList.isNotEmpty()) {
+                        newDynamicFrame(newList.last())
+                    }
+                }
+                .launchIn(lifecycleScope) // Se ejecuta siempre en el MainThread y sigue el ciclo de vida
         }
     }
 
@@ -117,12 +132,12 @@ class AnalisisFragment : Fragment() {
         }
     }
 
-    private fun newDynamicFrame(newFrame: RobotDynamicData) {
-        val actualTimeInSec = ((System.currentTimeMillis() - initTimeStamp).toFloat()) / 1000
-        entryMap.updateWithFrame(actualTimeInSec, newFrame)
-
-        lineDataMap.values.forEach { it.notifyDataSetChanged() }
-        updateDataset(selectedDataset)
+    private fun newDynamicFrame(newFrame: FrameRobotDynamicData) {
+        lifecycleScope.launch(Dispatchers.Main) {
+            entryMap.updateWithFrame(newFrame)
+            lineDataMap.values.forEach { it.notifyDataSetChanged() }
+            updateDataset(selectedDataset)
+        }
     }
 
     private fun updateDataset(selectedDataset: SelectedDataset?) {

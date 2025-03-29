@@ -1,6 +1,7 @@
 package com.app.hoverrobot.ui.analisisFragment.resources
 
 import com.app.hoverrobot.R
+import com.app.hoverrobot.data.models.comms.FrameRobotDynamicData
 import com.app.hoverrobot.data.models.comms.RobotDynamicData
 import com.app.hoverrobot.data.models.toPercentLevel
 import com.github.mikephil.charting.data.Entry
@@ -43,22 +44,22 @@ object EntriesMaps {
         LineDataKeys.LINEDATA_KEY_BATTERY_LVL to R.color.status_turquesa
     )
 
-    fun MutableMap<LineDataKeys, MutableList<Entry>>.updateWithFrame(actualTimeInSec: Float, newFrame: RobotDynamicData) {
-        this[LineDataKeys.LINEDATA_KEY_ANGLE_PITCH]?.add(Entry(actualTimeInSec, newFrame.pitchAngle))
-        this[LineDataKeys.LINEDATA_KEY_ANGLE_ROLL]?.add(Entry(actualTimeInSec, newFrame.rollAngle))
-        this[LineDataKeys.LINEDATA_KEY_ANGLE_YAW]?.add(Entry(actualTimeInSec, newFrame.yawAngle))
-        this[LineDataKeys.LINEDATA_KEY_SPEED_L]?.add(Entry(actualTimeInSec, newFrame.speedL.toFloat() / 10))
-        this[LineDataKeys.LINEDATA_KEY_SPEED_R]?.add(Entry(actualTimeInSec, newFrame.speedR.toFloat() / 10))
-        this[LineDataKeys.LINEDATA_KEY_CURRENT_L]?.add(Entry(actualTimeInSec, newFrame.currentL))
-        this[LineDataKeys.LINEDATA_KEY_CURRENT_R]?.add(Entry(actualTimeInSec, newFrame.currentR))
-        this[LineDataKeys.LINEDATA_KEY_SETPOINT_ANGLE]?.add(Entry(actualTimeInSec, newFrame.setPointAngle))
-        this[LineDataKeys.LINEDATA_KEY_SETPOINT_POS]?.add(Entry(actualTimeInSec, newFrame.setPointPos))
-        this[LineDataKeys.LINEDATA_KEY_SETPOINT_YAW]?.add(Entry(actualTimeInSec, newFrame.setPointYaw))
-        this[LineDataKeys.LINEDATA_KEY_SETPOINT_SPEED]?.add(Entry(actualTimeInSec, newFrame.setPointSpeed))
-        this[LineDataKeys.LINEDATA_KEY_POS_IN_MTS]?.add(Entry(actualTimeInSec, newFrame.posInMeters))
-        this[LineDataKeys.LINEDATA_KEY_OUTPUT_YAW]?.add(Entry(actualTimeInSec, newFrame.outputYawControl))
-        this[LineDataKeys.LINEDATA_KEY_ACTUAL_SPEED]?.add(Entry(actualTimeInSec, newFrame.speedL.toFloat()))  // TODO: tomar velocidad promedio
-        this[LineDataKeys.LINEDATA_KEY_BATTERY_LVL]?.add(Entry(actualTimeInSec, newFrame.batVoltage.toPercentLevel().toFloat()))
+    fun MutableMap<LineDataKeys, MutableList<Entry>>.updateWithFrame(newFrame: FrameRobotDynamicData) {
+        this[LineDataKeys.LINEDATA_KEY_ANGLE_PITCH]?.add(Entry(newFrame.timeStamp, newFrame.robotData.pitchAngle))
+        this[LineDataKeys.LINEDATA_KEY_ANGLE_ROLL]?.add(Entry(newFrame.timeStamp, newFrame.robotData.rollAngle))
+        this[LineDataKeys.LINEDATA_KEY_ANGLE_YAW]?.add(Entry(newFrame.timeStamp, newFrame.robotData.yawAngle))
+        this[LineDataKeys.LINEDATA_KEY_SPEED_L]?.add(Entry(newFrame.timeStamp, newFrame.robotData.speedL.toFloat() / 10))
+        this[LineDataKeys.LINEDATA_KEY_SPEED_R]?.add(Entry(newFrame.timeStamp, newFrame.robotData.speedR.toFloat() / 10))
+        this[LineDataKeys.LINEDATA_KEY_CURRENT_L]?.add(Entry(newFrame.timeStamp, newFrame.robotData.currentL))
+        this[LineDataKeys.LINEDATA_KEY_CURRENT_R]?.add(Entry(newFrame.timeStamp, newFrame.robotData.currentR))
+        this[LineDataKeys.LINEDATA_KEY_SETPOINT_ANGLE]?.add(Entry(newFrame.timeStamp, newFrame.robotData.setPointAngle))
+        this[LineDataKeys.LINEDATA_KEY_SETPOINT_POS]?.add(Entry(newFrame.timeStamp, newFrame.robotData.setPointPos))
+        this[LineDataKeys.LINEDATA_KEY_SETPOINT_YAW]?.add(Entry(newFrame.timeStamp, newFrame.robotData.setPointYaw))
+        this[LineDataKeys.LINEDATA_KEY_SETPOINT_SPEED]?.add(Entry(newFrame.timeStamp, newFrame.robotData.setPointSpeed))
+        this[LineDataKeys.LINEDATA_KEY_POS_IN_MTS]?.add(Entry(newFrame.timeStamp, newFrame.robotData.posInMeters))
+        this[LineDataKeys.LINEDATA_KEY_OUTPUT_YAW]?.add(Entry(newFrame.timeStamp, newFrame.robotData.outputYawControl))
+        this[LineDataKeys.LINEDATA_KEY_ACTUAL_SPEED]?.add(Entry(newFrame.timeStamp, newFrame.robotData.speedL.toFloat()))  // TODO: tomar velocidad promedio
+        this[LineDataKeys.LINEDATA_KEY_BATTERY_LVL]?.add(Entry(newFrame.timeStamp, newFrame.robotData.batVoltage.toPercentLevel().toFloat()))
     }
 }
 

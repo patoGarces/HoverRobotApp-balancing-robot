@@ -5,6 +5,11 @@ import com.app.hoverrobot.data.utils.StatusRobot
 import java.nio.ByteBuffer
 
 
+data class FrameRobotDynamicData(
+    val robotData: RobotDynamicData,
+    val timeStamp: Float,
+)
+
 data class RobotDynamicData(
     var isCharging: Boolean,
     val batVoltage: Float,
