@@ -49,12 +49,11 @@ import com.app.hoverrobot.ui.analisisFragment.resources.SelectedDataset
 import com.app.hoverrobot.ui.composeUtils.CustomButton
 import com.app.hoverrobot.ui.composeUtils.CustomColors
 import com.app.hoverrobot.ui.composeUtils.LineChartCompose
-import com.github.mikephil.charting.data.LineData
+import ir.ehsannarmani.compose_charts.models.Line
 
 @Composable
 fun AnalisisScreen(
-    dynamicData: State<RobotDynamicData?>,
-    actualLineData: State<LineData?>,
+    listDynamicData: State<List<RobotDynamicData?>>,
     limitAxis: State<Float>,
     statusRobot: State<StatusRobot?>,
     onActionAnalisisScreen: (AnalisisScreenActions) -> Unit
@@ -87,14 +86,14 @@ fun AnalisisScreen(
             Column(Modifier.weight(1F)) {
                 LineChartCompose(
                     modifier = Modifier.weight(1F),
-                    actualLineData = actualLineData,
+                    listOfDynamicData = listDynamicData,
                     isAutoScaled = isAutoScaled,
                     limitAxes = limitAxis
                 ) {
                     onActionAnalisisScreen(OnPauseChange(it))
                 }
 
-                dynamicData.value?.let { HighlightValues(dynamicData) }
+//                listDynamicData.last()?.let { HighlightValues(listDynamicData) }
             }
         }
 
@@ -112,7 +111,7 @@ fun AnalisisScreen(
 }
 
 @Composable
-private fun HighlightValues(dynamicItem: State<RobotDynamicData?>) {
+private fun HighlightValues(dynamicItem: State<RobotDynamicData>) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -122,25 +121,25 @@ private fun HighlightValues(dynamicItem: State<RobotDynamicData?>) {
 
     ) {
         Text(
-            text = stringResource(R.string.placeholder_pitch, dynamicItem.value!!.pitchAngle),
+            text = stringResource(R.string.placeholder_pitch, dynamicItem.value.pitchAngle),
             color = Color.White,
             fontSize = 14.sp
         )
 
         Text(
-            text = stringResource(R.string.placeholder_roll, dynamicItem.value!!.rollAngle),
+            text = stringResource(R.string.placeholder_roll, dynamicItem.value.rollAngle),
             color = Color.White,
             fontSize = 14.sp
         )
 
         Text(
-            text = stringResource(R.string.placeholder_yaw, dynamicItem.value!!.yawAngle),
+            text = stringResource(R.string.placeholder_yaw, dynamicItem.value.yawAngle),
             color = Color.White,
             fontSize = 14.sp
         )
 
         Text(
-            text = stringResource(R.string.placeholder_center, dynamicItem.value!!.centerAngle),
+            text = stringResource(R.string.placeholder_center, dynamicItem.value.centerAngle),
             color = Color.White,
             fontSize = 14.sp
         )
@@ -340,16 +339,16 @@ private fun AnalisisScreenPreview() {
     )
 
     val dummyDynamicData = remember { mutableStateOf<RobotDynamicData?>(mockRobotDynamicData) }
-    val dummyLineData = remember { mutableStateOf<LineData?>(null) }
+    val dummyLinesDatas = remember { mutableStateOf<List<Line>?>(null) }
     val dummyStatusRobot = remember { mutableStateOf(StatusRobot.TEST_MODE) }
     val dummyLimitAxis = remember { mutableFloatStateOf(100F) }
 
     Column {
-        AnalisisScreen(
-            actualLineData = dummyLineData,
-            dynamicData = dummyDynamicData,
-            limitAxis = dummyLimitAxis,
-            statusRobot = dummyStatusRobot
-        ) {}
+//        AnalisisScreen(
+////            linesData = dummyLinesDatas,
+//            dynamicData = dummyDynamicData,
+//            limitAxis = dummyLimitAxis,
+//            statusRobot = dummyStatusRobot
+//        ) {}
     }
 }

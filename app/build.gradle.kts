@@ -66,7 +66,6 @@ dependencies {
 
     // Dependencias de Jetpack Compose
     implementation(libs.androidx.ui)
-    implementation(libs.androidx.material)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -94,7 +93,8 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
 
     // Plotter
-    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+    implementation(libs.compose.charts)
+//    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 
     // DataStore
     implementation(libs.androidx.datastore.preferences)

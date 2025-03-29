@@ -8,14 +8,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.ClearAll
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -33,7 +28,6 @@ import com.app.hoverrobot.data.utils.StatusMapper.toColor
 import com.app.hoverrobot.data.utils.StatusRobot
 import com.app.hoverrobot.data.utils.formatMillisToDate
 import com.app.hoverrobot.ui.composeUtils.CustomFloatingButton
-import java.nio.file.WatchEvent
 import kotlin.collections.mutableListOf
 
 @Composable
