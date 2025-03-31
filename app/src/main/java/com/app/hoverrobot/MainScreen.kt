@@ -76,7 +76,7 @@ fun MainScreen(navController: NavHostController) {
     val robotStateViewModel: RobotStateViewModel = viewModel()
 
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
-        ?: Screens.NAVIGATION.route // Default tab is navigation
+        ?: Screens.NAVIGATION.route
     val selectedIndex = tabs.indexOfFirst { it.route == currentRoute }.coerceAtLeast(0)
 
     Column(modifier = Modifier

@@ -1,15 +1,9 @@
 package com.app.hoverrobot.ui.composeUtils
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CornerBasedShape
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -19,7 +13,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
@@ -44,10 +37,10 @@ fun CustomSelectorComponent(
             SegmentedButton(
                 colors = SegmentedButtonDefaults.colors(
                     activeContainerColor = selectedColor,               // Color de fondo cuando está seleccionado
-                    inactiveContainerColor = Color.Transparent,     // Color de fondo cuando no está seleccionado
-                    activeContentColor = Color.White,               // Color del texto cuando está seleccionado
-                    inactiveContentColor = Color.White,              // Color del texto cuando no está seleccionado
-                    activeBorderColor = Color.Red,
+                    inactiveContainerColor = Color.Transparent,         // Color de fondo cuando no está seleccionado
+                    activeContentColor = Color.White,                   // Color del texto cuando está seleccionado
+                    inactiveContentColor = Color.White,                 // Color del texto cuando no está seleccionado
+                    activeBorderColor = Color.LightGray,
                     inactiveBorderColor = Color.White
                 ),
                 selected = selectedIndex == index,
@@ -70,7 +63,6 @@ fun CustomSelectorComponent(
         }
     }
 }
-
 
 @Preview
 @Composable

@@ -23,16 +23,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import com.app.hoverrobot.data.models.ChartLimitsConfig
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.Legend
+import com.github.mikephil.charting.components.XAxis
+import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
 
 @Composable
 fun LineChartCompose(
     modifier: Modifier,
     actualLineData: State<LineData?>,
     isAutoScaled: Boolean,
-    limitAxes: State<Float>,
+    chartLimitsConfig: State<ChartLimitsConfig>,
     onPause: (Boolean) -> Unit
 ) {
     var onPauseState by remember { mutableStateOf(false) }
@@ -44,7 +48,7 @@ fun LineChartCompose(
         )
     ) {
         AndroidView(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().padding(bottom = 4.dp),
             factory = { context ->
                 LineChart(context).apply {
 
@@ -61,6 +65,8 @@ fun LineChartCompose(
                     axisRight.setDrawGridLines(true)
                     xAxis.setDrawAxisLine(true)
                     xAxis.setDrawGridLines(true)
+                    xAxis.position = XAxis.XAxisPosition.BOTTOM
+
                     // touch gestures
                     setTouchEnabled(true)
                     isDragEnabled = true
@@ -68,18 +74,27 @@ fun LineChartCompose(
                     setPinchZoom(false)
 
                     //legend
-                    legend.verticalAlignment = Legend.LegendVerticalAlignment.TOP
-                    legend.horizontalAlignment = Legend.LegendHorizontalAlignment.RIGHT
-                    legend.orientation = Legend.LegendOrientation.VERTICAL
-                    legend.form = Legend.LegendForm.LINE
-                    legend.setDrawInside(true)
+                    legend.verticalAlignment = Legend.LegendVerticalAlignment.BOTTOM
+                    legend.horizontalAlignment = Legend.LegendHorizontalAlignment.CENTER
+                    legend.orientation = Legend.LegendOrientation.HORIZONTAL
+                    legend.form = Legend.LegendForm.CIRCLE
+                    legend.setDrawInside(false)
+
+                    setDrawMarkers(false)
                     invalidate()
                 }
             },
             update = { lineChart ->
 
-                val minAxis = -limitAxes.value
-                val maxAxis = limitAxes.value
+                val minAxis = -chartLimitsConfig.value.limitAxis
+                val maxAxis = chartLimitsConfig.value.limitAxis
+
+                lineChart.axisLeft.removeAllLimitLines()
+                if (!chartLimitsConfig.value.limitLines.isNullOrEmpty()) {
+                    chartLimitsConfig.value.limitLines!!.forEach {
+                        lineChart.axisLeft.addLimitLine(it)
+                    }
+                }
 
                 if (!isAutoScaled) {
                     lineChart.axisLeft.axisMinimum = minAxis
@@ -115,8 +130,28 @@ fun LineChartCompose(
 )
 @Composable
 private fun LineChartComposePreview() {
-    val dummyLineData = remember { mutableStateOf<LineData?>(null) }
-    val dummyLimitAxis = remember { mutableFloatStateOf(100F) }
+
+    val dummyEntries = listOf(
+        Entry(0f, -90f),
+        Entry(1f, 20f),
+        Entry(2f, 50f),
+        Entry(3f, -60f),
+        Entry(4f, 18f)
+    )
+
+    val dummyDataSet = LineDataSet(dummyEntries, "Sample Data").apply {
+        color = android.graphics.Color.RED
+        lineWidth = 2.5f
+        circleRadius = 1f
+        setDrawCircles(false)
+        setDrawCircleHole(false)
+        setDrawValues(false)
+        setDrawHighlightIndicators(false)
+        isHighlightEnabled = false
+    }
+
+    val dummyLineData = remember { mutableStateOf(LineData(dummyDataSet)) }
+    val dummyLimitAxis = remember { mutableStateOf(ChartLimitsConfig(100F, null)) }
 
     LineChartCompose(Modifier, dummyLineData, false, dummyLimitAxis) {}
 }

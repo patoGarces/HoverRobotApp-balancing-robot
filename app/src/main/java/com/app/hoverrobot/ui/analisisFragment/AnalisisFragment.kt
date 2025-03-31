@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -13,6 +12,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.app.hoverrobot.R
+import com.app.hoverrobot.data.models.ChartLimitsConfig
 import com.app.hoverrobot.data.models.comms.FrameRobotDynamicData
 import com.app.hoverrobot.data.models.comms.RobotLocalConfig
 import com.app.hoverrobot.ui.analisisFragment.compose.AnalisisScreen
@@ -44,7 +44,7 @@ class AnalisisFragment : Fragment() {
     private val datasetKeys = LineDataKeys.entries.toList()
 
     private var actualLineData = mutableStateOf<LineData?>(null)
-    private var limixAxis = mutableFloatStateOf(100F)
+    private var chartLimitsConfig = mutableStateOf<ChartLimitsConfig>(ChartLimitsConfig(100F, null))
 
     private var isAnalisisPaused = false
 
@@ -65,7 +65,7 @@ class AnalisisFragment : Fragment() {
                 lastDynamicData = lastDynamicData,
                 actualLineData = actualLineData,
                 statusRobot = analisisViewModel.statusCode,
-                limitAxis = limixAxis
+                chartLimitsConfig = chartLimitsConfig,
             ) { onAction ->
                 when (onAction) {
                     is AnalisisScreenActions.OnDatasetChange -> {
@@ -128,7 +128,11 @@ class AnalisisFragment : Fragment() {
             it.lineWidth = 2.5f
             it.circleRadius = 1f
             it.color = requireContext().getColor(colorResId)
-            it.setCircleColor(it.color)
+            it.setDrawCircles(false)
+            it.setDrawCircleHole(false)
+            it.setDrawValues(false)
+            it.setDrawHighlightIndicators(false)
+            it.isHighlightEnabled = false
         }
     }
 
@@ -142,7 +146,7 @@ class AnalisisFragment : Fragment() {
 
     private fun updateDataset(selectedDataset: SelectedDataset?) {
         selectedDataset?.let {
-                actualLineData.value = when (selectedDataset) {
+            actualLineData.value = when (selectedDataset) {
                 SelectedDataset.DATASET_IMU -> {
                     setImuMode()
                     LineData(
@@ -203,14 +207,10 @@ class AnalisisFragment : Fragment() {
     }
 
     private fun setMotorControlMode() {
-        limixAxis.floatValue = 1000F
-//        binding.chart.axisLeft.removeAllLimitLines()
+        chartLimitsConfig.value = ChartLimitsConfig(1000F, null)
     }
 
     private fun setImuMode() {
-
-        limixAxis.floatValue = 180F
-//        binding.chart.axisLeft.removeAllLimitLines()
         val colorSafetyLimits = requireContext().getColor(R.color.status_turquesa)
 
         robotConfig?.let { robotConfig ->
@@ -221,7 +221,6 @@ class AnalisisFragment : Fragment() {
             centerAngleLimitLine.labelPosition = LimitLine.LimitLabelPosition.LEFT_TOP
             centerAngleLimitLine.textSize = 10f
             centerAngleLimitLine.lineColor = requireContext().getColor(R.color.status_blue)
-//            binding.chart.axisLeft.addLimitLine(centerAngleLimitLine)
 
             val upperLimitLine =
                 LimitLine(
@@ -233,7 +232,6 @@ class AnalisisFragment : Fragment() {
             upperLimitLine.labelPosition = LimitLine.LimitLabelPosition.LEFT_TOP
             upperLimitLine.textSize = 10f
             upperLimitLine.lineColor = colorSafetyLimits
-//            binding.chart.axisLeft.addLimitLine(upperLimitLine)
 
             val lowerLimitLine = LimitLine(
                 robotConfig.centerAngle - robotConfig.safetyLimits,
@@ -244,14 +242,15 @@ class AnalisisFragment : Fragment() {
             lowerLimitLine.labelPosition = LimitLine.LimitLabelPosition.LEFT_TOP
             lowerLimitLine.textSize = 10f
             lowerLimitLine.lineColor = colorSafetyLimits
-//            binding.chart.axisLeft.addLimitLine(lowerLimitLine)
+
+            chartLimitsConfig.value = ChartLimitsConfig(
+                180F,
+                listOf(centerAngleLimitLine, upperLimitLine, lowerLimitLine)
+            )
         }
     }
 
     private fun setPidAngleMode() {
-        limixAxis.floatValue = 15F
-//        binding.chart.axisLeft.removeAllLimitLines()
-
         robotConfig?.let { robotConfig ->
             val centerAngleLimitLine = LimitLine(robotConfig.centerAngle, "center Angle")
             centerAngleLimitLine.lineWidth = 2f
@@ -259,13 +258,13 @@ class AnalisisFragment : Fragment() {
             centerAngleLimitLine.labelPosition = LimitLine.LimitLabelPosition.LEFT_TOP
             centerAngleLimitLine.textSize = 10f
             centerAngleLimitLine.lineColor = requireContext().getColor(R.color.status_blue)
-//            binding.chart.axisLeft.addLimitLine(centerAngleLimitLine)
+
+            chartLimitsConfig.value = ChartLimitsConfig(15F, null)
         }
     }
 
     private fun setPidMode(limit: Float) {
-        limixAxis.floatValue = limit
-//        binding.chart.axisLeft.removeAllLimitLines()
+        chartLimitsConfig.value = ChartLimitsConfig(limit, null)
     }
 }
 

@@ -332,7 +332,7 @@ private fun GeneralSettingsItem(
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -348,12 +348,14 @@ private fun GeneralSettingsItem(
         CustomButton(stringResource(firstButtonTitle), onClick = onClickFirst, isLoading = isLoading)
 
         secondButtonTitle?.let { title ->
+            Spacer(Modifier.width(8.dp))
+
             CustomButton(stringResource(title), onClick = onClickSecond ?: {}, isLoading = isLoading)
         }
     }
 
     HorizontalDivider(
-        Modifier.padding(horizontal = 32.dp),
+        Modifier.padding(horizontal = 16.dp),
         thickness = 1.dp,
         color = Color.Gray
     )
