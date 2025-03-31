@@ -12,6 +12,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.viewinterop.AndroidView
 import com.app.hoverrobot.data.models.comms.PointCloudItem
 import com.github.mikephil.charting.charts.ScatterChart
+import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.ScatterData
 import com.github.mikephil.charting.data.ScatterDataSet
@@ -38,6 +39,20 @@ fun ScatterChartCompose(
                 setTouchEnabled(false)
                 description.isEnabled = false
                 legend.isEnabled = false
+
+                xAxis.position = XAxis.XAxisPosition.BOTTOM // Asegura que el eje X esté en la parte inferior
+                xAxis.setDrawAxisLine(true) // Activa la línea del eje X
+
+                // ocultar las líneas de los ejes
+                axisLeft.setDrawAxisLine(false)  // Elimina línea izquierda (Y)
+                axisRight.setDrawAxisLine(false) // Elimina línea derecha (Y)
+                xAxis.setDrawAxisLine(false)     // Elimina línea del eje X
+
+                // ocultar las líneas de la cuadrícula
+                axisLeft.setDrawGridLines(false)
+                axisRight.setDrawGridLines(false)
+                xAxis.setDrawGridLines(false)
+
                 invalidate()
             }
         },

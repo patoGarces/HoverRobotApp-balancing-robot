@@ -40,6 +40,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.app.hoverrobot.R
+import com.app.hoverrobot.data.models.ChartLimitsConfig
 import com.app.hoverrobot.data.models.comms.FrameRobotDynamicData
 import com.app.hoverrobot.data.models.comms.RobotDynamicData
 import com.app.hoverrobot.data.utils.StatusRobot
@@ -56,7 +57,7 @@ import com.github.mikephil.charting.data.LineData
 fun AnalisisScreen(
     lastDynamicData: State<FrameRobotDynamicData?>,
     actualLineData: State<LineData?>,
-    limitAxis: State<Float>,
+    chartLimitsConfig: State<ChartLimitsConfig>,
     statusRobot: State<StatusRobot?>,
     onActionAnalisisScreen: (AnalisisScreenActions) -> Unit
 ) {
@@ -90,7 +91,7 @@ fun AnalisisScreen(
                     modifier = Modifier.weight(1F),
                     actualLineData = actualLineData,
                     isAutoScaled = isAutoScaled,
-                    limitAxes = limitAxis
+                    chartLimitsConfig = chartLimitsConfig,
                 ) {
                     onActionAnalisisScreen(OnPauseChange(it))
                 }
@@ -340,18 +341,19 @@ private fun AnalisisScreenPreview() {
         statusCode = StatusRobot.STABILIZED
     )
 
-    val dummyDynamicData = remember { mutableStateOf<RobotDynamicData?>(mockRobotDynamicData) }
+    val dummyFrameDynamicData = remember { mutableStateOf<FrameRobotDynamicData?>(
+        FrameRobotDynamicData(mockRobotDynamicData, 0F))
+    }
     val dummyLineData = remember { mutableStateOf<LineData?>(null) }
     val dummyStatusRobot = remember { mutableStateOf(StatusRobot.TEST_MODE) }
-    val dummyLimitAxis = remember { mutableFloatStateOf(100F) }
+    val dummyChartLimitsConfig = remember { mutableStateOf(ChartLimitsConfig(100F, null)) }
 
-//    TODO: arreglar
     Column {
-//        AnalisisScreen(
-//            actualLineData = dummyLineData,
-//            dynamicData = dummyDynamicData,
-//            limitAxis = dummyLimitAxis,
-//            statusRobot = dummyStatusRobot
-//        ) {}
+        AnalisisScreen(
+            lastDynamicData = dummyFrameDynamicData,
+            actualLineData = dummyLineData,
+            chartLimitsConfig = dummyChartLimitsConfig,
+            statusRobot = dummyStatusRobot
+        ) {}
     }
 }
