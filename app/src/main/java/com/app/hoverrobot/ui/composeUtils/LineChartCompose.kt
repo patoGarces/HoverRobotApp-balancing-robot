@@ -6,10 +6,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
@@ -34,6 +36,7 @@ import com.github.mikephil.charting.data.LineDataSet
 @Composable
 fun LineChartCompose(
     modifier: Modifier,
+    isDataLoading: Boolean = false,
     actualLineData: State<LineData?>,
     isAutoScaled: Boolean,
     chartLimitsConfig: State<ChartLimitsConfig>,
@@ -115,6 +118,14 @@ fun LineChartCompose(
             }
         )
 
+        if (isDataLoading) {
+            CircularProgressIndicator(
+                Modifier.size(30.dp).align(Alignment.Center),
+                color = Color.White,
+                strokeWidth = 3.dp
+            )
+        }
+
         CustomFloatingButton(
             modifier = Modifier.align(Alignment.BottomEnd),
             icon = if (onPauseState) Icons.Filled.PlayArrow else Icons.Filled.Pause
@@ -153,5 +164,11 @@ private fun LineChartComposePreview() {
     val dummyLineData = remember { mutableStateOf(LineData(dummyDataSet)) }
     val dummyLimitAxis = remember { mutableStateOf(ChartLimitsConfig(100F, null)) }
 
-    LineChartCompose(Modifier, dummyLineData, false, dummyLimitAxis) {}
+    LineChartCompose(
+        modifier = Modifier,
+        isDataLoading = true,
+        actualLineData = dummyLineData,
+        isAutoScaled = false,
+        chartLimitsConfig = dummyLimitAxis
+    ) {}
 }
