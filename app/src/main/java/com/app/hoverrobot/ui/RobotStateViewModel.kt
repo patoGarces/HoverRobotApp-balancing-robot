@@ -15,16 +15,30 @@ import com.app.hoverrobot.data.models.comms.PidSettings
 import com.app.hoverrobot.data.models.comms.PointCloudItem
 import com.app.hoverrobot.data.models.comms.RobotDynamicData
 import com.app.hoverrobot.data.models.comms.RobotLocalConfig
+import com.app.hoverrobot.data.models.comms.Wheel
 import com.app.hoverrobot.data.models.toPercentLevel
 import com.app.hoverrobot.data.repositories.CommsRepository
 import com.app.hoverrobot.data.repositories.StoreSettings
 import com.app.hoverrobot.data.utils.StatusConnection
 import com.app.hoverrobot.data.utils.StatusRobot
 import com.app.hoverrobot.data.utils.ToolBox.ioScope
+import com.app.hoverrobot.data.utils.ToolBox.round
+import com.app.hoverrobot.ui.screens.navigationScreen.NavigationScreenAction
+import com.app.hoverrobot.ui.screens.navigationScreen.NavigationScreenAction.OnDearmedAction
+import com.app.hoverrobot.ui.screens.navigationScreen.NavigationScreenAction.OnNewDragCompassInteraction
+import com.app.hoverrobot.ui.screens.navigationScreen.NavigationScreenAction.OnNewJoystickInteraction
+import com.app.hoverrobot.ui.screens.navigationScreen.NavigationScreenAction.OnYawLeftAction
+import com.app.hoverrobot.ui.screens.navigationScreen.NavigationScreenAction.OnYawRightAction
+import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions
+import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnCalibrateImu
+import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnCleanLeftMotor
+import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnCleanRightMotor
+import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnNewSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
+import kotlin.math.abs
 
 @HiltViewModel
 class RobotStateViewModel @Inject constructor(
@@ -103,25 +117,44 @@ class RobotStateViewModel @Inject constructor(
 //        }
     }
 
+    fun onNavigationAction(action: NavigationScreenAction) {
+        when (action) {
+            is OnDearmedAction -> sendDearmedCommand()
+            is OnYawLeftAction -> sendNewMoveRelYaw(action.relativeYaw.toFloat())
+            is OnYawRightAction -> sendNewMoveRelYaw(action.relativeYaw.toFloat())
+            is OnNewDragCompassInteraction -> sendNewMoveAbsYaw(action.newDegress)
+            is NavigationScreenAction.OnFixedDistance -> sendNewMovePosition(
+                abs(action.meters),
+                action.meters < 0
+            )
+
+            is OnNewJoystickInteraction -> newCoordinatesJoystick(
+                (action.x * getAggressivenessLevel().normalizedFactor).round()
+                    .toInt(),
+                (action.y * getAggressivenessLevel().normalizedFactor).round()
+                    .toInt()
+            )
+        }
+    }
+
+    fun onSettingsScreenActions(action: SettingsScreenActions) {
+        when (action) {
+            is OnNewSettings -> sendNewPidSettings(action.pidSettings)
+            is OnCalibrateImu -> sendCommand(CommandsRobot.CALIBRATE_IMU)
+            is OnCleanRightMotor -> sendCommand(
+                CommandsRobot.CLEAN_WHEELS, Wheel.RIGHT_WHEEL.ordinal.toFloat()
+            )
+
+            is OnCleanLeftMotor -> sendCommand(
+                CommandsRobot.CLEAN_WHEELS, Wheel.LEFT_WHEEL.ordinal.toFloat()
+            )
+        }
+    }
 
     fun saveLocalSettings(newSetting: PidSettings): Boolean {
         return if (sendNewPidSettings(newSetting))
             sendCommand(CommandsRobot.SAVE_PARAMS_SETTINGS)
         else false
-    }
-
-    fun sendNewPidSettings(newSetting: PidSettings): Boolean {
-        return if (isRobotConnected.value) {
-            commsRepository.sendPidParams(newSetting)
-            true
-        } else false
-    }
-
-    fun sendCommand(command: CommandsRobot, value: Float = 0F): Boolean {
-        return if (isRobotConnected.value) {
-            commsRepository.sendCommand(command, value)
-            true
-        } else false
     }
 
     fun getAggressivenessLevel(): Aggressiveness = runBlocking { storeSettings.getAggressiveness() }
@@ -130,13 +163,27 @@ class RobotStateViewModel @Inject constructor(
         ioScope.launch { storeSettings.saveAggressiveness(level) }
     }
 
-    fun newCoordinatesJoystick(axisX: Int, axisY: Int) {
+    private fun sendNewPidSettings(newSetting: PidSettings): Boolean {
+        return if (isRobotConnected.value) {
+            commsRepository.sendPidParams(newSetting)
+            true
+        } else false
+    }
+
+    private fun sendCommand(command: CommandsRobot, value: Float = 0F): Boolean {
+        return if (isRobotConnected.value) {
+            commsRepository.sendCommand(command, value)
+            true
+        } else false
+    }
+
+    private fun newCoordinatesJoystick(axisX: Int, axisY: Int) {
         if (isRobotConnected.value) {
             commsRepository.sendDirectionControl(DirectionControl(axisX.toShort(), axisY.toShort()))
         }
     }
 
-    fun sendNewMovePosition(distanceInMts: Float, isBackward: Boolean = false) {
+    private fun sendNewMovePosition(distanceInMts: Float, isBackward: Boolean = false) {
         val command =
             if (isBackward) CommandsRobot.MOVE_BACKWARD else CommandsRobot.MOVE_FORWARD
 
@@ -145,19 +192,19 @@ class RobotStateViewModel @Inject constructor(
         }
     }
 
-    fun sendNewMoveAbsYaw(desiredAngle: Float) {
+    private fun sendNewMoveAbsYaw(desiredAngle: Float) {
         if (isRobotConnected.value) {
             commsRepository.sendCommand(CommandsRobot.MOVE_ABS_YAW, desiredAngle)
         }
     }
 
-    fun sendNewMoveRelYaw(angle: Float) {
+    private fun sendNewMoveRelYaw(angle: Float) {
         if (isRobotConnected.value) {
             commsRepository.sendCommand(CommandsRobot.MOVE_REL_YAW, angle)
         }
     }
 
-    fun sendDearmedCommand() {
+    private fun sendDearmedCommand() {
         if (isRobotConnected.value) {
             commsRepository.sendCommand(CommandsRobot.DEARMED)
         }

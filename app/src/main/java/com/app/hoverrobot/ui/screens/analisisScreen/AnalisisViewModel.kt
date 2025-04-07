@@ -11,6 +11,9 @@ import com.app.hoverrobot.data.models.comms.RobotLocalConfig
 import com.app.hoverrobot.data.repositories.CommsRepository
 import com.app.hoverrobot.data.utils.StatusRobot
 import com.app.hoverrobot.data.utils.ToolBox.ioScope
+import com.app.hoverrobot.ui.screens.analisisScreen.AnalisisScreenActions.OnClearData
+import com.app.hoverrobot.ui.screens.analisisScreen.AnalisisScreenActions.OnDatasetChange
+import com.app.hoverrobot.ui.screens.analisisScreen.AnalisisScreenActions.OnPauseChange
 import com.app.hoverrobot.ui.screens.analisisScreen.resources.EntriesMaps.updateWithFrame
 import com.app.hoverrobot.ui.screens.analisisScreen.resources.LineDataKeys
 import com.app.hoverrobot.ui.screens.analisisScreen.resources.SelectedDataset
@@ -82,16 +85,18 @@ class AnalisisViewModel @Inject constructor(
         }
     }
 
-    fun changeSelectedDataset(datasetSelected: SelectedDataset?) {
-        selectedDataset = datasetSelected
-    }
-
-    fun clearChart() {
-        entryMap.values.forEach { it.clear() }
-    }
-
-    fun setPaused(isPaused: Boolean) {
-        isAnalisisPaused = isPaused
+    fun onAnalisisScreenActions(action: AnalisisScreenActions) {
+        when (action) {
+            is OnDatasetChange -> {
+                selectedDataset = action.selectedDataset
+            }
+            is OnPauseChange -> {
+                isAnalisisPaused = action.isPaused
+            }
+            is OnClearData -> {
+                entryMap.values.forEach { it.clear() }
+            }
+        }
     }
 
     fun initGraph(colorSafetyLimit: Int, colorCenterAngle: Int,) {
