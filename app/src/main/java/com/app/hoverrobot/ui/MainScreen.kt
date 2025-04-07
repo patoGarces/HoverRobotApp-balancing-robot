@@ -19,32 +19,22 @@ import androidx.navigation.compose.rememberNavController
 import com.app.hoverrobot.ui.navigation.MainNavHost
 import com.app.hoverrobot.ui.screens.analisisScreen.AnalisisViewModel
 import com.app.hoverrobot.ui.components.BottomTabBar
+import com.app.hoverrobot.ui.navigation.NavigationScreens
 import com.app.hoverrobot.ui.screens.statusBarScreen.StatusBarScreen
-
-enum class Screens(val route: String) {
-    STATUS_DATA("Status"),
-    NAVIGATION("Navegación"),
-    ANALISYS("Análisis"),
-    SETTINGS("Configuración"),
-    STATUS_BAR("status_bar")
-}
 
 @Composable
 fun MainScreen(navController: NavHostController) {
 
     val context = LocalContext.current
     val tabs = listOf(
-        Screens.STATUS_DATA,
-        Screens.NAVIGATION,
-        Screens.ANALISYS,
-        Screens.SETTINGS,
+        NavigationScreens.STATUS_DATA,
+        NavigationScreens.NAVIGATION,
+        NavigationScreens.ANALISYS,
+        NavigationScreens.SETTINGS,
     )
-
     val robotStateViewModel: RobotStateViewModel = hiltViewModel()
     val analisisViewModel: AnalisisViewModel = hiltViewModel()
-
-    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
-        ?: Screens.NAVIGATION.route
+    val currentRoute = currentRoute(navController)
     val selectedIndex = tabs.indexOfFirst { it.route == currentRoute }.coerceAtLeast(0)
 
     Column(modifier = Modifier
@@ -53,7 +43,7 @@ fun MainScreen(navController: NavHostController) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        if (currentRoute != Screens.STATUS_DATA.route) {
+        if (currentRoute != NavigationScreens.STATUS_DATA.route) {
             StatusBarScreen(
                 statusRobot = robotStateViewModel.statusRobot,
                 connectionState = robotStateViewModel.connectionState,
@@ -87,6 +77,12 @@ fun MainScreen(navController: NavHostController) {
             }
         }
     }
+}
+
+private @Composable
+fun currentRoute(navController: NavHostController): String {
+    return navController.currentBackStackEntryAsState().value?.destination?.route
+        ?: NavigationScreens.NAVIGATION.route
 }
 
 @Preview(

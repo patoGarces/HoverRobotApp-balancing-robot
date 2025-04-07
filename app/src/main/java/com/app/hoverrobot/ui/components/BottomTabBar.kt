@@ -14,13 +14,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.app.hoverrobot.ui.Screens
+import com.app.hoverrobot.ui.navigation.NavigationScreens
 
 @Composable
 fun BottomTabBar(
-    tabs: List<Screens>,
+    tabs: List<NavigationScreens>,
     selectedIndex: Int,
-    onTabSelected: (Screens) -> Unit
+    onTabSelected: (NavigationScreens) -> Unit
 ) {
     TabRow(
         modifier = Modifier
@@ -47,7 +47,7 @@ fun BottomTabBar(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = screen.route,
+                    text = screen.label,
                     color = if (index == selectedIndex) Color.White else Color.Gray,
                     fontWeight = FontWeight.Bold
                 )

@@ -10,32 +10,12 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.app.hoverrobot.data.models.comms.CommandsRobot
-import com.app.hoverrobot.data.models.comms.Wheel
-import com.app.hoverrobot.data.utils.ToolBox.round
 import com.app.hoverrobot.ui.RobotStateViewModel
-import com.app.hoverrobot.ui.Screens
-import com.app.hoverrobot.ui.screens.analisisScreen.AnalisisScreenActions
-import com.app.hoverrobot.ui.screens.analisisScreen.AnalisisScreenActions.OnClearData
-import com.app.hoverrobot.ui.screens.analisisScreen.AnalisisScreenActions.OnDatasetChange
-import com.app.hoverrobot.ui.screens.analisisScreen.AnalisisScreenActions.OnPauseChange
 import com.app.hoverrobot.ui.screens.analisisScreen.AnalisisScreenWrapper
 import com.app.hoverrobot.ui.screens.analisisScreen.AnalisisViewModel
 import com.app.hoverrobot.ui.screens.navigationScreen.NavigationScreen
-import com.app.hoverrobot.ui.screens.navigationScreen.NavigationScreenAction
-import com.app.hoverrobot.ui.screens.navigationScreen.NavigationScreenAction.OnDearmedAction
-import com.app.hoverrobot.ui.screens.navigationScreen.NavigationScreenAction.OnNewDragCompassInteraction
-import com.app.hoverrobot.ui.screens.navigationScreen.NavigationScreenAction.OnNewJoystickInteraction
-import com.app.hoverrobot.ui.screens.navigationScreen.NavigationScreenAction.OnYawLeftAction
-import com.app.hoverrobot.ui.screens.navigationScreen.NavigationScreenAction.OnYawRightAction
-import com.app.hoverrobot.ui.screens.statusDataScreen.StatusDataScreen
 import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreen
-import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions
-import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnCalibrateImu
-import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnCleanLeftMotor
-import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnCleanRightMotor
-import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnNewSettings
-import kotlin.math.abs
+import com.app.hoverrobot.ui.screens.statusDataScreen.StatusDataScreen
 
 @Composable
 fun MainNavHost(
@@ -47,10 +27,10 @@ fun MainNavHost(
 ) {
     NavHost(
         navController = navController,
-        startDestination = Screens.NAVIGATION.route,
+        startDestination = NavigationScreens.NAVIGATION.route,
         modifier = modifier
     ) {
-        composable(Screens.STATUS_DATA.route) {
+        composable(NavigationScreens.STATUS_DATA.route) {
             StatusDataScreen(
                 statusRobot = robotStateViewModel.statusRobot,
                 statusConnection = robotStateViewModel.connectionState.status,
@@ -68,7 +48,7 @@ fun MainNavHost(
             )
         }
 
-        composable(Screens.NAVIGATION.route) {
+        composable(NavigationScreens.NAVIGATION.route) {
             val actualDegrees = remember {
                 derivedStateOf { robotStateViewModel.robotDynamicData?.yawAngle?.toInt() ?: 0 }
             }
@@ -78,74 +58,22 @@ fun MainNavHost(
                 isRobotConnected = robotStateViewModel.isRobotConnected,
                 newPointCloudItem = robotStateViewModel.pointCloud,
                 actualDegress = actualDegrees
-            ) { onAction ->
-                onAction.handle(robotStateViewModel)
-            }
+            ) { robotStateViewModel.onNavigationAction(it) }
         }
 
-        composable(Screens.SETTINGS.route) {
+        composable(NavigationScreens.SETTINGS.route) {
             SettingsScreen(
                 localRobotConfig = robotStateViewModel.localConfigFromRobot,
                 statusRobot = robotStateViewModel.statusRobot,
                 onPidSave = { robotStateViewModel.saveLocalSettings(it) },
-                onActionScreen = { onAction ->
-                    onAction.handle(robotStateViewModel)
-                }
+                onActionScreen = { robotStateViewModel.onSettingsScreenActions(it) }
             )
         }
 
-        composable(Screens.ANALISYS.route) {
-            AnalisisScreenWrapper(analisisViewModel) { onAction ->
-                onAction.handle(analisisViewModel)
+        composable(NavigationScreens.ANALISYS.route) {
+            AnalisisScreenWrapper(analisisViewModel) {
+                analisisViewModel.onAnalisisScreenActions(it)
             }
-        }
-    }
-}
-
-private fun NavigationScreenAction.handle(robotStateViewModel: RobotStateViewModel) {
-    when (this) {
-        is OnDearmedAction -> robotStateViewModel.sendDearmedCommand()
-        is OnYawLeftAction -> robotStateViewModel.sendNewMoveRelYaw(this.relativeYaw.toFloat())
-        is OnYawRightAction -> robotStateViewModel.sendNewMoveRelYaw(this.relativeYaw.toFloat())
-        is OnNewDragCompassInteraction -> robotStateViewModel.sendNewMoveAbsYaw(this.newDegress)
-        is NavigationScreenAction.OnFixedDistance -> robotStateViewModel.sendNewMovePosition(
-            abs(this.meters),
-            this.meters < 0
-        )
-
-        is OnNewJoystickInteraction -> robotStateViewModel.newCoordinatesJoystick(
-            (this.x * robotStateViewModel.getAggressivenessLevel().normalizedFactor).round()
-                .toInt(),
-            (this.y * robotStateViewModel.getAggressivenessLevel().normalizedFactor).round()
-                .toInt()
-        )
-    }
-}
-
-private fun SettingsScreenActions.handle(robotStateViewModel: RobotStateViewModel) {
-    when (this) {
-        is OnNewSettings -> robotStateViewModel.sendNewPidSettings(this.pidSettings)
-        is OnCalibrateImu -> robotStateViewModel.sendCommand(CommandsRobot.CALIBRATE_IMU)
-        is OnCleanRightMotor -> robotStateViewModel.sendCommand(
-            CommandsRobot.CLEAN_WHEELS, Wheel.RIGHT_WHEEL.ordinal.toFloat()
-        )
-
-        is OnCleanLeftMotor -> robotStateViewModel.sendCommand(
-            CommandsRobot.CLEAN_WHEELS, Wheel.LEFT_WHEEL.ordinal.toFloat()
-        )
-    }
-}
-
-private fun AnalisisScreenActions.handle(analisisViewModel: AnalisisViewModel) {
-    when (this) {
-        is OnDatasetChange -> {
-            analisisViewModel.changeSelectedDataset(this.selectedDataset)
-        }
-        is OnPauseChange -> {
-            analisisViewModel.setPaused(this.isPaused)
-        }
-        is OnClearData -> {
-            analisisViewModel.clearChart()
         }
     }
 }
