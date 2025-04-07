@@ -3,11 +3,13 @@ package com.app.hoverrobot
 import android.os.Bundle
 import android.view.View
 import android.view.WindowManager
-import android.webkit.WebView
-import android.webkit.WebViewClient
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.navigation.compose.rememberNavController
+import com.app.hoverrobot.ui.MainScreen
 import dagger.hilt.android.AndroidEntryPoint
 
 
@@ -29,6 +31,7 @@ class MainActivity : AppCompatActivity() {
         hideSystemBars()
     }
 
+    /* TODO: migrar a compose
     private fun webViewSetup(){
 
         val webView = findViewById<WebView>(R.id.webView)
@@ -41,13 +44,14 @@ class MainActivity : AppCompatActivity() {
             settings.safeBrowsingEnabled = true
         }
     }
+     */
 
     private fun hideSystemBars() {
-        supportActionBar?.hide()
-        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-        window.setFlags(
-            WindowManager.LayoutParams.FLAG_FULLSCREEN,
-            WindowManager.LayoutParams.FLAG_FULLSCREEN
-        )
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        WindowInsetsControllerCompat(window, window.decorView).apply {
+            hide(WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.navigationBars())
+            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        }
     }
 }
