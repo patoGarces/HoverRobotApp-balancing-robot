@@ -101,7 +101,7 @@ fun StatusDataScreen(
         }
 
         VersionAndIp(
-            version = stringResource(R.string.version_placeholder, BuildConfig.VERSION_NAME),
+            version = stringResource(R.string.app_name),
             localIp = localIp
         )
     }
