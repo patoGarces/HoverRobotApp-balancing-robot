@@ -1,7 +1,5 @@
 <resources>
-    <string name="app_name">HoverRobot</string>
     <string name="action_settings">Settings</string>
-
 
     <!--    Dialogs-->
     <string name="dialog_warning_distance">¡Advertencia! El robot se moverá al confirmar.</string>
@@ -28,7 +26,6 @@
     <string name="placeholder_rssi">%d dbm</string>
     <string name="placeholder_packets_rate">rx: %d pps</string>
     <string name="placeholder_temp">%.1f ºC</string>
-    <string name="version_placeholder">HoverRobot V%s</string>
 
     <!--    tabsLayout-->
     <string name="tab_status">Status</string>

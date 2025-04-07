@@ -3,6 +3,7 @@ package com.app.hoverrobot.ui.settingsScreen
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -15,8 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
@@ -42,7 +41,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -56,6 +54,7 @@ import com.app.hoverrobot.data.models.comms.isDiffWithOriginalLocalConfig
 import com.app.hoverrobot.data.utils.StatusRobot
 import com.app.hoverrobot.ui.composeUtils.CustomButton
 import com.app.hoverrobot.ui.composeUtils.CustomSlider
+import com.app.hoverrobot.ui.composeUtils.CustomTextStyles
 
 @Composable
 fun SettingsScreen(
@@ -227,7 +226,7 @@ private fun PidSettingsCardHeader(
 
         ExposedDropdownMenuBox(
             expanded = isDropdownMenuExpanded,
-            onExpandedChange = { isDropdownMenuExpanded = it },
+            onExpandedChange = { },
         ) {
             Row(
                 Modifier
@@ -235,24 +234,14 @@ private fun PidSettingsCardHeader(
                     .height(35.dp)
                     .padding(horizontal = 8.dp)
                     .border(width = 1.dp, color = outlineColor, shape = RoundedCornerShape(8.dp))
-                    .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true),
+                    .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true)
+                    .clickable { isDropdownMenuExpanded = !isDropdownMenuExpanded },
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                BasicTextField(
-                    modifier = Modifier
-                        .weight(1F)
-                        .padding(start = 8.dp),
-                    state = TextFieldState(
-                        initialText = optionDropDownMenu.getOrNull(
-                            dropDownMenuSelectedItem
-                        ) ?: ""
-                    ),
-                    readOnly = true,
-                    textStyle = TextStyle.Default.copy(
-                        fontSize = 14.sp,
-                        color = Color.Black,
-                        fontWeight = FontWeight.Bold
-                    )
+                Text(
+                    modifier = Modifier.weight(1F),
+                    text = optionDropDownMenu.getOrNull(dropDownMenuSelectedItem) ?: "Unknown",
+                    style = CustomTextStyles.textStyle14Bold
                 )
 
                 val trailingIcon =
@@ -271,7 +260,8 @@ private fun PidSettingsCardHeader(
                     .background(Color.Black, RoundedCornerShape(8.dp)),
                 containerColor = Color.Transparent,
                 expanded = isDropdownMenuExpanded,
-                onDismissRequest = { isDropdownMenuExpanded = false }) {
+                onDismissRequest = { }
+            ) {
                 optionDropDownMenu.forEachIndexed { index, item ->
                     DropdownMenuItem(
                         text = { Text(item, color = Color.White) },
@@ -345,12 +335,20 @@ private fun GeneralSettingsItem(
 
         Spacer(Modifier.weight(1F))
 
-        CustomButton(stringResource(firstButtonTitle), onClick = onClickFirst, isLoading = isLoading)
+        CustomButton(
+            stringResource(firstButtonTitle),
+            onClick = onClickFirst,
+            isLoading = isLoading
+        )
 
         secondButtonTitle?.let { title ->
             Spacer(Modifier.width(8.dp))
 
-            CustomButton(stringResource(title), onClick = onClickSecond ?: {}, isLoading = isLoading)
+            CustomButton(
+                stringResource(title),
+                onClick = onClickSecond ?: {},
+                isLoading = isLoading
+            )
         }
     }
 
@@ -377,7 +375,7 @@ private fun TitleSectionText(@StringRes nameId: Int) {
 @Composable
 private fun SliderParam(
     @StringRes nameId: Int,
-    edgeIndicators: Pair<String,String>? = null,
+    edgeIndicators: Pair<String, String>? = null,
     initialValue: Float,
     range: ClosedFloatingPointRange<Float> = 0F..4F,
     stepSize: Float = 0.01F,
@@ -430,7 +428,9 @@ private fun SliderParam(
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .padding(start = 8.dp, end = 48.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                    .padding(start = 8.dp, end = 48.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
                 Text(
                     text = edgeIndicators.first,
                     color = Color.White,
@@ -454,12 +454,12 @@ private fun SliderParam(
 private fun SettingsScreenPreview() {
 
     val localConfig = RobotLocalConfig(
-            pids = listOf(
-                PidParams(1f, 2f, 3f)
-            ),
-            centerAngle = 4f,
-            safetyLimits = 5f
-        )
+        pids = listOf(
+            PidParams(1f, 2f, 3f)
+        ),
+        centerAngle = 4f,
+        safetyLimits = 5f
+    )
 
     SettingsScreen(
         localRobotConfig = localConfig,

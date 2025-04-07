@@ -1,3 +1,5 @@
+import com.android.build.api.variant.VariantBuilder
+
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
@@ -18,12 +20,41 @@ android {
         versionName = "2.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
 
-        buildConfigField("String", "VERSION_NAME", "\"${versionName}\"")
+    flavorDimensions += "version"
+    productFlavors {
+        create("dev") {
+            dimension = "version"
+            applicationIdSuffix = ".dev"
+            versionNameSuffix = "-dev"
+            resValue("string", "app_name", "HoverRobot V${defaultConfig.versionName}-dev")
+        }
+
+        create("prod") {
+            dimension = "version"
+            resValue("string", "app_name", "HoverRobot V${defaultConfig.versionName}")
+        }
+    }
+
+    // Filtro variables, dejo solo devDebug y prodRelease
+    androidComponents {
+        beforeVariants { variant: VariantBuilder ->
+            val flavor = variant.productFlavors.firstOrNull()?.second
+            val buildType = variant.buildType
+
+            if (
+                (flavor == "dev" && buildType == "release") ||
+                (flavor == "prod" && buildType == "debug")
+            ) {
+                variant.enable = false
+            }
+        }
     }
 
     buildTypes {
         release {
+            isDebuggable = false
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
