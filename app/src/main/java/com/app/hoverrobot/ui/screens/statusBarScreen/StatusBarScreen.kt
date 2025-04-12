@@ -29,6 +29,7 @@ import com.app.hoverrobot.ui.composeUtils.CustomButton
 import com.app.hoverrobot.ui.composeUtils.CustomTextStyles
 import com.app.hoverrobot.ui.screens.statusBarScreen.compose.BatteryIndicator
 import com.app.hoverrobot.ui.screens.statusBarScreen.compose.NetworkIndicators
+import com.app.hoverrobot.ui.theme.MyAppTheme
 
 @Composable
 fun StatusBarScreen(
@@ -120,10 +121,12 @@ private fun TempIndicator(
 @Composable
 fun StatusBarScreenPreview() {
 
-    StatusBarScreen(
-        statusRobot = StatusRobot.INIT,
-        connectionState = ConnectionState(),
-        tempImu = 23F,
-        batteryState = Battery()
-    ) { }
+    MyAppTheme {
+        StatusBarScreen(
+            statusRobot = StatusRobot.INIT,
+            connectionState = ConnectionState(),
+            tempImu = 23F,
+            batteryState = Battery()
+        ) { }
+    }
 }

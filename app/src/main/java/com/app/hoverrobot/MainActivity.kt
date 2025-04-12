@@ -10,6 +10,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.navigation.compose.rememberNavController
 import com.app.hoverrobot.ui.MainScreen
+import com.app.hoverrobot.ui.theme.MyAppTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 
@@ -20,8 +21,10 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            val navController = rememberNavController()
-            MainScreen(navController)
+            MyAppTheme {
+                val navController = rememberNavController()
+                MainScreen(navController)
+            }
         }
 //        webViewSetup()
     }

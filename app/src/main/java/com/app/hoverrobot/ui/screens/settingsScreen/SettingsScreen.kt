@@ -55,6 +55,7 @@ import com.app.hoverrobot.data.utils.StatusRobot
 import com.app.hoverrobot.ui.composeUtils.CustomButton
 import com.app.hoverrobot.ui.composeUtils.CustomSlider
 import com.app.hoverrobot.ui.composeUtils.CustomTextStyles
+import com.app.hoverrobot.ui.theme.MyAppTheme
 
 @Composable
 fun SettingsScreen(
@@ -461,9 +462,11 @@ private fun SettingsScreenPreview() {
         safetyLimits = 5f
     )
 
-    SettingsScreen(
-        localRobotConfig = localConfig,
-        statusRobot = StatusRobot.STABILIZED,
-        onPidSave = { false }
-    ) {}
+    MyAppTheme {
+        SettingsScreen(
+            localRobotConfig = localConfig,
+            statusRobot = StatusRobot.STABILIZED,
+            onPidSave = { false }
+        ) {}
+    }
 }

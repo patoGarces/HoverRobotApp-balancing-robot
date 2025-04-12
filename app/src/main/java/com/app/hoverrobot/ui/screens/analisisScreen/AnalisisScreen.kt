@@ -51,6 +51,7 @@ import com.app.hoverrobot.ui.screens.analisisScreen.resources.SelectedDataset
 import com.app.hoverrobot.ui.composeUtils.CustomButton
 import com.app.hoverrobot.ui.composeUtils.CustomColors
 import com.app.hoverrobot.ui.composeUtils.LineChartCompose
+import com.app.hoverrobot.ui.theme.MyAppTheme
 import com.github.mikephil.charting.data.LineData
 
 @Composable
@@ -348,12 +349,14 @@ private fun AnalisisScreenPreview() {
     val dummyStatusRobot = remember { mutableStateOf(StatusRobot.TEST_MODE) }
     val dummyChartLimitsConfig = remember { mutableStateOf(ChartLimitsConfig(100F, null)) }
 
-    Column {
-        AnalisisScreen(
-            lastDynamicData = dummyFrameDynamicData,
-            actualLineData = dummyLineData,
-            chartLimitsConfig = dummyChartLimitsConfig,
-            statusRobot = dummyStatusRobot
-        ) {}
+    MyAppTheme {
+        Column {
+            AnalisisScreen(
+                lastDynamicData = dummyFrameDynamicData,
+                actualLineData = dummyLineData,
+                chartLimitsConfig = dummyChartLimitsConfig,
+                statusRobot = dummyStatusRobot
+            ) {}
+        }
     }
 }
