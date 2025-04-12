@@ -41,6 +41,7 @@ import com.app.hoverrobot.ui.screens.navigationScreen.NavigationScreenAction.OnY
 import com.app.hoverrobot.ui.screens.navigationScreen.compose.CompassComposable
 import com.app.hoverrobot.ui.screens.navigationScreen.compose.FixedDirection
 import com.app.hoverrobot.ui.screens.navigationScreen.compose.JoystickAnalogCompose
+import com.app.hoverrobot.ui.theme.MyAppTheme
 
 @Composable
 fun NavigationScreen(
@@ -292,17 +293,19 @@ fun NavigationButtonPreview() {
     val dummyRobotConnected = remember { mutableStateOf(true) }
     val dummyRobotStabilized = remember { mutableStateOf(true) }
 
-    Column(
-        Modifier
-            .padding(16.dp)
-            .background(Color.Black)
-    ) {
-        NavigationScreen(
-            actualDegress = dummySetDegress,
-            newPointCloudItem = dummyPointCloudItem,
-            isRobotConnected = dummyRobotConnected,
-            isRobotStabilized = dummyRobotStabilized,
-            disableCompass = true
-        ) { }
+    MyAppTheme {
+        Column(
+            Modifier
+                .padding(16.dp)
+                .background(Color.Black)
+        ) {
+            NavigationScreen(
+                actualDegress = dummySetDegress,
+                newPointCloudItem = dummyPointCloudItem,
+                isRobotConnected = dummyRobotConnected,
+                isRobotStabilized = dummyRobotStabilized,
+                disableCompass = true
+            ) { }
+        }
     }
 }

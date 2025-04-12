@@ -32,6 +32,7 @@ import com.app.hoverrobot.ui.composeUtils.CustomButton
 import com.app.hoverrobot.ui.composeUtils.CustomSelectorComponent
 import com.app.hoverrobot.ui.composeUtils.CustomTextStyles
 import com.app.hoverrobot.ui.composeUtils.TemperatureComponent
+import com.app.hoverrobot.ui.theme.MyAppTheme
 
 @Composable
 fun StatusDataScreen(
@@ -197,21 +198,23 @@ private fun VersionAndIp(version: String, localIp: String?) {
 )
 private fun AggressivenessScreenPreview() {
 
-    Column(
-        Modifier
-            .fillMaxWidth()
-            .background(Color.Black)
-    ) {
-        StatusDataScreen(
-            statusRobot = StatusRobot.STABILIZED,
-            statusConnection = StatusConnection.CONNECTED,
-            defaultAggressiveness = 0,
-            mainboardTemp = 12.5F,
-            motorControllerTemp = 50F,
-            imuTemp = 80F,
-            localIp = "255.255.255.255",
-            onAggressivenessChange = {},
-            onOpenNetworkSettings = {}
-        )
+    MyAppTheme {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .background(Color.Black)
+        ) {
+            StatusDataScreen(
+                statusRobot = StatusRobot.STABILIZED,
+                statusConnection = StatusConnection.CONNECTED,
+                defaultAggressiveness = 0,
+                mainboardTemp = 12.5F,
+                motorControllerTemp = 50F,
+                imuTemp = 80F,
+                localIp = "255.255.255.255",
+                onAggressivenessChange = {},
+                onOpenNetworkSettings = {}
+            )
+        }
     }
 }
