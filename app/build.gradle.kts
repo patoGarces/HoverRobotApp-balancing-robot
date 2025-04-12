@@ -138,6 +138,8 @@ dependencies {
 
     // Compass view
     implementation("com.github.kix2902:CompassView:master-SNAPSHOT")
+
+    implementation("androidx.work:work-runtime-ktx:2.10.0")
 }
 
 kapt {
