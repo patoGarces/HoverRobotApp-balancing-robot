@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,18 +28,20 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.app.hoverrobot.R
+import com.app.hoverrobot.ui.theme.MyAppTheme
 
 @Composable
 fun CustomButton(
     title: String,
     modifier: Modifier = Modifier,
     filled: Boolean = false,
-    color: Color = Color.Red,
+    color: Color = MaterialTheme.colorScheme.primary,
     height: Dp = 35.dp,
     enable: Boolean = true,
     isLoading: Boolean = false,
     onClick: () -> Unit
 ) {
+    val contentColor = if (enable) MaterialTheme.colorScheme.onPrimary else Color.Gray
     OutlinedButton(
         modifier = modifier
             .widthIn(min = 100.dp)
@@ -47,7 +51,8 @@ fun CustomButton(
         shape = RoundedCornerShape(8.dp),
         border = BorderStroke(1.dp, color),
         colors = ButtonDefaults.outlinedButtonColors(
-            containerColor = if (filled) color else Color.Transparent
+            containerColor = if (filled) color else Color.Transparent,
+            contentColor = contentColor
         ),
         contentPadding = PaddingValues(horizontal = 8.dp)
     ) {
@@ -68,7 +73,7 @@ fun CustomButton(
             } else {
                 Text(
                     text = title,
-                    color = if (enable) Color.White else Color.Gray,
+                    color = contentColor,
                     textAlign = TextAlign.Center
                 )
             }
@@ -80,32 +85,33 @@ fun CustomButton(
 @Composable
 private fun CustomButtonPreview() {
 
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        CustomButton(
-            title = stringResource(R.string.btn_clear_title)
-        ) { }
+    MyAppTheme {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            CustomButton(
+                title = "Clear data"
+            ) { }
 
-        Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(8.dp))
 
-        CustomButton(
-            title = stringResource(R.string.btn_clear_title),
-            filled = true
-        ) { }
+            CustomButton(
+                title = "Clear data",
+                filled = true
+            ) { }
 
-        Spacer(Modifier.height(8.dp))
-
-
-        CustomButton(
-            title = stringResource(R.string.btn_pid_sync),
-            enable = false
-        ) { }
-
-        Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(8.dp))
 
 
-        CustomButton(
-            title = stringResource(R.string.btn_clear_title),
-            isLoading = true
-        ) { }
+            CustomButton(
+                title = "Sync(Disabled)",
+                enable = false
+            ) { }
+
+            Spacer(Modifier.height(8.dp))
+
+            CustomButton(
+                title = "Clear data",
+                isLoading = true
+            ) { }
+        }
     }
 }

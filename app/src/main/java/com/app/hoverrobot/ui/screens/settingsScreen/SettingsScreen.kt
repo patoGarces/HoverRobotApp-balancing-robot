@@ -1,5 +1,6 @@
 package com.app.hoverrobot.ui.screens.settingsScreen
 
+import android.content.res.Configuration
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -26,10 +27,12 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -96,15 +99,7 @@ private fun PidSettingsCard(
     var enablePidSave by remember { mutableStateOf(false) }
     var enablePidReset by remember { mutableStateOf(false) }
 
-    var outlineColor by remember { mutableStateOf(Color.Red) }
-
-    val listColor = listOf(
-        Color.White,
-        Color.Blue,
-        Color.Green,
-        Color.Yellow
-    )
-
+    // TODO: simplificar estos 2 launchedEffect en 1 solo
     LaunchedEffect(originalLocalConfig) {
         newPidSettings = originalLocalConfig.asPidSettings(indexPid)
         enablePidReset = newPidSettings.isDiffWithOriginalLocalConfig(originalLocalConfig)
@@ -126,11 +121,9 @@ private fun PidSettingsCard(
             newPidSettings = originalLocalConfig.asPidSettings(indexPid)
             onSendPidSettings(newPidSettings)
         },
-        outlineColor = listColor[indexPid],
         onIndexPidChange = {
             indexPid = it
             newPidSettings = originalLocalConfig.asPidSettings(indexPid)
-            outlineColor = listColor[it]
         }
     )
 
@@ -138,7 +131,7 @@ private fun PidSettingsCard(
         Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
-            .border(width = 1.dp, color = Color.White, shape = RoundedCornerShape(8.dp))
+            .border(width = 1.dp, color = MaterialTheme.colorScheme.onBackground, shape = RoundedCornerShape(8.dp))
     ) {
         Column(Modifier.padding(vertical = 16.dp)) {
             SliderParam(
@@ -192,13 +185,19 @@ private fun PidSettingsCardHeader(
     enablePidSave: Boolean,
     onPidSave: () -> Boolean,
     onPidSync: () -> Unit,
-    outlineColor: Color,
     onIndexPidChange: (Int) -> Unit
 ) {
+    val listColor = listOf(
+        Color.White,
+        Color.Blue,
+        Color.Green,
+        Color.Yellow
+    )
     var isDropdownMenuExpanded by remember { mutableStateOf(false) }
     var dropDownMenuSelectedItem by remember { mutableIntStateOf(0) }
     var buttonSaveEnable by remember { mutableStateOf(true) }
     val optionDropDownMenu = stringArrayResource(R.array.dropdown_menu_pid_items)
+    val outlineColor by remember { derivedStateOf { listColor[dropDownMenuSelectedItem] } }
 
     Row(
         Modifier.fillMaxWidth(),
@@ -292,7 +291,7 @@ private fun GeneralSettingsCard(
         Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
-            .border(width = 1.dp, color = Color.White, shape = RoundedCornerShape(8.dp))
+            .border(width = 1.dp, color = MaterialTheme.colorScheme.onBackground, shape = RoundedCornerShape(8.dp))
     ) {
         GeneralSettingsItem(
             titleItem = R.string.general_commands_calibrate_imu_title,
@@ -331,7 +330,7 @@ private fun GeneralSettingsItem(
             text = stringResource(titleItem),
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White
+            color = MaterialTheme.colorScheme.onPrimary,
         )
 
         Spacer(Modifier.weight(1F))
@@ -368,11 +367,10 @@ private fun TitleSectionText(@StringRes nameId: Int) {
         text = stringResource(nameId),
         fontSize = 20.sp,
         fontWeight = FontWeight.Bold,
-        color = Color.White
+        color = MaterialTheme.colorScheme.onPrimary,
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SliderParam(
     @StringRes nameId: Int,
@@ -397,7 +395,7 @@ private fun SliderParam(
             text = stringResource(nameId),
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White
+            color = MaterialTheme.colorScheme.onPrimary,
         )
 
         Row(
@@ -421,7 +419,7 @@ private fun SliderParam(
                 modifier = Modifier.padding(8.dp),
                 text = stringResource(R.string.value_slider_format, actualValue),
                 fontSize = 16.sp,
-                color = Color.White
+                color = MaterialTheme.colorScheme.onPrimary,
             )
         }
 
@@ -434,12 +432,12 @@ private fun SliderParam(
             ) {
                 Text(
                     text = edgeIndicators.first,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     fontSize = 12.sp
                 )
                 Text(
                     text = edgeIndicators.second,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     fontSize = 12.sp
                 )
             }
@@ -450,6 +448,7 @@ private fun SliderParam(
 
 @Composable
 @Preview(
+    uiMode = Configuration.UI_MODE_NIGHT_NO,
     device = "spec:width=411dp,height=891dp,dpi=420,isRound=false,chinSize=0dp,orientation=landscape"
 )
 private fun SettingsScreenPreview() {
