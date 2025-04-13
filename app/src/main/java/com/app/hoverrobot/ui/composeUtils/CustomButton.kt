@@ -41,7 +41,7 @@ fun CustomButton(
     isLoading: Boolean = false,
     onClick: () -> Unit
 ) {
-    val contentColor = if (enable) MaterialTheme.colorScheme.onPrimary else Color.Gray
+    val contentColor = if (enable) MaterialTheme.colorScheme.onBackground else Color.Gray
     OutlinedButton(
         modifier = modifier
             .widthIn(min = 100.dp)

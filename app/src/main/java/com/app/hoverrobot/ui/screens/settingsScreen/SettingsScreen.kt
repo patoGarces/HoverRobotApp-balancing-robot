@@ -56,6 +56,7 @@ import com.app.hoverrobot.data.models.comms.asPidSettings
 import com.app.hoverrobot.data.models.comms.isDiffWithOriginalLocalConfig
 import com.app.hoverrobot.data.utils.StatusRobot
 import com.app.hoverrobot.ui.composeUtils.CustomButton
+import com.app.hoverrobot.ui.composeUtils.CustomPreview
 import com.app.hoverrobot.ui.composeUtils.CustomSlider
 import com.app.hoverrobot.ui.composeUtils.CustomTextStyles
 import com.app.hoverrobot.ui.theme.MyAppTheme
@@ -330,7 +331,7 @@ private fun GeneralSettingsItem(
             text = stringResource(titleItem),
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onPrimary,
+            color = MaterialTheme.colorScheme.onBackground,
         )
 
         Spacer(Modifier.weight(1F))
@@ -367,7 +368,7 @@ private fun TitleSectionText(@StringRes nameId: Int) {
         text = stringResource(nameId),
         fontSize = 20.sp,
         fontWeight = FontWeight.Bold,
-        color = MaterialTheme.colorScheme.onPrimary,
+        color = MaterialTheme.colorScheme.onBackground,
     )
 }
 
@@ -395,7 +396,7 @@ private fun SliderParam(
             text = stringResource(nameId),
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onPrimary,
+            color = MaterialTheme.colorScheme.onBackground,
         )
 
         Row(
@@ -419,7 +420,7 @@ private fun SliderParam(
                 modifier = Modifier.padding(8.dp),
                 text = stringResource(R.string.value_slider_format, actualValue),
                 fontSize = 16.sp,
-                color = MaterialTheme.colorScheme.onPrimary,
+                color = MaterialTheme.colorScheme.onBackground,
             )
         }
 
@@ -432,12 +433,12 @@ private fun SliderParam(
             ) {
                 Text(
                     text = edgeIndicators.first,
-                    color = MaterialTheme.colorScheme.onPrimary,
+                    color = MaterialTheme.colorScheme.onBackground,
                     fontSize = 12.sp
                 )
                 Text(
                     text = edgeIndicators.second,
-                    color = MaterialTheme.colorScheme.onPrimary,
+                    color = MaterialTheme.colorScheme.onBackground,
                     fontSize = 12.sp
                 )
             }
@@ -447,10 +448,7 @@ private fun SliderParam(
 }
 
 @Composable
-@Preview(
-    uiMode = Configuration.UI_MODE_NIGHT_NO,
-    device = "spec:width=411dp,height=891dp,dpi=420,isRound=false,chinSize=0dp,orientation=landscape"
-)
+@CustomPreview
 private fun SettingsScreenPreview() {
 
     val localConfig = RobotLocalConfig(

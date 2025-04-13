@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -48,7 +49,8 @@ fun TemperatureComponent(
             modifier = Modifier
                 .padding(bottom = 16.dp)
                 .fillMaxWidth(),
-            style = CustomTextStyles.textStyle14Bold
+            style = CustomTextStyles.textStyle14Bold,
+            color = MaterialTheme.colorScheme.onBackground
         )
 
         Box(
@@ -69,7 +71,7 @@ fun TemperatureComponent(
             if (temp == 0F) {
                 CircularProgressIndicator(
                     Modifier.size(30.dp),
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onBackground,
                     strokeWidth = 3.dp
                 )
             } else {
@@ -77,7 +79,7 @@ fun TemperatureComponent(
                     text = "$temp°",
                     fontSize = 20.sp,
                     modifier = Modifier.padding(8.dp),
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onBackground,
                     textAlign = TextAlign.Center,
                     fontWeight = FontWeight.Bold
                 )

@@ -8,15 +8,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.app.hoverrobot.R
 import com.app.hoverrobot.data.models.Battery
@@ -26,6 +25,7 @@ import com.app.hoverrobot.data.utils.StatusMapper.toColor
 import com.app.hoverrobot.data.utils.StatusMapper.toStringRes
 import com.app.hoverrobot.data.utils.StatusRobot
 import com.app.hoverrobot.ui.composeUtils.CustomButton
+import com.app.hoverrobot.ui.composeUtils.CustomPreview
 import com.app.hoverrobot.ui.composeUtils.CustomTextStyles
 import com.app.hoverrobot.ui.screens.statusBarScreen.compose.BatteryIndicator
 import com.app.hoverrobot.ui.screens.statusBarScreen.compose.NetworkIndicators
@@ -75,7 +75,7 @@ fun StatusBarScreen(
                     .fillMaxHeight()
                     .padding(vertical = 8.dp),
                 thickness = 1.dp,
-                color = Color.Red
+                color = MaterialTheme.colorScheme.primary
             )
 
             BatteryIndicator(
@@ -92,7 +92,6 @@ private fun TempIndicator(
     modifier: Modifier,
     tempImu: Float
 ) {
-
     Row(
         modifier = modifier.padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -102,22 +101,20 @@ private fun TempIndicator(
         Icon(
             painter = painterResource(id = R.drawable.ic_temp),
             modifier = Modifier.fillMaxHeight(),
-            tint = Color.White,
+            tint = MaterialTheme.colorScheme.onBackground,
             contentDescription = ""
         )
 
         Text(
             modifier = Modifier,
             text = stringResource(R.string.placeholder_temp, tempImu),
-            style = CustomTextStyles.textStyle16Bold
+            style = CustomTextStyles.textStyle16Bold,
+            color = MaterialTheme.colorScheme.onBackground
         )
     }
 }
 
-
-@Preview(
-    device = "spec:width=411dp,height=891dp,dpi=420,isRound=false,chinSize=0dp,orientation=landscape"
-)
+@CustomPreview
 @Composable
 fun StatusBarScreenPreview() {
 
