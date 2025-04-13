@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
@@ -14,7 +15,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.app.hoverrobot.ui.components.BottomTabBar
+import com.app.hoverrobot.ui.composeUtils.CustomPreviewComponent
 import com.app.hoverrobot.ui.navigation.NavigationScreens
+import com.app.hoverrobot.ui.theme.MyAppTheme
 
 @Composable
 fun BottomTabBar(
@@ -33,7 +37,7 @@ fun BottomTabBar(
                 modifier = Modifier
                     .tabIndicatorOffset(tabPositions[selectedIndex])
                     .height(2.dp)
-                    .background(Color.Red)
+                    .background(MaterialTheme.colorScheme.primary)
             )
         },
         divider = {},
@@ -48,10 +52,22 @@ fun BottomTabBar(
             ) {
                 Text(
                     text = screen.label,
-                    color = if (index == selectedIndex) Color.White else Color.Gray,
+                    color = if (index == selectedIndex) MaterialTheme.colorScheme.onBackground else Color.Gray,
                     fontWeight = FontWeight.Bold
                 )
             }
         }
+    }
+}
+
+@Composable
+@CustomPreviewComponent
+private fun BottomTabBarPreview() {
+    MyAppTheme {
+        BottomTabBar(
+            tabs = listOf(NavigationScreens.NAVIGATION,NavigationScreens.ANALISYS),
+            selectedIndex = 0,
+            onTabSelected = {}
+        )
     }
 }

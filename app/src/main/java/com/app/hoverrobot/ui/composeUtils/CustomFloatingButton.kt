@@ -7,19 +7,21 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.app.hoverrobot.ui.theme.MyAppTheme
 
 
 @Composable
 fun CustomFloatingButton(
     modifier: Modifier,
     icon: ImageVector,
-    color: Color = CustomColors.PurpleThemeDefault,
+    color: Color = MaterialTheme.colorScheme.secondary,
     onClick: () -> Unit,
 ) {
     IconButton(
@@ -34,17 +36,19 @@ fun CustomFloatingButton(
     ) {
         Icon(
             imageVector = icon,
-            tint = Color.White,
+            tint = MaterialTheme.colorScheme.onBackground,
             contentDescription = "Clear logs"
         )
     }
 }
 
-@Preview
+@CustomPreviewComponent
 @Composable
 private fun CustomFloatingButtonPreview() {
-    CustomFloatingButton(
-        modifier = Modifier,
-        icon = Icons.Filled.PlayArrow,
-    ) { }
+    MyAppTheme {
+        CustomFloatingButton(
+            modifier = Modifier,
+            icon = Icons.Filled.PlayArrow,
+        ) { }
+    }
 }

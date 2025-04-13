@@ -50,6 +50,7 @@ import com.app.hoverrobot.ui.screens.analisisScreen.compose.LogScreen
 import com.app.hoverrobot.ui.screens.analisisScreen.resources.SelectedDataset
 import com.app.hoverrobot.ui.composeUtils.CustomButton
 import com.app.hoverrobot.ui.composeUtils.CustomColors
+import com.app.hoverrobot.ui.composeUtils.CustomPreview
 import com.app.hoverrobot.ui.composeUtils.LineChartCompose
 import com.app.hoverrobot.ui.theme.MyAppTheme
 import com.github.mikephil.charting.data.LineData
@@ -126,31 +127,31 @@ private fun HighlightValues(dynamicItem: RobotDynamicData) {
     ) {
         Text(
             text = stringResource(R.string.placeholder_pitch, dynamicItem.pitchAngle),
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onBackground,
             fontSize = 14.sp
         )
 
         Text(
             text = stringResource(R.string.placeholder_roll, dynamicItem.rollAngle),
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onBackground,
             fontSize = 14.sp
         )
 
         Text(
             text = stringResource(R.string.placeholder_yaw, dynamicItem.yawAngle),
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onBackground,
             fontSize = 14.sp
         )
 
         Text(
             text = stringResource(R.string.placeholder_center, dynamicItem.centerAngle),
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onBackground,
             fontSize = 14.sp
         )
 
         Text(
             text = stringResource(R.string.placeholder_position, dynamicItem.posInMeters),
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onBackground,
             fontSize = 14.sp
         )
     }
@@ -177,14 +178,14 @@ fun SettingsChartMenuScreen(
     Column(
         modifier = Modifier
             .width(140.dp)
-            .border(border = BorderStroke(1.dp, Color.White), shape = RoundedCornerShape(8.dp))
+            .border(border = BorderStroke(1.dp, MaterialTheme.colorScheme.onBackground), shape = RoundedCornerShape(8.dp))
     ) {
         LazyColumn {
             item {
                 Text(
                     text = stringResource(R.string.dataset_title),
                     style = TextStyle(
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onBackground,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     ),
@@ -236,7 +237,7 @@ fun SettingsChartMenuScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(8.dp),
-                    color = CustomColors.PurpleThemeDefault,
+                    color = MaterialTheme.colorScheme.primary,
                 ) {
                     onClearChart()
                 }
@@ -268,7 +269,7 @@ private fun CheckboxItem(
         Text(
             text = stringResource(nameItem),
             style = TextStyle(
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onBackground,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold
             ),
@@ -295,8 +296,9 @@ private fun SwitchItem(
             checked = checkedState,
             onCheckedChange = { onCheckedChange(it) },
             colors = SwitchDefaults.colors(
-                uncheckedThumbColor = Color.White,
+                uncheckedThumbColor = MaterialTheme.colorScheme.primary,
                 uncheckedBorderColor = MaterialTheme.colorScheme.primary,
+                checkedTrackColor = Color.Transparent,
                 uncheckedTrackColor = Color.Transparent
             )
         )
@@ -304,7 +306,7 @@ private fun SwitchItem(
         Text(
             text = stringResource(R.string.switch_text_title),
             style = TextStyle(
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onBackground,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold
             ),
@@ -314,9 +316,7 @@ private fun SwitchItem(
     }
 }
 
-@Preview(
-    device = "spec:width=411dp,height=891dp,dpi=420,isRound=false,chinSize=0dp,orientation=landscape"
-)
+@CustomPreview
 @Composable
 private fun AnalisisScreenPreview() {
     val mockRobotDynamicData = RobotDynamicData(

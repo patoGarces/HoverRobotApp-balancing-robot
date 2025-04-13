@@ -1,5 +1,6 @@
 package com.app.hoverrobot.ui.screens.statusDataScreen
 
+import android.content.res.Configuration
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -29,6 +31,7 @@ import com.app.hoverrobot.data.utils.StatusMapper.toColor
 import com.app.hoverrobot.data.utils.StatusMapper.toStringRes
 import com.app.hoverrobot.data.utils.StatusRobot
 import com.app.hoverrobot.ui.composeUtils.CustomButton
+import com.app.hoverrobot.ui.composeUtils.CustomPreview
 import com.app.hoverrobot.ui.composeUtils.CustomSelectorComponent
 import com.app.hoverrobot.ui.composeUtils.CustomTextStyles
 import com.app.hoverrobot.ui.composeUtils.TemperatureComponent
@@ -105,7 +108,7 @@ private fun TitleScreen(text: String) {
         modifier = Modifier.padding(vertical = 8.dp),
         text = text,
         fontSize = 24.sp,
-        color = Color.White
+        color = MaterialTheme.colorScheme.onBackground
     )
 
     HorizontalDivider(
@@ -130,7 +133,7 @@ private fun NormalSection(
     ) {
         Text(
             text = stringResource(title),
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onBackground,
             style = CustomTextStyles.textStyle14Normal
         )
 
@@ -165,7 +168,8 @@ fun SelectorSection(
     ) {
         Text(
             text = title,
-            style = CustomTextStyles.textStyle14Normal
+            style = CustomTextStyles.textStyle14Normal,
+            color = MaterialTheme.colorScheme.onBackground
         )
 
         CustomSelectorComponent(
@@ -188,21 +192,18 @@ private fun VersionAndIp(version: String, localIp: String?) {
         modifier = Modifier.padding(vertical = 4.dp),
         text = version + if (!localIp.isNullOrEmpty()) " - Local ip: $localIp" else "",
         fontSize = 14.sp,
-        color = Color.White
+        color = MaterialTheme.colorScheme.onBackground
     )
 }
 
 @Composable
-@Preview(
-    device = "spec:width=411dp,height=891dp,dpi=420,isRound=false,chinSize=0dp,orientation=landscape"
-)
+@CustomPreview
 private fun AggressivenessScreenPreview() {
 
     MyAppTheme {
         Column(
             Modifier
                 .fillMaxWidth()
-                .background(Color.Black)
         ) {
             StatusDataScreen(
                 statusRobot = StatusRobot.STABILIZED,

@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
@@ -26,6 +27,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.app.hoverrobot.data.models.ChartLimitsConfig
+import com.app.hoverrobot.ui.theme.MyAppTheme
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.components.XAxis
@@ -46,7 +48,7 @@ fun LineChartCompose(
 
     Box(
         modifier = modifier.border(
-            border = BorderStroke(1.dp, Color.White),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.onBackground),
             shape = RoundedCornerShape(8.dp)
         )
     ) {
@@ -136,9 +138,7 @@ fun LineChartCompose(
     }
 }
 
-@Preview(
-    device = "spec:width=411dp,height=891dp,dpi=420,isRound=false,chinSize=0dp,orientation=landscape"
-)
+@CustomPreview
 @Composable
 private fun LineChartComposePreview() {
 
@@ -164,11 +164,13 @@ private fun LineChartComposePreview() {
     val dummyLineData = remember { mutableStateOf(LineData(dummyDataSet)) }
     val dummyLimitAxis = remember { mutableStateOf(ChartLimitsConfig(100F, null)) }
 
-    LineChartCompose(
-        modifier = Modifier,
-        isDataLoading = true,
-        actualLineData = dummyLineData,
-        isAutoScaled = false,
-        chartLimitsConfig = dummyLimitAxis
-    ) {}
+    MyAppTheme {
+        LineChartCompose(
+            modifier = Modifier,
+            isDataLoading = true,
+            actualLineData = dummyLineData,
+            isAutoScaled = false,
+            chartLimitsConfig = dummyLimitAxis
+        ) {}
+    }
 }

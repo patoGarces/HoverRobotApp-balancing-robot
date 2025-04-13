@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -26,7 +27,9 @@ import com.app.hoverrobot.data.models.BATTERY_LEVEL_LOW
 import com.app.hoverrobot.data.models.BATTERY_LEVEL_MEDIUM
 import com.app.hoverrobot.data.models.Battery
 import com.app.hoverrobot.ui.composeUtils.CustomColors
+import com.app.hoverrobot.ui.composeUtils.CustomPreviewComponent
 import com.app.hoverrobot.ui.composeUtils.CustomTextStyles.textStyle16Bold
+import com.app.hoverrobot.ui.theme.MyAppTheme
 
 val Float.inNormalRange: Boolean
     get() = this in 30F..50F
@@ -50,27 +53,27 @@ fun BatteryIndicator(
 
     val icon = when {
         !isConnected || isMcbOff -> {
-            iconTint = Color.White
+            iconTint = MaterialTheme.colorScheme.onBackground
             R.drawable.ic_battery_unknown
         }
 
         batteryState.isCharging -> {
-            iconTint = Color.White
+            iconTint = MaterialTheme.colorScheme.onBackground
             R.drawable.ic_battery_charging
         }
 
         batteryState.level > BATTERY_LEVEL_HIGH -> {
-            iconTint = Color.White
+            iconTint = MaterialTheme.colorScheme.onBackground
             R.drawable.ic_battery_4
         }
 
         batteryState.level > BATTERY_LEVEL_MEDIUM -> {
-            iconTint = Color.White
+            iconTint = MaterialTheme.colorScheme.onBackground
             R.drawable.ic_battery_3
         }
 
         batteryState.level > BATTERY_LEVEL_LOW -> {
-            iconTint = Color.White
+            iconTint = MaterialTheme.colorScheme.onBackground
             R.drawable.ic_battery_2
         }
 
@@ -92,7 +95,8 @@ fun BatteryIndicator(
     ) {
         Text(
             text = batteryVoltageText,
-            style = textStyle16Bold
+            style = textStyle16Bold,
+            color = MaterialTheme.colorScheme.onBackground,
         )
 
         Icon(
@@ -106,49 +110,52 @@ fun BatteryIndicator(
 
         Text(
             text = batteryPercentText,
-            style = textStyle16Bold
+            style = textStyle16Bold,
+            color = MaterialTheme.colorScheme.onBackground
         )
     }
 }
 
-@Preview
+@CustomPreviewComponent
 @Composable
 fun BatteryIndicatorPReview() {
-    Column {
-        BatteryIndicator(
-            batteryState = Battery(false,10,40.3F),
-            isConnected = true,
-            isMcbOff = false
-        )
+    MyAppTheme {
+        Column {
+            BatteryIndicator(
+                batteryState = Battery(false, 10, 40.3F),
+                isConnected = true,
+                isMcbOff = false
+            )
 
-        BatteryIndicator(
-            batteryState = Battery(false,20,40.3F),
-            isConnected = true,
-            isMcbOff = false
-        )
+            BatteryIndicator(
+                batteryState = Battery(false, 20, 40.3F),
+                isConnected = true,
+                isMcbOff = false
+            )
 
-        BatteryIndicator(
-            batteryState = Battery(false,30,40.3F),
-            isConnected = true,
-            isMcbOff = false
-        )
+            BatteryIndicator(
+                batteryState = Battery(false, 30, 40.3F),
+                isConnected = true,
+                isMcbOff = false
+            )
 
-        BatteryIndicator(
-            batteryState = Battery(false,100,40.3F),
-            isConnected = true,
-            isMcbOff = false
-        )
+            BatteryIndicator(
+                batteryState = Battery(false, 100, 40.3F),
+                isConnected = true,
+                isMcbOff = false
+            )
 
-        BatteryIndicator(
-            batteryState = Battery(false,50,40F),
-            isConnected = false,
-            isMcbOff = false
-        )
+            BatteryIndicator(
+                batteryState = Battery(false, 50, 40F),
+                isConnected = false,
+                isMcbOff = false
+            )
 
-        BatteryIndicator(
-            batteryState = Battery(true,20,40.3F),
-            isConnected = true,
-            isMcbOff = false
-        )
+            BatteryIndicator(
+                batteryState = Battery(true, 20, 40.3F),
+                isConnected = true,
+                isMcbOff = false
+            )
+        }
     }
 }
