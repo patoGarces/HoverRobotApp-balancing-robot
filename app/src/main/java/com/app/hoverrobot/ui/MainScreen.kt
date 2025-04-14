@@ -80,8 +80,8 @@ fun MainScreen(navController: NavHostController) {
     }
 }
 
-private @Composable
-fun currentRoute(navController: NavHostController): String {
+@Composable
+private fun currentRoute(navController: NavHostController): String {
     return navController.currentBackStackEntryAsState().value?.destination?.route
         ?: NavigationScreens.NAVIGATION.route
 }

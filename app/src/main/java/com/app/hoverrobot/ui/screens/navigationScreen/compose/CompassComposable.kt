@@ -66,7 +66,7 @@ fun CompassComposable(
         },
         update = { compassView ->
             if (enableSetNewDegress) {
-                compassView.setDegrees(actualDegress.value.toFloat())
+                compassView.degrees = actualDegress.value.toFloat()
             }
         }
     )
