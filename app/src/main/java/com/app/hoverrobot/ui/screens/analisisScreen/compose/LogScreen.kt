@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -28,6 +29,7 @@ import com.app.hoverrobot.data.utils.StatusMapper.toColor
 import com.app.hoverrobot.data.utils.StatusRobot
 import com.app.hoverrobot.data.utils.formatMillisToDate
 import com.app.hoverrobot.ui.composeUtils.CustomFloatingButton
+import com.app.hoverrobot.ui.composeUtils.CustomPreview
 import kotlin.collections.mutableListOf
 
 @Composable
@@ -38,8 +40,10 @@ fun LogScreen(
     val scrollState = rememberLazyListState()
 
     Box(
-        modifier = modifier
-            .border(border = BorderStroke(1.dp, Color.White), shape = RoundedCornerShape(8.dp))
+        modifier = modifier.border(
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onBackground),
+            shape = RoundedCornerShape(8.dp)
+        )
     ) {
         LazyColumn(
             state = scrollState,
@@ -63,7 +67,7 @@ fun LogScreen(
                             append("${listOfLogs[log].second.name} ")
                         }
                         // Descripción en blanco
-                        withStyle(style = SpanStyle(color = Color.White)) {
+                        withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.onBackground)) {
                             listOfLogs[log].third?.let { description ->
                                 append("- $description")
                             }
@@ -83,9 +87,7 @@ fun LogScreen(
     }
 }
 
-@Preview(
-    device = "spec:width=411dp,height=891dp,dpi=420,isRound=false,chinSize=0dp,orientation=landscape"
-)
+@CustomPreview
 @Composable
 private fun LogScreenPreview() {
 

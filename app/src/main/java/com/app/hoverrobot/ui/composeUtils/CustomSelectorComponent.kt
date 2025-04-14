@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.app.hoverrobot.ui.theme.MyAppTheme
 
 @Composable
 fun CustomSelectorComponent(
@@ -36,7 +37,7 @@ fun CustomSelectorComponent(
                 colors = SegmentedButtonDefaults.colors(
                     activeContainerColor = selectedColor,               // Color de fondo cuando está seleccionado
                     inactiveContainerColor = Color.Transparent,         // Color de fondo cuando no está seleccionado
-                    activeContentColor = MaterialTheme.colorScheme.background,                   // Color del texto cuando está seleccionado
+                    activeContentColor = MaterialTheme.colorScheme.onBackground,                   // Color del texto cuando está seleccionado
                     inactiveContentColor = MaterialTheme.colorScheme.onBackground,                 // Color del texto cuando no está seleccionado
                     activeBorderColor = Color.LightGray,
                     inactiveBorderColor = MaterialTheme.colorScheme.onBackground
@@ -65,8 +66,10 @@ fun CustomSelectorComponent(
 @CustomPreviewComponent
 @Composable
 fun CustomSelectorComponentPreview() {
-    CustomSelectorComponent(
-        defaultOption = 0,
-        options = listOf("Option1", "Option2", "Option3"),
-    ) { }
+    MyAppTheme {
+        CustomSelectorComponent(
+            defaultOption = 0,
+            options = listOf("Option1", "Option2", "Option3"),
+        ) { }
+    }
 }

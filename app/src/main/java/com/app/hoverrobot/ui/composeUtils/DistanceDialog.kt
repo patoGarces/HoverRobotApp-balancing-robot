@@ -21,6 +21,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -35,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -48,6 +50,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat.getColor
 import com.app.hoverrobot.R
+import com.app.hoverrobot.ui.theme.MyAppTheme
 
 @Composable
 fun NumberPickerDialog(
@@ -296,8 +299,8 @@ fun DistancePickerDialog(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(color = Color.DarkGray, shape = RoundedCornerShape(16.dp))
-                .border(width = 1.dp, color = Color.Red, RoundedCornerShape(16.dp)),
+                .background(color = MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(16.dp))
+                .border(width = 1.dp, color = MaterialTheme.colorScheme.primary, RoundedCornerShape(16.dp)),
         ) {
             Text(
                 text = stringResource(R.string.dialog_action_title),
@@ -307,20 +310,21 @@ fun DistancePickerDialog(
                 textAlign = TextAlign.Center,
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp,
-                color = Color.White
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
+                val contentPickerColor = MaterialTheme.colorScheme.onSurface.toArgb()
                 // Picker de metros (0 a 5)
                 AndroidView(
                     factory = { context ->
                         NumberPicker(context).apply {
                             minValue = 0
                             maxValue = 5
-                            textColor = getColor(context, R.color.white)
+                            textColor = contentPickerColor
                             displayedValues = Array(6) { "$it m" }
                             value = selectedMeters
                             setOnValueChangedListener { _, _, newValue ->
@@ -339,7 +343,7 @@ fun DistancePickerDialog(
                         NumberPicker(context).apply {
                             minValue = 0
                             maxValue = 9
-                            textColor = getColor(context, R.color.white)
+                            textColor = contentPickerColor
                             displayedValues = Array(10) { "${it * 10} cm" }
                             value = selectedDecimeters
                             setOnValueChangedListener { _, _, newValue ->
@@ -358,10 +362,10 @@ fun DistancePickerDialog(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
+                    modifier = Modifier.padding(horizontal = 8.dp),
                     imageVector = Icons.Default.Warning,
                     contentDescription = "Warning",
-                    tint = Color.Yellow,
-                    modifier = Modifier.padding(horizontal = 8.dp)
+                    tint = Color.Yellow
                 )
 
                 Text(
@@ -369,7 +373,7 @@ fun DistancePickerDialog(
                     text = stringResource(R.string.dialog_warning_distance),
                     textAlign = TextAlign.Center,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
 
                 val enable = actualDistance != 0F
@@ -385,7 +389,7 @@ fun DistancePickerDialog(
                 ) {
                     Text(
                         text = stringResource(directionTitle),
-                        color = if (enable) Color.White else Color.Gray,
+                        color = if (enable) MaterialTheme.colorScheme.onSurface else Color.Gray,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -394,11 +398,12 @@ fun DistancePickerDialog(
     }
 }
 
-@Preview
 @Composable
+@CustomPreviewComponent
 fun DistanceDialogPreview() {
 
-    Column {
+    MyAppTheme {
+        Column {
 //        DistanceDialog(
 //            10, {}, {}
 //        )
@@ -413,11 +418,12 @@ fun DistanceDialogPreview() {
 //            {}
 //        )
 
-        DistancePickerDialog(
-            directionTitle = R.string.title_forward,
-            initialDistance = 1.3F,
-            onDismiss = {},
-            onConfirm = { meters -> },
-        )
+            DistancePickerDialog(
+                directionTitle = R.string.title_forward,
+                initialDistance = 1.3F,
+                onDismiss = {},
+                onConfirm = { meters -> },
+            )
+        }
     }
 }

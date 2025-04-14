@@ -1,7 +1,12 @@
 <resources>
-    <!-- Base application theme. -->
+    <!-- Base application theme -->
     <style name="Base.Theme.HoverRobot" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Barra de estado transparente -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <!-- Barra de navegación transparente -->
+        <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
 
+    <!-- Tema final de la app -->
     <style name="Theme.HoverRobot" parent="Base.Theme.HoverRobot" />
 </resources>

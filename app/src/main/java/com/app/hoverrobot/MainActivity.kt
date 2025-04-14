@@ -29,11 +29,6 @@ class MainActivity : AppCompatActivity() {
 //        webViewSetup()
     }
 
-    override fun onResume() {
-        super.onResume()
-        hideSystemBars()
-    }
-
     /* TODO: migrar a compose
     private fun webViewSetup(){
 
@@ -48,6 +43,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
      */
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) hideSystemBars()
+    }
 
     private fun hideSystemBars() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
