@@ -5,6 +5,7 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -21,8 +22,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.graphics.ColorFilter
 import com.app.hoverrobot.R
+import com.app.hoverrobot.ui.composeUtils.CustomPreview
+import com.app.hoverrobot.ui.theme.MyAppTheme
 import java.math.BigDecimal
 import java.math.RoundingMode
 import kotlin.math.atan
@@ -44,9 +47,7 @@ fun JoystickAnalogCompose(
     dotImage: Int = R.mipmap.ic_analog_foreground,
     onMoved: (normX: Float, normY: Float) -> Unit = { _, _ -> }
 ) {
-    Box(
-        modifier = modifier.size(size)
-    ) {
+    Box(modifier = modifier.size(size)) {
         val maxRadius = with(LocalDensity.current) { (size / 2).toPx() }
         val centerX = with(LocalDensity.current) { ((size - dotSize) / 2).toPx() }
         val centerY = with(LocalDensity.current) { ((size - dotSize) / 2).toPx() }
@@ -62,13 +63,14 @@ fun JoystickAnalogCompose(
 
         Image(
             painterResource(id = backgroundImage),
-            "JoyStickBackground",
+            contentDescription = "JoyStickBackground",
             modifier = Modifier.size(size),
+            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground)
         )
 
         Image(
             painterResource(id = dotImage),
-            "JoyStickDot",
+            contentDescription = "JoyStickDot",
             modifier = Modifier
                 .offset {
                     IntOffset(
@@ -135,8 +137,10 @@ enum class FixedDirection{
     HORIZONTAL
 }
 
-@Preview
+@CustomPreview
 @Composable
 private fun JoystickAnalogComposePreview() {
-    JoystickAnalogCompose { x, y -> }
+    MyAppTheme {
+        JoystickAnalogCompose { x, y -> }
+    }
 }

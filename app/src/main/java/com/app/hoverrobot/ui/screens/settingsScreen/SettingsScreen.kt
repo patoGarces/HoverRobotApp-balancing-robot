@@ -56,6 +56,7 @@ import com.app.hoverrobot.data.models.comms.asPidSettings
 import com.app.hoverrobot.data.models.comms.isDiffWithOriginalLocalConfig
 import com.app.hoverrobot.data.utils.StatusRobot
 import com.app.hoverrobot.ui.composeUtils.CustomButton
+import com.app.hoverrobot.ui.composeUtils.CustomDropdownMenu
 import com.app.hoverrobot.ui.composeUtils.CustomPreview
 import com.app.hoverrobot.ui.composeUtils.CustomSlider
 import com.app.hoverrobot.ui.composeUtils.CustomTextStyles
@@ -188,17 +189,7 @@ private fun PidSettingsCardHeader(
     onPidSync: () -> Unit,
     onIndexPidChange: (Int) -> Unit
 ) {
-    val listColor = listOf(
-        Color.White,
-        Color.Blue,
-        Color.Green,
-        Color.Yellow
-    )
-    var isDropdownMenuExpanded by remember { mutableStateOf(false) }
-    var dropDownMenuSelectedItem by remember { mutableIntStateOf(0) }
     var buttonSaveEnable by remember { mutableStateOf(true) }
-    val optionDropDownMenu = stringArrayResource(R.array.dropdown_menu_pid_items)
-    val outlineColor by remember { derivedStateOf { listColor[dropDownMenuSelectedItem] } }
 
     Row(
         Modifier.fillMaxWidth(),
@@ -225,57 +216,7 @@ private fun PidSettingsCardHeader(
             modifier = Modifier.padding(horizontal = 8.dp),
         ) { onPidSync() }
 
-        ExposedDropdownMenuBox(
-            expanded = isDropdownMenuExpanded,
-            onExpandedChange = { },
-        ) {
-            Row(
-                Modifier
-                    .width(130.dp)
-                    .height(35.dp)
-                    .padding(horizontal = 8.dp)
-                    .border(width = 1.dp, color = outlineColor, shape = RoundedCornerShape(8.dp))
-                    .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true)
-                    .clickable { isDropdownMenuExpanded = !isDropdownMenuExpanded },
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    modifier = Modifier.weight(1F),
-                    text = optionDropDownMenu.getOrNull(dropDownMenuSelectedItem) ?: "Unknown",
-                    style = CustomTextStyles.textStyle14Bold
-                )
-
-                val trailingIcon =
-                    if (isDropdownMenuExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown
-                Icon(
-                    imageVector = trailingIcon,
-                    contentDescription = "Dropdown",
-                    tint = Color.White,
-                )
-            }
-
-            ExposedDropdownMenu(
-                modifier = Modifier
-                    .padding(top = 8.dp)
-                    .border(1.dp, Color.Red, RoundedCornerShape(8.dp))
-                    .background(Color.Black, RoundedCornerShape(8.dp)),
-                containerColor = Color.Transparent,
-                expanded = isDropdownMenuExpanded,
-                onDismissRequest = { }
-            ) {
-                optionDropDownMenu.forEachIndexed { index, item ->
-                    DropdownMenuItem(
-                        text = { Text(item, color = Color.White) },
-                        onClick = {
-                            dropDownMenuSelectedItem = index
-                            onIndexPidChange(index)
-                            isDropdownMenuExpanded = false
-                        },
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
-                    )
-                }
-            }
-        }
+        CustomDropdownMenu(R.array.dropdown_menu_pid_items, onIndexChange = onIndexPidChange)
     }
 }
 

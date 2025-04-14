@@ -3,6 +3,7 @@ package com.app.hoverrobot.ui.screens.navigationScreen.compose
 import android.view.MotionEvent
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
@@ -11,10 +12,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.app.hoverrobot.R
+import com.app.hoverrobot.ui.composeUtils.CustomPreview
+import com.app.hoverrobot.ui.theme.MyAppTheme
 import com.redinput.compassview.CompassView
 
 @Composable
@@ -24,15 +28,18 @@ fun CompassComposable(
 ) {
     var enableSetNewDegress by remember { mutableStateOf(true) }
 
+    val contentColor = MaterialTheme.colorScheme.onBackground.toArgb()
+    val backgroundColor = Color.Transparent.toArgb()
+    val primaryColor = MaterialTheme.colorScheme.primary.toArgb()
     AndroidView(
         modifier = Modifier.fillMaxWidth().height(40.dp),
         factory = { ctx ->
             CompassView(ctx, null).apply {
-                setBackgroundColor(ctx.getColor(R.color.transparent))
+                setBackgroundColor(backgroundColor)
                 setShowMarker(true)
-                setMarkerColor(ctx.getColor(R.color.red_80_percent))
-                setLineColor(ctx.getColor(R.color.white))
-                setTextColor(ctx.getColor(R.color.white))
+                setMarkerColor(primaryColor)
+                setLineColor(contentColor)
+                setTextColor(contentColor)
                 setTextSize(28)
                 setRangeDegrees(50F)
                 degrees = actualDegress.value.toFloat()
@@ -65,10 +72,11 @@ fun CompassComposable(
     )
 }
 
-@Preview
 @Composable
+@CustomPreview
 private fun CompassComposablePreview() {
-
     val dummySetDegress = remember { mutableIntStateOf(0) }
-    CompassComposable(dummySetDegress) { }
+    MyAppTheme {
+        CompassComposable(dummySetDegress) { }
+    }
 }

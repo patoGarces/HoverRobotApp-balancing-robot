@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,6 +34,7 @@ import androidx.compose.ui.Alignment
 import com.app.hoverrobot.data.models.comms.PointCloudItem
 import com.app.hoverrobot.ui.composeUtils.ScatterChartCompose
 import com.app.hoverrobot.ui.composeUtils.ArcSeekBar
+import com.app.hoverrobot.ui.composeUtils.CustomPreview
 import com.app.hoverrobot.ui.composeUtils.DistancePickerDialog
 import com.app.hoverrobot.ui.screens.navigationScreen.NavigationScreenAction.OnDearmedAction
 import com.app.hoverrobot.ui.screens.navigationScreen.NavigationScreenAction.OnNewDragCompassInteraction
@@ -101,11 +103,11 @@ fun NavigationScreen(
                         showDialog = true
                     },
                     shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, Color.White)
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.onBackground)
                 ) {
                     Text(
                         text = stringResource(R.string.title_backward),
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                 }
 
@@ -119,11 +121,11 @@ fun NavigationScreen(
                         showDialog = true
                     },
                     shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, Color.White)
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.onBackground)
                 ) {
                     Text(
                         text = stringResource(R.string.title_forward),
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                 }
             }
@@ -284,9 +286,7 @@ private fun YawControlButtons(
 }
 
 @Composable
-@Preview(
-    device = "spec:width=411dp,height=891dp,dpi=420,isRound=false,chinSize=0dp,orientation=landscape"
-)
+@CustomPreview
 fun NavigationButtonPreview() {
     val dummySetDegress = remember { mutableIntStateOf(0) }
     val dummyPointCloudItem = remember { mutableStateOf(PointCloudItem()) }
@@ -294,18 +294,12 @@ fun NavigationButtonPreview() {
     val dummyRobotStabilized = remember { mutableStateOf(true) }
 
     MyAppTheme {
-        Column(
-            Modifier
-                .padding(16.dp)
-                .background(Color.Black)
-        ) {
-            NavigationScreen(
-                actualDegress = dummySetDegress,
-                newPointCloudItem = dummyPointCloudItem,
-                isRobotConnected = dummyRobotConnected,
-                isRobotStabilized = dummyRobotStabilized,
-                disableCompass = true
-            ) { }
-        }
+        NavigationScreen(
+            actualDegress = dummySetDegress,
+            newPointCloudItem = dummyPointCloudItem,
+            isRobotConnected = dummyRobotConnected,
+            isRobotStabilized = dummyRobotStabilized,
+            disableCompass = true
+        ) { }
     }
 }
