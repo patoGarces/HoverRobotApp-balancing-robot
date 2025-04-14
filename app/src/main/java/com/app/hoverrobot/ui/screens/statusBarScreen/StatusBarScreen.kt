@@ -109,7 +109,6 @@ private fun TempIndicator(
             modifier = Modifier,
             text = stringResource(R.string.placeholder_temp, tempImu),
             style = CustomTextStyles.textStyle16Bold,
-            color = MaterialTheme.colorScheme.onBackground
         )
     }
 }

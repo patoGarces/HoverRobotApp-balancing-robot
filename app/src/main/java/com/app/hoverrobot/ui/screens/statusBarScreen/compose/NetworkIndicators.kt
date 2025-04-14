@@ -48,7 +48,6 @@ fun NetworkIndicators(
             modifier = Modifier.padding(start = 8.dp),
             text = stringResource(R.string.placeholder_rssi,connectionState.rssi),
             style = textStyle16Bold,
-            color = MaterialTheme.colorScheme.onBackground,
         )
 
         VerticalDivider(
@@ -60,7 +59,6 @@ fun NetworkIndicators(
         Text(
             text = stringResource(R.string.placeholder_packets_rate,connectionState.receiverPacketRates),
             style = textStyle16Bold,
-            color = MaterialTheme.colorScheme.onBackground,
         )
     }
 }
