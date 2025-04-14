@@ -133,7 +133,6 @@ private fun NormalSection(
     ) {
         Text(
             text = stringResource(title),
-            color = MaterialTheme.colorScheme.onBackground,
             style = CustomTextStyles.textStyle14Normal
         )
 
@@ -168,8 +167,7 @@ fun SelectorSection(
     ) {
         Text(
             text = title,
-            style = CustomTextStyles.textStyle14Normal,
-            color = MaterialTheme.colorScheme.onBackground
+            style = CustomTextStyles.textStyle14Normal
         )
 
         CustomSelectorComponent(

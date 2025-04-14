@@ -49,8 +49,7 @@ fun TemperatureComponent(
             modifier = Modifier
                 .padding(bottom = 16.dp)
                 .fillMaxWidth(),
-            style = CustomTextStyles.textStyle14Bold,
-            color = MaterialTheme.colorScheme.onBackground
+            style = CustomTextStyles.textStyle14Bold
         )
 
         Box(

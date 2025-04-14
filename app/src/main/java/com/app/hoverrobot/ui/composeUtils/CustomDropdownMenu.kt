@@ -78,8 +78,7 @@ fun CustomDropdownMenu(
             Text(
                 modifier = Modifier.weight(1f),
                 text = optionDropDownMenu.getOrNull(dropDownMenuSelectedItem) ?: "Unknown",
-                style = CustomTextStyles.textStyle14Bold,
-                color = MaterialTheme.colorScheme.onBackground
+                style = CustomTextStyles.textStyle14Bold
             )
             val trailingIcon =
                 if (isDropdownMenuExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown

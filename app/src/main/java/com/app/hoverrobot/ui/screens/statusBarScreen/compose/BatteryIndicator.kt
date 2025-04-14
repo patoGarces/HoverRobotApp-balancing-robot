@@ -95,8 +95,7 @@ fun BatteryIndicator(
     ) {
         Text(
             text = batteryVoltageText,
-            style = textStyle16Bold,
-            color = MaterialTheme.colorScheme.onBackground,
+            style = textStyle16Bold
         )
 
         Icon(
@@ -110,8 +109,7 @@ fun BatteryIndicator(
 
         Text(
             text = batteryPercentText,
-            style = textStyle16Bold,
-            color = MaterialTheme.colorScheme.onBackground
+            style = textStyle16Bold
         )
     }
 }
