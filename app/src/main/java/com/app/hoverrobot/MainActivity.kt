@@ -1,8 +1,6 @@
 package com.app.hoverrobot
 
 import android.os.Bundle
-import android.view.View
-import android.view.WindowManager
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
