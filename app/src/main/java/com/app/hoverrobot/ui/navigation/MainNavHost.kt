@@ -57,7 +57,7 @@ fun MainNavHost(
                 isRobotStabilized = robotStateViewModel.isRobotStabilized,
                 isRobotConnected = robotStateViewModel.isRobotConnected,
                 newPointCloudItem = robotStateViewModel.pointCloud,
-                actualDegress = actualDegrees
+                actualDegrees = actualDegrees
             ) { robotStateViewModel.onNavigationAction(it) }
         }
 

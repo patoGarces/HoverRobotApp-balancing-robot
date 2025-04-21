@@ -24,7 +24,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.app.hoverrobot.R
@@ -50,15 +49,12 @@ fun NavigationScreen(
     isRobotStabilized: State<Boolean>,
     isRobotConnected: State<Boolean>,
     newPointCloudItem: State<PointCloudItem?>,
-    actualDegress: State<Int>,
-    enableSeekbarsYaw: Boolean = false,
+    actualDegrees: State<Int>,
     disableCompass: Boolean = false,
     onActionScreen: (NavigationScreenAction) -> Unit
 ) {
     var joystickX by remember { mutableIntStateOf(0) }
     var joystickY by remember { mutableIntStateOf(0) }
-    var leftAngleDir by remember { mutableIntStateOf(1) }
-    var rightAngleDir by remember { mutableIntStateOf(1) }
     var showDialog by remember { mutableStateOf(false) }
     var isForwardMove by remember { mutableStateOf(true) }
 
@@ -79,7 +75,7 @@ fun NavigationScreen(
             onConfirm = { meters ->
                 showDialog = false
                 val dirMeters = if (isForwardMove) meters else -meters
-                NavigationScreenAction.OnFixedDistance(dirMeters)
+                onActionScreen(NavigationScreenAction.OnFixedDistance(dirMeters))
             },
         )
     }
@@ -136,25 +132,13 @@ fun NavigationScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Bottom
             ) {
-                Box(Modifier.padding(top = 8.dp)) {
-                    JoystickAnalogCompose(
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .zIndex(1F),
-                        size = 100.dp,
-                        dotSize = 50.dp,
-                        fixedDirection = FixedDirection.VERTICAL
-                    ) { x: Float, y: Float ->
-                        joystickY = (y * 100F).toInt()
-                    }
-
-                    if (enableSeekbarsYaw) {
-                        ArcSeekBar(
-                            modifier = Modifier.align(Alignment.TopCenter),
-                            range = 1F..180F,
-                            sizeArc = 140.dp
-                        ) { leftAngleDir = -it.toInt() }
-                    }
+                JoystickAnalogCompose(
+                    modifier = Modifier.padding(top = 8.dp),
+                    size = 100.dp,
+                    dotSize = 50.dp,
+                    fixedDirection = FixedDirection.VERTICAL
+                ) { x: Float, y: Float ->
+                    joystickY = (y * 100F).toInt()
                 }
 
                 Column(
@@ -165,50 +149,23 @@ fun NavigationScreen(
                 ) {
                     YawControlButtons(
                         isRobotStabilized = isRobotStabilized.value,
-                        yawLeftText = stringResource(
-                            R.string.control_move_placeholder_direction,
-                            leftAngleDir
-                        ),
-                        yawLeftOnClick = {
-                            onActionScreen(OnYawLeftAction(leftAngleDir))
-                        },
-                        yawRightText = stringResource(
-                            R.string.control_move_placeholder_direction,
-                            rightAngleDir
-                        ),
-                        yawRightOnClick = {
-                            onActionScreen(OnYawRightAction(rightAngleDir))
-                        },
                         onDearmedClick = { onActionScreen(OnDearmedAction) }
                     )
                 }
 
-                Box(Modifier.padding(top = 8.dp)) {
-
-                    JoystickAnalogCompose(
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .zIndex(1F),
-                        size = 100.dp,
-                        dotSize = 50.dp,
-                        fixedDirection = FixedDirection.HORIZONTAL
-                    ) { x: Float, y: Float ->
-                        joystickX = (x * 100F).toInt()
-                    }
-
-                    if (enableSeekbarsYaw) {
-                        ArcSeekBar(
-                            modifier = Modifier.align(Alignment.TopCenter),
-                            range = 1F..180F,
-                            sizeArc = 140.dp
-                        ) { rightAngleDir = it.toInt() }
-                    }
+                JoystickAnalogCompose(
+                    modifier = Modifier.padding(top = 8.dp),
+                    size = 100.dp,
+                    dotSize = 50.dp,
+                    fixedDirection = FixedDirection.HORIZONTAL
+                ) { x: Float, y: Float ->
+                    joystickX = (x * 100F).toInt()
                 }
             }
 
             // TODO: revisar por que al mostrar este composable se rompe la preview
             if (!disableCompass) {
-                CompassComposable(actualDegress) {
+                CompassComposable(actualDegrees) {
                     onActionScreen(OnNewDragCompassInteraction(it))
                 }
             }
@@ -219,11 +176,6 @@ fun NavigationScreen(
 @Composable
 private fun YawControlButtons(
     isRobotStabilized: Boolean,
-    enableSeekbarsYaw: Boolean = false,
-    yawLeftText: String,
-    yawLeftOnClick: () -> Unit,
-    yawRightText: String,
-    yawRightOnClick: () -> Unit,
     onDearmedClick: () -> Unit
 ) {
 
@@ -231,23 +183,6 @@ private fun YawControlButtons(
         Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        if (enableSeekbarsYaw) {
-            OutlinedButton(
-                modifier = Modifier
-                    .wrapContentSize()
-                    .widthIn(80.dp)
-                    .background(Color.Transparent),
-                onClick = yawLeftOnClick,
-                shape = RoundedCornerShape(8.dp),
-                border = BorderStroke(1.dp, Color.White)
-            ) {
-                Text(
-                    text = yawLeftText,
-                    color = Color.White
-                )
-            }
-        }
-
         if (isRobotStabilized) {
             OutlinedButton(
                 modifier = Modifier
@@ -261,24 +196,7 @@ private fun YawControlButtons(
             ) {
                 Text(
                     text = stringResource(id = R.string.dearmed_button),
-                    color = Color.White
-                )
-            }
-        }
-
-        if (enableSeekbarsYaw) {
-            OutlinedButton(
-                modifier = Modifier
-                    .wrapContentSize()
-                    .widthIn(80.dp)
-                    .background(Color.Transparent),
-                onClick = yawRightOnClick,
-                shape = RoundedCornerShape(8.dp),
-                border = BorderStroke(1.dp, Color.White)
-            ) {
-                Text(
-                    text = yawRightText,
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onBackground
                 )
             }
         }
@@ -295,7 +213,7 @@ fun NavigationButtonPreview() {
 
     MyAppTheme {
         NavigationScreen(
-            actualDegress = dummySetDegress,
+            actualDegrees = dummySetDegress,
             newPointCloudItem = dummyPointCloudItem,
             isRobotConnected = dummyRobotConnected,
             isRobotStabilized = dummyRobotStabilized,
