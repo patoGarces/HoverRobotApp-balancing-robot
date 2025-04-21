@@ -82,7 +82,6 @@
     <string name="status_robot_error_battery">Error battery</string>
 
     <!--    Navigation screen-->
-    <string name="control_move_placeholder_direction">%d°</string>
     <string name="title_forward">Avanzar</string>
     <string name="title_backward">Retroceder</string>
 
