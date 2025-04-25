@@ -5,12 +5,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.app.hoverrobot.data.models.ChartLimitsConfig
 import com.app.hoverrobot.data.models.comms.FrameRobotDynamicData
 import com.app.hoverrobot.data.models.comms.RobotLocalConfig
 import com.app.hoverrobot.data.repositories.CommsRepository
 import com.app.hoverrobot.data.utils.StatusRobot
-import com.app.hoverrobot.data.utils.ToolBox.ioScope
 import com.app.hoverrobot.ui.screens.analisisScreen.AnalisisScreenActions.OnClearData
 import com.app.hoverrobot.ui.screens.analisisScreen.AnalisisScreenActions.OnDatasetChange
 import com.app.hoverrobot.ui.screens.analisisScreen.AnalisisScreenActions.OnPauseChange
@@ -66,7 +66,7 @@ class AnalisisViewModel @Inject constructor(
         internal set
 
     init {
-        ioScope.launch {
+        viewModelScope.launch {
             commsRepository.dynamicDataRobotFlow.collect { newData ->
                 val actualTimeInSec = ((System.currentTimeMillis() - initTimeStamp).toFloat()) / 1000
                 _newDataAnalisis.value = FrameRobotDynamicData(newData,actualTimeInSec)
@@ -76,7 +76,7 @@ class AnalisisViewModel @Inject constructor(
             }
         }
 
-        ioScope.launch {
+        viewModelScope.launch {
             commsRepository.robotLocalConfigFlow.collect {
                 it?.let {
                     _newRobotConfig.postValue(it)
