@@ -1,11 +1,13 @@
 package com.app.hoverrobot.ui.screens.navigationScreen
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -19,30 +21,28 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.center
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
 import com.app.hoverrobot.R
-import kotlinx.coroutines.delay
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.Alignment
 import com.app.hoverrobot.data.models.comms.PointCloudItem
-import com.app.hoverrobot.ui.composeUtils.ScatterChartCompose
-import com.app.hoverrobot.ui.composeUtils.ArcSeekBar
 import com.app.hoverrobot.ui.composeUtils.CustomPreview
 import com.app.hoverrobot.ui.composeUtils.DistancePickerDialog
 import com.app.hoverrobot.ui.screens.navigationScreen.NavigationScreenAction.OnDearmedAction
 import com.app.hoverrobot.ui.screens.navigationScreen.NavigationScreenAction.OnNewDragCompassInteraction
-import com.app.hoverrobot.ui.screens.navigationScreen.NavigationScreenAction.OnYawLeftAction
-import com.app.hoverrobot.ui.screens.navigationScreen.NavigationScreenAction.OnYawRightAction
 import com.app.hoverrobot.ui.screens.navigationScreen.compose.CompassComposable
 import com.app.hoverrobot.ui.screens.navigationScreen.compose.FixedDirection
 import com.app.hoverrobot.ui.screens.navigationScreen.compose.JoystickAnalogCompose
 import com.app.hoverrobot.ui.theme.MyAppTheme
+
 
 @Composable
 fun NavigationScreen(
@@ -58,11 +58,16 @@ fun NavigationScreen(
     var showDialog by remember { mutableStateOf(false) }
     var isForwardMove by remember { mutableStateOf(true) }
 
-    LaunchedEffect(isRobotStabilized) {
-        while (isRobotStabilized.value) {
-            onActionScreen(NavigationScreenAction.OnNewJoystickInteraction(joystickX, joystickY))
-            delay(50)
+    val pointList = remember { mutableStateListOf<PointCloudItem>() }
+
+    LaunchedEffect(newPointCloudItem.value) {
+        newPointCloudItem.value?.let { newPoint ->
+            pointList.add(newPoint)
         }
+    }
+
+    LaunchedEffect(joystickX, joystickY) {
+        onActionScreen(NavigationScreenAction.OnNewJoystickInteraction(joystickX, joystickY))
     }
 
     if (!isRobotConnected.value) return
@@ -81,7 +86,12 @@ fun NavigationScreen(
     }
 
     Box {
-        ScatterChartCompose(newPointCloudItem)
+//        ScatterChartCompose(newPointCloudItem)
+
+        TrajectoryMap(
+            points = pointList.map { Offset(it.x, it.y) },
+            modifier = Modifier.fillMaxSize()
+        )
 
         Column(Modifier.align(Alignment.BottomCenter)) {
             Row(
@@ -202,6 +212,91 @@ private fun YawControlButtons(
         }
     }
 }
+
+/*
+@Composable
+fun TrajectoryMap(
+    points: List<Offset>,
+    modifier: Modifier = Modifier
+) {
+    var scale by remember { mutableStateOf(200f) } // Aumentamos la escala
+    var offset by remember { mutableStateOf(Offset.Zero) }
+
+    Box(
+        modifier = modifier
+            .pointerInput(Unit) {
+                detectTransformGestures { _, pan, zoom, _ ->
+                    offset += pan
+                    scale *= zoom
+                }
+            }
+            .background(Color.Blue)
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val canvasCenter = size.center // 📍 Centro del canvas (x: mitad ancho, y: mitad alto)
+
+            withTransform({
+                translate(canvasCenter.x + offset.x, canvasCenter.y + offset.y)
+                scale(scale, -scale) // 🔁 Negativo para invertir eje Y (hacia arriba)
+            }) {
+                for (point in points) {
+                    drawCircle(
+                        color = Color.Green,
+                        radius = 10f, // Aumentamos el tamaño del punto
+                        center = point
+                    )
+                }
+            }
+        }
+    }
+}
+
+ */
+@Composable
+fun TrajectoryMap(
+    points: List<Offset>,
+    modifier: Modifier = Modifier
+) {
+    val zoomFactor = 100f // 1 metro = 50 pixeles
+    val dotColor = MaterialTheme.colorScheme.primary
+
+    Box(
+        modifier = modifier
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val canvasCenter = size.center // El centro del canvas
+
+            // Dibujar líneas de trayectoria
+            if (points.size > 1) {
+                for (i in 0 until points.size - 1) {
+                    val start = canvasCenter + points[i] * zoomFactor
+                    val end = canvasCenter + points[i + 1] * zoomFactor
+
+                    drawLine(
+                        color = Color.Cyan,
+                        start = start,
+                        end = end,
+                        strokeWidth = 2f
+                    )
+                }
+            }
+
+            // Dibujar puntos
+            for (point in points) {
+                val pointPos = canvasCenter + point * zoomFactor // Aplica el zoom a las coordenadas
+                drawCircle(
+                    color = dotColor,
+                    radius = 5f, // Ajuste el tamaño del punto
+                    center = pointPos
+                )
+            }
+        }
+    }
+}
+
+
+
 
 @Composable
 @CustomPreview

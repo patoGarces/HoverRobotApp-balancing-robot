@@ -1,11 +1,14 @@
 package com.app.hoverrobot.ui
 
+import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.app.hoverrobot.data.models.Aggressiveness
 import com.app.hoverrobot.data.models.Battery
 import com.app.hoverrobot.data.models.comms.CommandsRobot
@@ -21,7 +24,6 @@ import com.app.hoverrobot.data.repositories.CommsRepository
 import com.app.hoverrobot.data.repositories.StoreSettings
 import com.app.hoverrobot.data.utils.StatusConnection
 import com.app.hoverrobot.data.utils.StatusRobot
-import com.app.hoverrobot.data.utils.ToolBox.ioScope
 import com.app.hoverrobot.data.utils.ToolBox.round
 import com.app.hoverrobot.ui.screens.navigationScreen.NavigationScreenAction
 import com.app.hoverrobot.ui.screens.navigationScreen.NavigationScreenAction.OnDearmedAction
@@ -35,10 +37,13 @@ import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnClea
 import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnCleanRightMotor
 import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnNewSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 import kotlin.math.abs
+import kotlin.math.cos
+import kotlin.math.sin
 
 @HiltViewModel
 class RobotStateViewModel @Inject constructor(
@@ -61,8 +66,8 @@ class RobotStateViewModel @Inject constructor(
     var connectionState by mutableStateOf(ConnectionState())
         internal set
 
-    var pointCloud = mutableStateOf<PointCloudItem>(PointCloudItem())
-        internal set
+    private val _pointCloud = mutableStateOf<PointCloudItem?>(null)
+    val pointCloud: State<PointCloudItem?> = _pointCloud
 
     val isRobotStabilized: State<Boolean> = derivedStateOf {
         statusRobot == StatusRobot.STABILIZED
@@ -72,14 +77,30 @@ class RobotStateViewModel @Inject constructor(
         connectionState.status == StatusConnection.CONNECTED
     }
 
+    private var actualJoyPosition = DirectionControl()
+
+    private var currentPosition = Offset(0f, 0f)
+    private var lastDistance = 0f // La última distancia recibida
+
     init {
-        ioScope.launch {
+        viewModelScope.launch {
+            while (true) {
+                if (isRobotConnected.value && isRobotStabilized.value) {
+                    newCoordinatesJoystick(actualJoyPosition.joyAxisX, actualJoyPosition.joyAxisY)
+
+                    Log.i("Joystick","${actualJoyPosition.joyAxisX}")
+                }
+                delay(50)
+            }
+        }
+
+        viewModelScope.launch {
             commsRepository.connectionState.collect {
                 connectionState = it
             }
         }
 
-        ioScope.launch {
+        viewModelScope.launch {
             commsRepository.robotLocalConfigFlow.collect {
                 it?.let { localConfig ->
                     localConfigFromRobot = localConfig
@@ -87,7 +108,7 @@ class RobotStateViewModel @Inject constructor(
             }
         }
 
-        ioScope.launch {
+        viewModelScope.launch {
             commsRepository.dynamicDataRobotFlow.collect {
                 robotDynamicData = it
                 it.let {
@@ -99,19 +120,24 @@ class RobotStateViewModel @Inject constructor(
                         it.batVoltage
                     )
                 }
+
+                val displacement = it.posInMeters - lastDistance
+                val nextPoint = generateNextPoint(currentPosition, -it.yawAngle, displacement)
+                currentPosition = nextPoint
+                lastDistance = it.posInMeters
+                _pointCloud.value = PointCloudItem(
+                    x = nextPoint.x,
+                    y = nextPoint.y
+                )
             }
         }
-
-//        // TODO: aca recibo cada punto de la nube
-//        ioScope.launch {
-//            for (i in 0..10000) {
-//                _pointCloud.postValue(
-//                    PointCloudItem(
+//        viewModelScope.launch {
+//            for (i in 0..5000) {
+//                pointCloud.value = PointCloudItem(
 //                        x = ((Math.random()-0.5) * 10).toFloat(),
 //                        y = ((Math.random()-0.5) * 10).toFloat(),
 //                        ""
 //                    )
-//                )
 //                delay(100)
 //            }
 //        }
@@ -128,12 +154,9 @@ class RobotStateViewModel @Inject constructor(
                 action.meters < 0
             )
 
-            is OnNewJoystickInteraction -> newCoordinatesJoystick(
-                (action.x * getAggressivenessLevel().normalizedFactor).round()
-                    .toInt(),
-                (action.y * getAggressivenessLevel().normalizedFactor).round()
-                    .toInt()
-            )
+            is OnNewJoystickInteraction -> {
+                actualJoyPosition = DirectionControl(action.x.toShort(), action.y.toShort())
+            }
         }
     }
 
@@ -160,7 +183,21 @@ class RobotStateViewModel @Inject constructor(
     fun getAggressivenessLevel(): Aggressiveness = runBlocking { storeSettings.getAggressiveness() }
 
     fun setLevelAggressiveness(level: Aggressiveness) {
-        ioScope.launch { storeSettings.saveAggressiveness(level) }
+        viewModelScope.launch { storeSettings.saveAggressiveness(level) }
+    }
+
+    private fun generateNextPoint(
+        previousPosition: Offset,
+        yawDegrees: Float,
+        deltaDistance: Float // Distancia recorrida desde el punto anterior
+    ): Offset {
+        val yawRadians = Math.toRadians(yawDegrees.toDouble())
+
+        // Calcular el desplazamiento en los ejes X y Y
+        val dx = (deltaDistance * sin(yawRadians)).toFloat()
+        val dy = (deltaDistance * cos(yawRadians)).toFloat()
+
+        return previousPosition + Offset(dx, dy)
     }
 
     private fun sendNewPidSettings(newSetting: PidSettings): Boolean {
@@ -177,8 +214,12 @@ class RobotStateViewModel @Inject constructor(
         } else false
     }
 
-    private fun newCoordinatesJoystick(axisX: Int, axisY: Int) {
+    private fun newCoordinatesJoystick(actualX: Short, actualY: Short) {
         if (isRobotConnected.value) {
+            val axisX = (actualX * getAggressivenessLevel().normalizedFactor).round()
+                .toInt()
+            val axisY = (actualY * getAggressivenessLevel().normalizedFactor).round()
+                .toInt()
             commsRepository.sendDirectionControl(DirectionControl(axisX.toShort(), axisY.toShort()))
         }
     }
