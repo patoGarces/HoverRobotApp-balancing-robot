@@ -1,7 +1,7 @@
 package com.app.hoverrobot.data.repositories
 
 import android.util.Log
-
+import com.app.hoverrobot.data.models.comms.SocketTcpInterface
 import com.app.hoverrobot.data.utils.StatusConnection
 import com.app.hoverrobot.data.utils.ToolBox.ioScope
 import com.app.hoverrobot.data.utils.toByteBuffer
@@ -20,22 +20,19 @@ import java.net.Socket
 import java.net.SocketException
 import java.nio.ByteBuffer
 
+class ServerTcpImpl(private val port: Int = 8080): SocketTcpInterface {
 
-class ServerTcp {
-
-    private val tcpSocket: ServerSocket
+    val tcpSocket: ServerSocket
 
     private val _receivedDataFlow = MutableSharedFlow<ByteBuffer>()
-    val receivedDataFlow: SharedFlow<ByteBuffer> = _receivedDataFlow
+    override val receivedDataFlow: SharedFlow<ByteBuffer> = _receivedDataFlow
 
     private val _connectionsStatus = MutableStateFlow(StatusConnection.INIT)
-    val connectionsStatus: StateFlow<StatusConnection> = _connectionsStatus
+    override val connectionsStatus: StateFlow<StatusConnection> = _connectionsStatus
 
     private val TAG = "ServerTcp"
 
-    private val port = 8080
-
-    private lateinit var socket: Socket
+    private lateinit var socket: Socket // TODO: no deberia existir creo, alcanza con tcpSocket
 
     var clientsIp: String? = null
         internal set

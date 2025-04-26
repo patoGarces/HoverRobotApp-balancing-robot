@@ -50,12 +50,18 @@ interface CommsRepository {
 class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val context: Context) :
     CommsRepository {
 
-    private val serverSocket = ServerTcp()
+     private val IP_HOVER_ROBOT = "192.168.0.102"    // ip prototipo TODO: hacer configurable
+//     private val IP_HOVER_ROBOT = "192.168.0.101"    // ip robot TODO: hacer configurable
+//    private val serverSocket = ServerTcpImpl()
+    private val serverSocket = ClientTcpImpl(IP_HOVER_ROBOT) // TODO: renombrar variable y elimianr ip harcode
 
     private val _connectionState = MutableStateFlow(ConnectionState())                // Es un stateFlow, porque busco que emita SOLO si cambia el valor de su contenido
     override val connectionState: StateFlow<ConnectionState> = _connectionState
 
-    private val _dynamicDataRobotFlow = MutableSharedFlow<RobotDynamicData>()
+    private val _dynamicDataRobotFlow = MutableSharedFlow<RobotDynamicData>(
+        replay = 0,
+        extraBufferCapacity = 1000                                      // Este buffer me permite que si demora el collect, guardar los datos hast que se puedan procesar
+    )
     override val dynamicDataRobotFlow: SharedFlow<RobotDynamicData> = _dynamicDataRobotFlow
 
     private val _robotLocalConfigFlow = MutableStateFlow<RobotLocalConfig>(RobotLocalConfig())
@@ -70,45 +76,53 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
         val byteBuffer = ByteBuffer.allocate(bufferSize)
 
         ioScope.launch {
-            serverSocket.receivedDataFlow.collect { newPaquet ->
+            serverSocket.receivedDataFlow.collect { newPacket ->
 
-                byteBuffer.put(newPaquet)
+                byteBuffer.put(newPacket)
                 byteBuffer.flip()
 
-                while (byteBuffer.remaining() >= 20) {
+                while (true) {
+                    if (byteBuffer.remaining() < 2) {
+                        // No hay suficientes bytes para leer un header
+                        break
+                    }
 
+                    byteBuffer.mark() // Marca la posición antes de leer
                     val headerBytes = ByteArray(2)
                     byteBuffer.get(headerBytes)
 
                     val byte0 = headerBytes[0].toInt() and 0xFF
                     val byte1 = headerBytes[1].toInt() and 0xFF
-                    val headerPackage = ((byte1 shl 8) or byte0)        // shl es analogo a '<<' en C
+                    val headerPackage = ((byte1 shl 8) or byte0)
+
+                    val expectedSize = when (headerPackage) {
+                        HEADER_PACKAGE_STATUS -> ROBOT_DYNAMIC_DATA_SIZE
+                        HEADER_PACKAGE_LOCAL_CONFIG -> ROBOT_LOCAL_CONFIG_SIZE
+                        else -> {
+                            Log.i(TAG, "Unrecognized package: 0x${headerPackage.toString(16)}")
+                            continue
+                        }
+                    }
+
+                    if (byteBuffer.remaining() < expectedSize) {
+                        // No tenemos todos los datos todavía, esperamos a la próxima recepción
+                        byteBuffer.reset() // Volvemos al punto anterior (antes de leer el header)
+                        break
+                    }
+
+                    val dataBytes = ByteArray(expectedSize)
+                    byteBuffer.get(dataBytes)
 
                     when (headerPackage) {
                         HEADER_PACKAGE_STATUS -> {
-                            try {
-                                val dynamicData = ByteArray(ROBOT_DYNAMIC_DATA_SIZE)
-                                byteBuffer.get(dynamicData)
-                                contPackets++
-                                _dynamicDataRobotFlow.emit(dynamicData.toByteBuffer().asRobotDynamicData)
-                            }
-                            catch (e: BufferUnderflowException) {
-                                Log.e(TAG,"error: $e")
-                            }
-                        }
-
-                        HEADER_PACKAGE_LOCAL_CONFIG -> {
-                            val localConfig = ByteArray(ROBOT_LOCAL_CONFIG_SIZE)
-                            byteBuffer.get(localConfig)
                             contPackets++
-                            _robotLocalConfigFlow.emit(localConfig.toByteBuffer().asRobotLocalConfig)
+                            _dynamicDataRobotFlow.emit(dataBytes.toByteBuffer().asRobotDynamicData)
                         }
-
-                        else -> {
-                            Log.d(TAG, "Unrecognized package: $headerPackage")
-                        }
+                        HEADER_PACKAGE_LOCAL_CONFIG -> _robotLocalConfigFlow.emit(dataBytes.toByteBuffer().asRobotLocalConfig)
+                        else -> Log.i(TAG, "Unrecognized len package: 0x${headerPackage.toString(16)} , size: ${dataBytes.size}")
                     }
                 }
+
                 byteBuffer.compact()
             }
         }
