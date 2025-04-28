@@ -7,6 +7,7 @@ import android.util.Log
 import com.app.hoverrobot.data.models.comms.CommandsRobot
 import com.app.hoverrobot.data.models.comms.ConnectionState
 import com.app.hoverrobot.data.models.comms.DirectionControl
+import com.app.hoverrobot.data.models.comms.NetworkState
 import com.app.hoverrobot.data.models.comms.PidSettings
 import com.app.hoverrobot.data.models.comms.ROBOT_DYNAMIC_DATA_SIZE
 import com.app.hoverrobot.data.models.comms.ROBOT_LOCAL_CONFIG_SIZE
@@ -30,37 +31,42 @@ import java.nio.ByteOrder
 import javax.inject.Inject
 
 
-val IP_RASPI_DEFAULT = "192.168.0.102"
-val IP_HOVER_ROBOT_DEFAULT = "192.168.0.101"
+val IP_ADDRESS_CLIENT_RASPI_DEFAULT = "192.168.0.102"
+val IP_ADDRESS_CLIENT_ROBOT_DEFAULT = "192.168.0.101"
 val APP_DEFAULT_PORT = 8080
 
 interface CommsRepository {
-
-    val connectionState: StateFlow<ConnectionState>
+    val connectionNetworkState: StateFlow<NetworkState>
 
     val dynamicDataRobotFlow: SharedFlow<RobotDynamicData>
 
     val robotLocalConfigFlow: SharedFlow<RobotLocalConfig?>
 
-    fun reconnectSocket(serverIp: String, port: Int)
+    val localIp: StateFlow<String?>
+
+    fun reconnectRobotSocket(serverIp: String, port: Int)
+
+    fun reconnectRaspiSocket(serverIp: String, port: Int)
 
     fun sendPidParams(pidParams: PidSettings)
 
     fun sendDirectionControl(directionControl: DirectionControl)
 
     fun sendCommand(commandCode: CommandsRobot, value: Float = 0f)
-
-    fun getConnectedClient(): String?
 }
 
 class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val context: Context) :
     CommsRepository {
 
-//    private val serverSocket = ServerTcpImpl()
-    private val serverSocket = ClientTcpImpl()  // TODO: renombrar variable
+//    private val socketTCP = ServerTcpImpl()
+    private val socketClientRobot = ClientTcpImpl()
+    private val socketClientRaspi = ClientTcpImpl()
 
-    private val _connectionState = MutableStateFlow(ConnectionState())                // Es un stateFlow, porque busco que emita SOLO si cambia el valor de su contenido
-    override val connectionState: StateFlow<ConnectionState> = _connectionState
+    private val _connectionNetworkState = MutableStateFlow(NetworkState())                      // Es un stateFlow, porque busco que emita SOLO si cambia el valor de su contenido
+    override val connectionNetworkState: StateFlow<NetworkState> = _connectionNetworkState
+
+    private val _localIp = MutableStateFlow<String?>(null)                // Es un stateFlow, porque busco que emita SOLO si cambia el valor de su contenido
+    override val localIp: StateFlow<String?> = _localIp
 
     private val _dynamicDataRobotFlow = MutableSharedFlow<RobotDynamicData>(
         replay = 0,
@@ -80,8 +86,7 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
         val byteBuffer = ByteBuffer.allocate(bufferSize)
 
         ioScope.launch {
-            serverSocket.receivedDataFlow.collect { newPacket ->
-
+            socketClientRobot.receivedDataFlow.collect { newPacket ->
                 byteBuffer.put(newPacket)
                 byteBuffer.flip()
 
@@ -134,23 +139,35 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
         ioScope.launch {
             while(true) {
                 val wifiInfo = getWifiInfo(context)
-                _connectionState.emit(
-                    ConnectionState(
-                        status = serverSocket.connectionsStatus.value,
-                        receiverPacketRates = contPackets,
+                _localIp.emit(wifiInfo.ipAddress.toIpString())
+
+                _connectionNetworkState.emit(
+                    NetworkState(
+                        status = StatusConnection.INIT,                             // TODO: monitorizar la conexion wifi
+                        statusRobotClient = ConnectionState(
+                            status = socketClientRobot.connectionsStatus.value,
+                            receiverPacketRates = contPackets,
+                            addressIp = socketClientRobot.serverAddress,
+                        ),
+                        statusRaspiClient = ConnectionState(
+                            status = socketClientRaspi.connectionsStatus.value,
+//                            receiverPacketRates = 0,
+                            addressIp = socketClientRaspi.serverAddress,
+                        ),
                         rssi = wifiInfo.rssi,
                         strength = WifiManager.calculateSignalLevel(wifiInfo.rssi, 5),
                         frequency = wifiInfo.frequency,
-                        ip = wifiInfo.ipAddress.toIpString()
+                        localIp = wifiInfo.ipAddress.toIpString(),
                     )
                 )
+
                 contPackets = 0
                 delay(1000)
             }
         }
 
         ioScope.launch {
-            serverSocket.connectionsStatus.collect {
+            socketClientRobot.connectionsStatus.collect {
                 if (it == StatusConnection.SEARCHING) {
                     _robotLocalConfigFlow.emit(RobotLocalConfig())                                            // Para forzar el collect al reconectar
                 }
@@ -158,8 +175,12 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
         }
     }
 
-    override fun reconnectSocket(serverIp: String, port: Int) {
-        serverSocket.reconnect(serverIp, port)
+    override fun reconnectRobotSocket(serverIp: String, port: Int) {
+        socketClientRobot.reconnect(serverIp, port)
+    }
+
+    override fun reconnectRaspiSocket(serverIp: String, port: Int) {
+        socketClientRaspi.reconnect(serverIp, port)
     }
 
     override fun sendPidParams(pidParams: PidSettings) {
@@ -177,7 +198,7 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
         buffer.order(ByteOrder.LITTLE_ENDIAN)
         paramList.forEach { buffer.putShort(it.toShort()) }
 
-        serverSocket.sendData(buffer.array())
+        socketClientRobot.sendData(buffer.array())
     }
 
     override fun sendDirectionControl(directionControl: DirectionControl) {
@@ -187,7 +208,7 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
         buffer.order(ByteOrder.LITTLE_ENDIAN)
         paramList.forEach { buffer.putShort(it) }
 
-        serverSocket.sendData(buffer.array())
+        socketClientRobot.sendData(buffer.array())
     }
 
     override fun sendCommand(commandCode: CommandsRobot, value: Float) {
@@ -203,10 +224,7 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
         buffer.order(ByteOrder.LITTLE_ENDIAN)
         paramList.forEach { buffer.putShort(it) }
 
-        serverSocket.sendData(buffer.array())
-    }
-    override fun getConnectedClient(): String? {
-        return serverSocket.clientsIp
+        socketClientRobot.sendData(buffer.array())
     }
 
     private fun getWifiInfo(context: Context): WifiInfo {
@@ -218,7 +236,6 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
             wifiManager.connectionInfo // Para API < 30
         }
     }
-
 
     companion object {
         const val HEADER_PACKAGE_STATUS: Int = 0xAB01       // Package recepcion

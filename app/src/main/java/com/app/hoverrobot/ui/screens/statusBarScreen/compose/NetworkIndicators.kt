@@ -20,7 +20,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.app.hoverrobot.R
 import com.app.hoverrobot.data.models.comms.ConnectionState
+import com.app.hoverrobot.data.models.comms.NetworkState
 import com.app.hoverrobot.data.utils.ImagebuttonsMappers.strengthIconMapper
+import com.app.hoverrobot.data.utils.StatusConnection
 import com.app.hoverrobot.ui.composeUtils.CustomPreviewComponent
 import com.app.hoverrobot.ui.composeUtils.CustomTextStyles.textStyle16Bold
 import com.app.hoverrobot.ui.theme.MyAppTheme
@@ -28,7 +30,7 @@ import com.app.hoverrobot.ui.theme.MyAppTheme
 @Composable
 fun NetworkIndicators(
     modifier: Modifier,
-    connectionState: ConnectionState
+    networkState: NetworkState
 ) {
 
     Row(
@@ -38,7 +40,7 @@ fun NetworkIndicators(
     ) {
 
         Icon(
-            painter = painterResource(id = strengthIconMapper(connectionState.strength)),
+            painter = painterResource(id = strengthIconMapper(networkState.strength)),
             modifier = Modifier.fillMaxHeight(),
             tint = MaterialTheme.colorScheme.onBackground,
             contentDescription = ""
@@ -46,7 +48,7 @@ fun NetworkIndicators(
 
         Text(
             modifier = Modifier.padding(start = 8.dp),
-            text = stringResource(R.string.placeholder_rssi,connectionState.rssi),
+            text = stringResource(R.string.placeholder_rssi,networkState.rssi),
             style = textStyle16Bold,
         )
 
@@ -57,7 +59,7 @@ fun NetworkIndicators(
         )
 
         Text(
-            text = stringResource(R.string.placeholder_packets_rate,connectionState.receiverPacketRates),
+            text = stringResource(R.string.placeholder_packets_rate,networkState.statusRobotClient.receiverPacketRates),
             style = textStyle16Bold,
         )
     }
@@ -66,11 +68,23 @@ fun NetworkIndicators(
 @CustomPreviewComponent
 @Composable
 private fun NetworkIndicatorsPreview() {
+    val networkStateMock = NetworkState(
+        statusRobotClient = ConnectionState(
+            status = StatusConnection.CONNECTED,
+            addressIp = "255.255.255.254"
+        ),
+        statusRaspiClient = ConnectionState(
+            status = StatusConnection.WAITING,
+            addressIp = "255.255.255.255"
+        ),
+        localIp = "192.168.0.0"
+    )
+
 
     MyAppTheme {
         NetworkIndicators(
             Modifier.height(35.dp),
-            connectionState = ConnectionState()
+            networkState = networkStateMock
         )
     }
 }

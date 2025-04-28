@@ -33,12 +33,11 @@ fun MainNavHost(
         composable(NavigationScreens.STATUS_DATA.route) {
             StatusDataScreen(
                 statusRobot = robotStateViewModel.statusRobot,
-                statusConnection = robotStateViewModel.connectionState.status,
+                networkState = robotStateViewModel.connectionNetworkState,
                 defaultAggressiveness = robotStateViewModel.getAggressivenessLevel().ordinal,
                 mainboardTemp = robotStateViewModel.robotDynamicData?.tempMainboard ?: 0F,
                 motorControllerTemp = robotStateViewModel.robotDynamicData?.tempMcb ?: 0F,
                 imuTemp = robotStateViewModel.robotDynamicData?.tempImu ?: 0F,
-                localIp = robotStateViewModel.connectionState.ip,
                 onOpenNetworkSettings = {
                     context.startActivity(Intent(Settings.ACTION_WIFI_SETTINGS))
                 },
@@ -65,7 +64,7 @@ fun MainNavHost(
             SettingsScreen(
                 localRobotConfig = robotStateViewModel.localConfigFromRobot,
                 statusRobot = robotStateViewModel.statusRobot,
-                serverRobotAddress = robotStateViewModel.serverAddressRobot,
+                networkState = robotStateViewModel.connectionNetworkState,
                 onPidSave = { robotStateViewModel.saveLocalSettings(it) },
                 onActionScreen = { robotStateViewModel.onSettingsScreenActions(it) }
             )
