@@ -30,9 +30,8 @@ import java.nio.ByteOrder
 import javax.inject.Inject
 
 
-// TODO: sacar de aca
-//val IP_HOVER_ROBOT_DEFAULT = "192.168.0.102"    // ip prototipo TODO: hacer configurable
-val IP_HOVER_ROBOT_DEFAULT = "192.168.0.101"    // ip robot TODO: hacer configurable
+val IP_RASPI_DEFAULT = "192.168.0.102"
+val IP_HOVER_ROBOT_DEFAULT = "192.168.0.101"
 val APP_DEFAULT_PORT = 8080
 
 interface CommsRepository {

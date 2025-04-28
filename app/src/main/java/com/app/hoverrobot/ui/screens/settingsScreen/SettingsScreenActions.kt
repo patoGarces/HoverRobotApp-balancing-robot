@@ -7,4 +7,6 @@ sealed class SettingsScreenActions {
     data object OnCleanLeftMotor: SettingsScreenActions()
     data object OnCleanRightMotor: SettingsScreenActions()
     data class OnNewSettings(val pidSettings: PidSettings): SettingsScreenActions()
+    data class OnReconnectToRobot(val ip: String): SettingsScreenActions()
+    data class OnReconnectToRaspi(val ip: String): SettingsScreenActions()
 }
