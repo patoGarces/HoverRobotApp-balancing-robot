@@ -21,7 +21,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.Icon
+import androidx.compose.material3.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -51,23 +51,27 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.app.hoverrobot.R
+import com.app.hoverrobot.data.models.comms.ConnectionState
+import com.app.hoverrobot.data.models.comms.NetworkState
 import com.app.hoverrobot.data.models.comms.PidParams
 import com.app.hoverrobot.data.models.comms.PidSettings
 import com.app.hoverrobot.data.models.comms.RobotLocalConfig
 import com.app.hoverrobot.data.models.comms.asPidSettings
 import com.app.hoverrobot.data.models.comms.isDiffWithOriginalLocalConfig
+import com.app.hoverrobot.data.utils.StatusConnection
 import com.app.hoverrobot.data.utils.StatusRobot
 import com.app.hoverrobot.ui.composeUtils.CustomButton
 import com.app.hoverrobot.ui.composeUtils.CustomDropdownMenu
 import com.app.hoverrobot.ui.composeUtils.CustomPreview
 import com.app.hoverrobot.ui.composeUtils.CustomSlider
+import com.app.hoverrobot.ui.composeUtils.CustomTextStyles
 import com.app.hoverrobot.ui.theme.MyAppTheme
 
 @Composable
 fun SettingsScreen(
     localRobotConfig: RobotLocalConfig,
     statusRobot: StatusRobot,
-    serverRobotAddress: String,
+    networkState: NetworkState,
     onPidSave: (PidSettings) -> Boolean,
     onActionScreen: (SettingsScreenActions) -> Unit,
 ) {
@@ -77,11 +81,11 @@ fun SettingsScreen(
             .padding(16.dp)
             .verticalScroll(rememberScrollState())
     ) {
-//        PidSettingsCard(
-//            originalLocalConfig = localRobotConfig,
-//            onSendPidSettings = { onActionScreen(SettingsScreenActions.OnNewSettings(it)) },
-//            onPidSave = { onPidSave(it) },
-//        )
+        PidSettingsCard(
+            originalLocalConfig = localRobotConfig,
+            onSendPidSettings = { onActionScreen(SettingsScreenActions.OnNewSettings(it)) },
+            onPidSave = { onPidSave(it) },
+        )
 
         GeneralSettingsCard(
             statusRobot = statusRobot,
@@ -90,9 +94,11 @@ fun SettingsScreen(
             onCleanRightMotor = { onActionScreen(SettingsScreenActions.OnCleanRightMotor) }
         )
 
-        ConnectionSettingsCard(serverRobotAddress = serverRobotAddress) {
-            onActionScreen(SettingsScreenActions.OnReconnectToRobot(it))
-        }
+        ConnectionSettingsCard(
+            networkState = networkState,
+            onReconnectRobot =  { onActionScreen(SettingsScreenActions.OnReconnectToRobot(it)) },
+            onReconnectRaspi =  { onActionScreen(SettingsScreenActions.OnReconnectToRaspi(it)) }
+        )
     }
 }
 
@@ -260,8 +266,9 @@ private fun GeneralSettingsCard(
 
 @Composable
 private fun ConnectionSettingsCard(
-    serverRobotAddress: String,
-    onReconnectRobot: (String) -> Unit
+    networkState: NetworkState,
+    onReconnectRobot: (String) -> Unit,
+    onReconnectRaspi: (String) -> Unit,
 ) {
     TitleSectionText(R.string.settings_group_connection_title)
 
@@ -271,17 +278,21 @@ private fun ConnectionSettingsCard(
             .padding(vertical = 8.dp)
             .border(width = 1.dp, color = MaterialTheme.colorScheme.onBackground, shape = RoundedCornerShape(8.dp))
     ) {
-        IpAddressItem(
-            titleItem = R.string.settings_connection_robot_title,
-            ipAddress = serverRobotAddress,
-            onConfirmClick = onReconnectRobot
-        )
+        networkState.statusRobotClient.addressIp?.let { clientRobotAddress ->
+            IpAddressItem(
+                titleItem = R.string.settings_connection_robot_title,
+                ipAddress = clientRobotAddress,
+                onConfirmClick = onReconnectRobot
+            )
+        }
 
-        IpAddressItem(
-            titleItem = R.string.settings_connection_raspi_title,
-            ipAddress = "0.0.0.0",
-            onConfirmClick = {}
-        )
+        networkState.statusRaspiClient.addressIp?.let { clientRaspiAddress ->
+            IpAddressItem(
+                titleItem = R.string.settings_connection_raspi_title,
+                ipAddress = clientRaspiAddress,
+                onConfirmClick = onReconnectRaspi
+            )
+        }
     }
 }
 
@@ -361,14 +372,12 @@ private fun IpAddressItem(
 
         Text(
             text = ipAddress.substringBeforeLast(".") + ".",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground,
+            style = CustomTextStyles.textStyle14Bold,
         )
 
         Box(
             modifier = Modifier
-                .heightIn(min = 40.dp)
+                .heightIn(min = 35.dp)
                 .width(60.dp)
                 .border(
                     border = BorderStroke(1.dp, color = MaterialTheme.colorScheme.primary),
@@ -399,12 +408,7 @@ private fun IpAddressItem(
                 },
                 singleLine = true,
                 cursorBrush = SolidColor(Color.Transparent),
-                textStyle = TextStyle(
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onBackground
-                ),
+                textStyle = CustomTextStyles.textStyle14Bold,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Decimal,
                     imeAction = ImeAction.Done
@@ -417,7 +421,7 @@ private fun IpAddressItem(
         val colorButton = if (isError) Color.Gray else MaterialTheme.colorScheme.onBackground
         Box(
             modifier = Modifier
-                .size(40.dp)
+                .size(35.dp)
                 .border(
                     BorderStroke(1.dp, color = colorButton),
                     shape = RoundedCornerShape(8.dp)
@@ -534,11 +538,23 @@ private fun SettingsScreenPreview() {
         safetyLimits = 5f
     )
 
+    val networkStateMock = NetworkState(
+        statusRobotClient = ConnectionState(
+            status = StatusConnection.CONNECTED,
+            addressIp = "255.255.255.254"
+        ),
+        statusRaspiClient = ConnectionState(
+            status = StatusConnection.WAITING,
+            addressIp = "255.255.255.255"
+        ),
+        localIp = "192.168.0.0"
+    )
+
     MyAppTheme {
         SettingsScreen(
             localRobotConfig = localConfig,
             statusRobot = StatusRobot.STABILIZED,
-            serverRobotAddress = "192.168.0.123",
+            networkState = networkStateMock,
             onPidSave = { false }
         ) {}
     }

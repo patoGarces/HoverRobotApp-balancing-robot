@@ -1,6 +1,5 @@
 package com.app.hoverrobot.ui
 
-import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -12,8 +11,8 @@ import androidx.lifecycle.viewModelScope
 import com.app.hoverrobot.data.models.Aggressiveness
 import com.app.hoverrobot.data.models.Battery
 import com.app.hoverrobot.data.models.comms.CommandsRobot
-import com.app.hoverrobot.data.models.comms.ConnectionState
 import com.app.hoverrobot.data.models.comms.DirectionControl
+import com.app.hoverrobot.data.models.comms.NetworkState
 import com.app.hoverrobot.data.models.comms.PidSettings
 import com.app.hoverrobot.data.models.comms.PointCloudItem
 import com.app.hoverrobot.data.models.comms.RobotDynamicData
@@ -22,8 +21,8 @@ import com.app.hoverrobot.data.models.comms.Wheel
 import com.app.hoverrobot.data.models.toPercentLevel
 import com.app.hoverrobot.data.repositories.APP_DEFAULT_PORT
 import com.app.hoverrobot.data.repositories.CommsRepository
-import com.app.hoverrobot.data.repositories.IP_HOVER_ROBOT_DEFAULT
-import com.app.hoverrobot.data.repositories.IP_RASPI_DEFAULT
+import com.app.hoverrobot.data.repositories.IP_ADDRESS_CLIENT_ROBOT_DEFAULT
+import com.app.hoverrobot.data.repositories.IP_ADDRESS_CLIENT_RASPI_DEFAULT
 import com.app.hoverrobot.data.repositories.StoreSettings
 import com.app.hoverrobot.data.utils.StatusConnection
 import com.app.hoverrobot.data.utils.StatusRobot
@@ -54,13 +53,6 @@ class RobotStateViewModel @Inject constructor(
     private val commsRepository: CommsRepository,
     private val storeSettings: StoreSettings
 ) : ViewModel() {
-
-    var serverAddressRobot by mutableStateOf(IP_HOVER_ROBOT_DEFAULT)
-        internal set
-
-    var serverAddressRaspi by mutableStateOf(IP_RASPI_DEFAULT)
-        internal set
-
     var localConfigFromRobot by mutableStateOf(RobotLocalConfig())
         internal set
 
@@ -73,7 +65,7 @@ class RobotStateViewModel @Inject constructor(
     var robotDynamicData by mutableStateOf<RobotDynamicData?>(null)
         internal set
 
-    var connectionState by mutableStateOf(ConnectionState())
+    var connectionNetworkState by mutableStateOf(NetworkState())
         internal set
 
     private val _pointCloud = mutableStateOf<PointCloudItem?>(null)
@@ -84,7 +76,7 @@ class RobotStateViewModel @Inject constructor(
     }
 
     val isRobotConnected: State<Boolean> = derivedStateOf {
-        connectionState.status == StatusConnection.CONNECTED
+        connectionNetworkState.statusRobotClient.status == StatusConnection.CONNECTED
     }
 
     private var actualJoyPosition = DirectionControl()
@@ -93,21 +85,20 @@ class RobotStateViewModel @Inject constructor(
     private var lastDistance = 0f // La última distancia recibida
 
     init {
-        commsRepository.reconnectSocket(serverAddressRobot, APP_DEFAULT_PORT)
+        commsRepository.reconnectRobotSocket(IP_ADDRESS_CLIENT_ROBOT_DEFAULT, APP_DEFAULT_PORT)
+        commsRepository.reconnectRaspiSocket(IP_ADDRESS_CLIENT_RASPI_DEFAULT, APP_DEFAULT_PORT)
         viewModelScope.launch {
             while (true) {
                 if (isRobotConnected.value && isRobotStabilized.value) {
                     newCoordinatesJoystick(actualJoyPosition.joyAxisX, actualJoyPosition.joyAxisY)
-
-                    Log.i("Joystick","${actualJoyPosition.joyAxisX}")
                 }
                 delay(50)
             }
         }
 
         viewModelScope.launch {
-            commsRepository.connectionState.collect {
-                connectionState = it
+            commsRepository.connectionNetworkState.collect {
+                connectionNetworkState = it
             }
         }
 
@@ -182,9 +173,11 @@ class RobotStateViewModel @Inject constructor(
                 CommandsRobot.CLEAN_WHEELS, Wheel.LEFT_WHEEL.ordinal.toFloat()
             )
             is OnReconnectToRobot -> {
-                commsRepository.reconnectSocket(action.ip, APP_DEFAULT_PORT)
+                commsRepository.reconnectRobotSocket(action.ip, APP_DEFAULT_PORT)
             }
-            is SettingsScreenActions.OnReconnectToRaspi -> {}
+            is SettingsScreenActions.OnReconnectToRaspi -> {
+                commsRepository.reconnectRaspiSocket(action.ip, APP_DEFAULT_PORT)
+            }
         }
     }
 

@@ -38,7 +38,7 @@ class ClientTcpImpl() : SocketTcpInterface {
 
     private val TAG = "ClientTcp"
 
-    var clientsIp: String? = null
+    var serverAddress: String? = null
         internal set
 
     var paquetsPerSecond: Int = 0
@@ -52,6 +52,7 @@ class ClientTcpImpl() : SocketTcpInterface {
     }
 
     override fun reconnect(serverIp: String, port: Int) {
+        serverAddress = serverIp
         socketRunningJob?.cancel()
         initSocket(serverIp, port)
     }

@@ -11,7 +11,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -47,7 +46,7 @@ fun MainScreen(navController: NavHostController) {
         if (currentRoute != NavigationScreens.STATUS_DATA.route) {
             StatusBarScreen(
                 statusRobot = robotStateViewModel.statusRobot,
-                connectionState = robotStateViewModel.connectionState,
+                networkState = robotStateViewModel.connectionNetworkState,
                 tempImu = robotStateViewModel.robotDynamicData?.tempImu ?: 0F,
                 batteryState = robotStateViewModel.batteryState
             ) {

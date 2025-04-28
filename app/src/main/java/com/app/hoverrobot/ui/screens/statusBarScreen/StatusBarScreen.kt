@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.app.hoverrobot.R
 import com.app.hoverrobot.data.models.Battery
 import com.app.hoverrobot.data.models.comms.ConnectionState
+import com.app.hoverrobot.data.models.comms.NetworkState
 import com.app.hoverrobot.data.utils.StatusConnection
 import com.app.hoverrobot.data.utils.StatusMapper.toColor
 import com.app.hoverrobot.data.utils.StatusMapper.toStringRes
@@ -34,7 +35,7 @@ import com.app.hoverrobot.ui.theme.MyAppTheme
 @Composable
 fun StatusBarScreen(
     statusRobot: StatusRobot,
-    connectionState: ConnectionState,
+    networkState: NetworkState,
     batteryState: Battery,
     tempImu: Float,
     onClickBtnStatus: () -> Unit
@@ -52,14 +53,14 @@ fun StatusBarScreen(
         ) {
             NetworkIndicators(
                 Modifier,
-                connectionState
+                networkState
             )
         }
 
         CustomButton(
             modifier = Modifier.widthIn(min = 200.dp),
-            title = stringResource(statusRobot.toStringRes(connectionState.status)).uppercase(),
-            color = statusRobot.toColor(connectionState.status),
+            title = stringResource(statusRobot.toStringRes(networkState.statusRobotClient.status)).uppercase(),
+            color = statusRobot.toColor(networkState.statusRobotClient.status),
             onClick = onClickBtnStatus
         )
 
@@ -80,7 +81,7 @@ fun StatusBarScreen(
 
             BatteryIndicator(
                 batteryState = batteryState,
-                isConnected = connectionState.status == StatusConnection.CONNECTED,
+                isConnected = networkState.statusRobotClient.status == StatusConnection.CONNECTED,
                 isMcbOff = statusRobot == StatusRobot.ERROR_MCB_CONNECTION
             )
         }
@@ -116,11 +117,22 @@ private fun TempIndicator(
 @CustomPreview
 @Composable
 fun StatusBarScreenPreview() {
+    val networkStateMock = NetworkState(
+        statusRobotClient = ConnectionState(
+            status = StatusConnection.CONNECTED,
+            addressIp = "255.255.255.254"
+        ),
+        statusRaspiClient = ConnectionState(
+            status = StatusConnection.WAITING,
+            addressIp = "255.255.255.255"
+        ),
+        localIp = "192.168.0.0"
+    )
 
     MyAppTheme {
         StatusBarScreen(
             statusRobot = StatusRobot.INIT,
-            connectionState = ConnectionState(),
+            networkState = networkStateMock,
             tempImu = 23F,
             batteryState = Battery()
         ) { }
