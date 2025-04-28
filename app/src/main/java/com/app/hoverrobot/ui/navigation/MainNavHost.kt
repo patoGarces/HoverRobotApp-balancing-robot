@@ -65,6 +65,7 @@ fun MainNavHost(
             SettingsScreen(
                 localRobotConfig = robotStateViewModel.localConfigFromRobot,
                 statusRobot = robotStateViewModel.statusRobot,
+                serverRobotAddress = robotStateViewModel.serverAddressRobot,
                 onPidSave = { robotStateViewModel.saveLocalSettings(it) },
                 onActionScreen = { robotStateViewModel.onSettingsScreenActions(it) }
             )

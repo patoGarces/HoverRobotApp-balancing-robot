@@ -61,7 +61,8 @@
         <item>PID SPEED</item>
         <item>PID YAW</item>
     </string-array>
-    <string name="settings_connection_title">Direccion servidor</string>
+    <string name="settings_connection_robot_title">Direccion server robot</string>
+    <string name="settings_connection_raspi_title">Direccion server raspi</string>
 
     <!--    Mapper status connection -->
     <string name="status_connection_init">Iniciando</string>

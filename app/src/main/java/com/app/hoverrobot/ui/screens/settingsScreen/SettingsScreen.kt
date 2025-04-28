@@ -3,6 +3,7 @@ package com.app.hoverrobot.ui.screens.settingsScreen
 import androidx.annotation.StringRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,28 +11,22 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.input.TextFieldLineLimits
-import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -44,9 +39,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -67,6 +67,7 @@ import com.app.hoverrobot.ui.theme.MyAppTheme
 fun SettingsScreen(
     localRobotConfig: RobotLocalConfig,
     statusRobot: StatusRobot,
+    serverRobotAddress: String,
     onPidSave: (PidSettings) -> Boolean,
     onActionScreen: (SettingsScreenActions) -> Unit,
 ) {
@@ -89,7 +90,9 @@ fun SettingsScreen(
             onCleanRightMotor = { onActionScreen(SettingsScreenActions.OnCleanRightMotor) }
         )
 
-        ConnectionSettingsCard(serverIp = "192.168.0.100") {}
+        ConnectionSettingsCard(serverRobotAddress = serverRobotAddress) {
+            onActionScreen(SettingsScreenActions.OnReconnectToRobot(it))
+        }
     }
 }
 
@@ -257,8 +260,8 @@ private fun GeneralSettingsCard(
 
 @Composable
 private fun ConnectionSettingsCard(
-    serverIp: String,
-    onReconnect: (String) -> Unit
+    serverRobotAddress: String,
+    onReconnectRobot: (String) -> Unit
 ) {
     TitleSectionText(R.string.settings_group_connection_title)
 
@@ -268,59 +271,17 @@ private fun ConnectionSettingsCard(
             .padding(vertical = 8.dp)
             .border(width = 1.dp, color = MaterialTheme.colorScheme.onBackground, shape = RoundedCornerShape(8.dp))
     ) {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                modifier = Modifier.padding(vertical = 8.dp),
-                text = stringResource(R.string.settings_connection_title),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground,
-            )
+        IpAddressItem(
+            titleItem = R.string.settings_connection_robot_title,
+            ipAddress = serverRobotAddress,
+            onConfirmClick = onReconnectRobot
+        )
 
-            Spacer(Modifier.weight(1F))
-
-            Text(
-                text = "192.168.0.",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground,
-            )
-
-            Box(
-                modifier = Modifier
-                    .heightIn(min = 40.dp)
-                    .border(
-                        border = BorderStroke(1.dp, color = MaterialTheme.colorScheme.primary),
-                        shape = RoundedCornerShape(8.dp)
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                BasicTextField(
-                    state = TextFieldState("100"),
-                    lineLimits = TextFieldLineLimits.SingleLine,
-                    textStyle = TextStyle(
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
-                    ),
-                )
-            }
-
-            IconButton(
-                modifier = Modifier.border(border = BorderStroke(1.dp, color = MaterialTheme.colorScheme.onPrimary),
-                    RoundedCornerShape(8.dp))
-                onClick = {}
-            ) {
-                Icon(
-                    imageVector =  Icons.Default.Refresh,
-                    contentDescription = null)
-            }
-        }
+        IpAddressItem(
+            titleItem = R.string.settings_connection_raspi_title,
+            ipAddress = "0.0.0.0",
+            onConfirmClick = {}
+        )
     }
 }
 
@@ -371,6 +332,107 @@ private fun GeneralSettingsItem(
         thickness = 1.dp,
         color = Color.Gray
     )
+}
+
+@Composable
+private fun IpAddressItem(
+    @StringRes titleItem: Int,
+    ipAddress: String,
+    onConfirmClick: (String) -> Unit
+){
+
+    var textFieldValue by remember { mutableStateOf(TextFieldValue(ipAddress.substringAfterLast("."))) }
+    var isError by remember { mutableStateOf(false) }
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            modifier = Modifier.padding(vertical = 8.dp),
+            text = stringResource(titleItem),
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
+
+        Spacer(Modifier.weight(1F))
+
+        Text(
+            text = ipAddress.substringBeforeLast(".") + ".",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
+
+        Box(
+            modifier = Modifier
+                .heightIn(min = 40.dp)
+                .width(60.dp)
+                .border(
+                    border = BorderStroke(1.dp, color = MaterialTheme.colorScheme.primary),
+                    shape = RoundedCornerShape(8.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            BasicTextField(
+                value = textFieldValue,
+                onValueChange = { newValue ->
+                    val digitsOnly = newValue.text.filter { it.isDigit() }.take(3)
+
+                    val normalizedText = when {
+                        digitsOnly.isEmpty() -> ""
+                        digitsOnly.all { it == '0' } -> "0"     // Si son solo ceros, muestro "0"
+                        else -> digitsOnly.trimStart('0')       // Si no, limpio los ceros de adelante
+                    }
+
+                    textFieldValue = TextFieldValue(
+                        text = normalizedText,
+                        selection = TextRange(digitsOnly.length) // Siempre poner cursor al final
+                    )
+                    isError = when {
+                        digitsOnly.isEmpty() -> true
+                        digitsOnly.toIntOrNull()?.let { it > 255 } == true -> true
+                        else -> false
+                    }
+                },
+                singleLine = true,
+                cursorBrush = SolidColor(Color.Transparent),
+                textStyle = TextStyle(
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onBackground
+                ),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Decimal,
+                    imeAction = ImeAction.Done
+                ),
+            )
+        }
+
+        Spacer(Modifier.width(16.dp))
+
+        val colorButton = if (isError) Color.Gray else MaterialTheme.colorScheme.onBackground
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .border(
+                    BorderStroke(1.dp, color = colorButton),
+                    shape = RoundedCornerShape(8.dp)
+                )
+                .clickable { onConfirmClick("192.168.0.${textFieldValue.text}") },
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Refresh,
+                tint = colorButton,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
 }
 
 @Composable
@@ -476,6 +538,7 @@ private fun SettingsScreenPreview() {
         SettingsScreen(
             localRobotConfig = localConfig,
             statusRobot = StatusRobot.STABILIZED,
+            serverRobotAddress = "192.168.0.123",
             onPidSave = { false }
         ) {}
     }

@@ -24,7 +24,7 @@ import java.nio.ByteBuffer
 import java.util.Timer
 import java.util.TimerTask
 
-class ClientTcpImpl(): SocketTcpInterface {
+class ClientTcpImpl() : SocketTcpInterface {
 
     var tcpSocket: Socket? = null
 
@@ -59,7 +59,6 @@ class ClientTcpImpl(): SocketTcpInterface {
     private fun initSocket(serverIp: String, port: Int = 8080) {
         socketRunningJob = ioScope.launch {
             while (isActive) {
-
                 tcpSocket?.close()
                 tcpSocket = null
                 setNewConnectStatus(StatusConnection.SEARCHING)
@@ -67,9 +66,9 @@ class ClientTcpImpl(): SocketTcpInterface {
                 tcpSocket = Socket()
 
                 try {
-
                     tcpSocket?.connect(InetSocketAddress(serverIp, port), 5000)
-                    tcpSocket?.soTimeout = 3000                         // Timeout para detectar la desconexion
+                    tcpSocket?.soTimeout =
+                        3000                         // Timeout para detectar la desconexion
                     setNewConnectStatus(StatusConnection.CONNECTED)
 
                     val input = BufferedInputStream(tcpSocket?.getInputStream())

@@ -23,6 +23,7 @@ import com.app.hoverrobot.data.models.toPercentLevel
 import com.app.hoverrobot.data.repositories.APP_DEFAULT_PORT
 import com.app.hoverrobot.data.repositories.CommsRepository
 import com.app.hoverrobot.data.repositories.IP_HOVER_ROBOT_DEFAULT
+import com.app.hoverrobot.data.repositories.IP_RASPI_DEFAULT
 import com.app.hoverrobot.data.repositories.StoreSettings
 import com.app.hoverrobot.data.utils.StatusConnection
 import com.app.hoverrobot.data.utils.StatusRobot
@@ -38,6 +39,7 @@ import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnCali
 import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnCleanLeftMotor
 import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnCleanRightMotor
 import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnNewSettings
+import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnReconnectToRobot
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -52,6 +54,12 @@ class RobotStateViewModel @Inject constructor(
     private val commsRepository: CommsRepository,
     private val storeSettings: StoreSettings
 ) : ViewModel() {
+
+    var serverAddressRobot by mutableStateOf(IP_HOVER_ROBOT_DEFAULT)
+        internal set
+
+    var serverAddressRaspi by mutableStateOf(IP_RASPI_DEFAULT)
+        internal set
 
     var localConfigFromRobot by mutableStateOf(RobotLocalConfig())
         internal set
@@ -85,7 +93,7 @@ class RobotStateViewModel @Inject constructor(
     private var lastDistance = 0f // La última distancia recibida
 
     init {
-        commsRepository.reconnectSocket(IP_HOVER_ROBOT_DEFAULT, APP_DEFAULT_PORT)
+        commsRepository.reconnectSocket(serverAddressRobot, APP_DEFAULT_PORT)
         viewModelScope.launch {
             while (true) {
                 if (isRobotConnected.value && isRobotStabilized.value) {
@@ -170,10 +178,13 @@ class RobotStateViewModel @Inject constructor(
             is OnCleanRightMotor -> sendCommand(
                 CommandsRobot.CLEAN_WHEELS, Wheel.RIGHT_WHEEL.ordinal.toFloat()
             )
-
             is OnCleanLeftMotor -> sendCommand(
                 CommandsRobot.CLEAN_WHEELS, Wheel.LEFT_WHEEL.ordinal.toFloat()
             )
+            is OnReconnectToRobot -> {
+                commsRepository.reconnectSocket(action.ip, APP_DEFAULT_PORT)
+            }
+            is SettingsScreenActions.OnReconnectToRaspi -> {}
         }
     }
 
