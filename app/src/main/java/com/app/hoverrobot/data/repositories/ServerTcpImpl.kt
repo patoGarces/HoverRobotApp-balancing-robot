@@ -6,23 +6,28 @@ import com.app.hoverrobot.data.utils.StatusConnection
 import com.app.hoverrobot.data.utils.ToolBox.ioScope
 import com.app.hoverrobot.data.utils.toByteBuffer
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.net.ServerSocket
 import java.net.Socket
 import java.net.SocketException
 import java.nio.ByteBuffer
+import java.util.Timer
+import java.util.TimerTask
 
-class ServerTcpImpl(private val port: Int = 8080): SocketTcpInterface {
+class ServerTcpImpl(): SocketTcpInterface {
 
-    val tcpSocket: ServerSocket
+    var tcpSocket: ServerSocket? = null
 
     private val _receivedDataFlow = MutableSharedFlow<ByteBuffer>()
     override val receivedDataFlow: SharedFlow<ByteBuffer> = _receivedDataFlow
@@ -30,9 +35,11 @@ class ServerTcpImpl(private val port: Int = 8080): SocketTcpInterface {
     private val _connectionsStatus = MutableStateFlow(StatusConnection.INIT)
     override val connectionsStatus: StateFlow<StatusConnection> = _connectionsStatus
 
+    private var socketRunningJob: Job? = null
+
     private val TAG = "ServerTcp"
 
-    private lateinit var socket: Socket // TODO: no deberia existir creo, alcanza con tcpSocket
+    private var socket: Socket? = null
 
     var clientsIp: String? = null
         internal set
@@ -41,81 +48,81 @@ class ServerTcpImpl(private val port: Int = 8080): SocketTcpInterface {
         internal set
 
     private var contPackets = 0
-    private var contFailReception = 0
 
     init {
         setNewConnectStatus(StatusConnection.INIT)
-        tcpSocket = ServerSocket(port)
-        socketHandler()
+        measureReception()
     }
 
-    private fun socketHandler() {
-        ioScope.launch {
-            while (true) {
-                setNewConnectStatus(StatusConnection.WAITING)
-                socket = tcpSocket.accept()
+    override fun reconnect(serverIp: String, port: Int) {
+        socketRunningJob?.cancel()
+        initSocket(port)
+    }
 
-                val remoteIp = socket.inetAddress
-                remoteIp.hostAddress?.let { clientIp ->
+    private fun initSocket(port: Int) {
+        socketRunningJob = ioScope.launch {
+            while (isActive) {
+                tcpSocket?.close()
+                tcpSocket = null
+                setNewConnectStatus(StatusConnection.WAITING)
+                tcpSocket = ServerSocket(port)
+                socket = tcpSocket?.accept()
+
+                if (socket == null) {
+                    Log.e(TAG, "Accept() returned null socket")
+                    continue
+                }
+
+                val remoteIp = socket?.inetAddress
+                remoteIp?.hostAddress?.let { clientIp ->
                     clientsIp = clientIp
                     Log.d(TAG, "remote ip: $clientIp, name: ${remoteIp.hostName}")
                 }
 
-                ioScope.launch { socketAlive() }
-
                 setNewConnectStatus(StatusConnection.CONNECTED)
 
-                if (!socket.isClosed) socket.getInputStream().handleReception()
+                if (tcpSocket?.isClosed == false) socket?.getInputStream()?.handleReception()
 
-                socket.close()
+                socket?.close()
             }
         }
     }
 
     private suspend fun InputStream.handleReception() {
-        val buffer = ByteArray(1024) // Tamaño del buffer para leer los datos
+        val buffer = ByteArray(1024)
         var bytesRead: Int
 
-        while (true) {
-            try {
-                bytesRead = withContext(Dispatchers.IO) {
-                    read(buffer)
+        try {
+            while (true) {
+                try {
+                    bytesRead = withContext(Dispatchers.IO) {
+                        read(buffer)
+                    }
+                } catch (e: IOException) {
+                    Log.e(TAG, "Error de lectura o socket: $e")
+                    break
                 }
-            }
-            catch (e: SocketException) {
-                Log.e(TAG, "Error socket: $e")
-                break
-            }
 
-            if (bytesRead > 0) {
-                contPackets++
-                val receivedData = buffer.copyOf(bytesRead)
-                _receivedDataFlow.emit(receivedData.toByteBuffer())
-            }
-            else if(bytesRead < 0) {
-                Log.e(TAG, "Error bytesRead")
-                break
-            }
-        }
-    }
-
-    private suspend fun socketAlive() {
-        while (socket.isConnected) {
-            if (contPackets != 0) {
-                paquetsPerSecond = contPackets
-                contPackets = 0
-            }
-            else {
-                contFailReception++
-                if(contFailReception > 3) {
-                    Log.e(TAG,"Force close socket because contFailReception")
-                    contFailReception = 0
-                    socket.close()
+                if (bytesRead > 0) {
+                    contPackets++
+                    val receivedData = buffer.copyOf(bytesRead)
+                    _receivedDataFlow.emit(receivedData.toByteBuffer())
+                } else if (bytesRead < 0) {
                     break
                 }
             }
-            delay(1000)
+        } finally {
+            socket?.close()
         }
+    }
+
+    private fun measureReception() {
+        Timer().schedule(object : TimerTask() {
+            override fun run() {
+                paquetsPerSecond = contPackets
+                contPackets = 0
+            }
+        }, 0, 1000)
     }
 
     private fun setNewConnectStatus(newStatus: StatusConnection) {
@@ -126,8 +133,8 @@ class ServerTcpImpl(private val port: Int = 8080): SocketTcpInterface {
 
     fun sendData(data: ByteArray) {
         ioScope.launch {
-            socket.let {
-                val outputStream: OutputStream = socket.getOutputStream()
+            socket?.let { sock ->
+                val outputStream: OutputStream = sock.getOutputStream()
                 outputStream.write(data)
                 outputStream.flush()
             }

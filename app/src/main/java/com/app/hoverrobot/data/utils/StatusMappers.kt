@@ -9,6 +9,7 @@ object StatusMapper {
         when (this) {
             StatusConnection.INIT -> R.string.status_connection_init
             StatusConnection.WAITING -> R.string.status_connection_waiting
+            StatusConnection.SEARCHING -> R.string.status_connection_searching
             StatusConnection.CONNECTED -> R.string.status_connection_connected
             StatusConnection.ERROR -> R.string.status_connection_error
         }
@@ -53,6 +54,7 @@ object StatusMapper {
         when (this) {
             StatusConnection.INIT -> CustomColors.StatusOrange
             StatusConnection.WAITING -> CustomColors.StatusTurquesa
+            StatusConnection.SEARCHING -> CustomColors.StatusTurquesa
             StatusConnection.CONNECTED -> CustomColors.StatusBlue
             StatusConnection.ERROR -> CustomColors.StatusRed
         }
@@ -61,6 +63,7 @@ object StatusMapper {
 enum class StatusConnection {
     INIT,
     WAITING,
+    SEARCHING,
     CONNECTED,
     ERROR
 }

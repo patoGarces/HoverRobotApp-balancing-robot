@@ -20,7 +20,9 @@ import com.app.hoverrobot.data.models.comms.RobotDynamicData
 import com.app.hoverrobot.data.models.comms.RobotLocalConfig
 import com.app.hoverrobot.data.models.comms.Wheel
 import com.app.hoverrobot.data.models.toPercentLevel
+import com.app.hoverrobot.data.repositories.APP_DEFAULT_PORT
 import com.app.hoverrobot.data.repositories.CommsRepository
+import com.app.hoverrobot.data.repositories.IP_HOVER_ROBOT_DEFAULT
 import com.app.hoverrobot.data.repositories.StoreSettings
 import com.app.hoverrobot.data.utils.StatusConnection
 import com.app.hoverrobot.data.utils.StatusRobot
@@ -83,6 +85,7 @@ class RobotStateViewModel @Inject constructor(
     private var lastDistance = 0f // La última distancia recibida
 
     init {
+        commsRepository.reconnectSocket(IP_HOVER_ROBOT_DEFAULT, APP_DEFAULT_PORT)
         viewModelScope.launch {
             while (true) {
                 if (isRobotConnected.value && isRobotStabilized.value) {

@@ -6,10 +6,12 @@ import com.app.hoverrobot.data.utils.StatusConnection
 import com.app.hoverrobot.data.utils.ToolBox.ioScope
 import com.app.hoverrobot.data.utils.toByteBuffer
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.BufferedInputStream
@@ -22,10 +24,7 @@ import java.nio.ByteBuffer
 import java.util.Timer
 import java.util.TimerTask
 
-class ClientTcpImpl(
-    private val ipServer: String,
-    private val port: Int = 8080
-): SocketTcpInterface {
+class ClientTcpImpl(): SocketTcpInterface {
 
     var tcpSocket: Socket? = null
 
@@ -34,6 +33,8 @@ class ClientTcpImpl(
 
     private val _connectionsStatus = MutableStateFlow(StatusConnection.INIT)
     override val connectionsStatus: StateFlow<StatusConnection> = _connectionsStatus
+
+    private var socketRunningJob: Job? = null
 
     private val TAG = "ClientTcp"
 
@@ -47,25 +48,28 @@ class ClientTcpImpl(
 
     init {
         setNewConnectStatus(StatusConnection.INIT)
-        socketHandler()
         measureReception()
     }
 
-    private fun socketHandler() {
-        ioScope.launch {
-            while (true) {
+    override fun reconnect(serverIp: String, port: Int) {
+        socketRunningJob?.cancel()
+        initSocket(serverIp, port)
+    }
+
+    private fun initSocket(serverIp: String, port: Int = 8080) {
+        socketRunningJob = ioScope.launch {
+            while (isActive) {
 
                 tcpSocket?.close()
                 tcpSocket = null
-                setNewConnectStatus(StatusConnection.WAITING)                       // TODO: deberia cambiar a CONNECTING
+                setNewConnectStatus(StatusConnection.SEARCHING)
                 // Siempre crear una nueva instancia antes de intentar conectar
                 tcpSocket = Socket()
 
                 try {
 
-                    tcpSocket?.connect(InetSocketAddress(ipServer, port), 5000)
+                    tcpSocket?.connect(InetSocketAddress(serverIp, port), 5000)
                     tcpSocket?.soTimeout = 3000                         // Timeout para detectar la desconexion
-//                    ioScope.launch { socketAlive() }
                     setNewConnectStatus(StatusConnection.CONNECTED)
 
                     val input = BufferedInputStream(tcpSocket?.getInputStream())
