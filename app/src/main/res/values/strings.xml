@@ -34,7 +34,10 @@
     <string name="tab_settings">Configuracion</string>
 
     <!--    Settings screen-->
-    <string name="pid_group_title">Ajustes PID</string>
+    <string name="settings_group_pid_title">Ajustes PID</string>
+    <string name="settings_group_general_title">Ajustes generales</string>
+    <string name="settings_group_connection_title">Ajustes conexion</string>
+
     <string name="pid_parameter_p_title">Parametro P:</string>
     <string name="pid_parameter_i_title">Parametro I:</string>
     <string name="pid_parameter_d_title">Parametro D:</string>
@@ -45,7 +48,6 @@
     <string name="btn_pid_save">Guardar</string>
     <string name="btn_pid_reset">Deshacer</string>
     <string name="value_slider_format">%.2f</string>
-    <string name="general_commands_group_title">Ajustes generales</string>
     <string name="general_commands_calibrate_imu_title">Calibrar IMU</string>
     <string name="general_command_btn_calibrate">Calibrar</string>
     <string name="general_command_clean_wheels_title">Limpieza de ruedas</string>
@@ -59,10 +61,12 @@
         <item>PID SPEED</item>
         <item>PID YAW</item>
     </string-array>
+    <string name="settings_connection_title">Direccion servidor</string>
 
     <!--    Mapper status connection -->
     <string name="status_connection_init">Iniciando</string>
     <string name="status_connection_waiting">Esperando conexion</string>
+    <string name="status_connection_searching">Buscando</string>
     <string name="status_connection_connected">Conectado</string>
     <string name="status_connection_error">Reintentar</string>
 

@@ -1,38 +1,40 @@
 package com.app.hoverrobot.ui.screens.settingsScreen
 
-import android.content.res.Configuration
 import androidx.annotation.StringRes
-import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Icon
+import androidx.compose.material.OutlinedTextField
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -42,10 +44,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.app.hoverrobot.R
@@ -59,7 +61,6 @@ import com.app.hoverrobot.ui.composeUtils.CustomButton
 import com.app.hoverrobot.ui.composeUtils.CustomDropdownMenu
 import com.app.hoverrobot.ui.composeUtils.CustomPreview
 import com.app.hoverrobot.ui.composeUtils.CustomSlider
-import com.app.hoverrobot.ui.composeUtils.CustomTextStyles
 import com.app.hoverrobot.ui.theme.MyAppTheme
 
 @Composable
@@ -75,11 +76,11 @@ fun SettingsScreen(
             .padding(16.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        PidSettingsCard(
-            originalLocalConfig = localRobotConfig,
-            onSendPidSettings = { onActionScreen(SettingsScreenActions.OnNewSettings(it)) },
-            onPidSave = { onPidSave(it) },
-        )
+//        PidSettingsCard(
+//            originalLocalConfig = localRobotConfig,
+//            onSendPidSettings = { onActionScreen(SettingsScreenActions.OnNewSettings(it)) },
+//            onPidSave = { onPidSave(it) },
+//        )
 
         GeneralSettingsCard(
             statusRobot = statusRobot,
@@ -87,6 +88,8 @@ fun SettingsScreen(
             onCleanLeftMotor = { onActionScreen(SettingsScreenActions.OnCleanLeftMotor) },
             onCleanRightMotor = { onActionScreen(SettingsScreenActions.OnCleanRightMotor) }
         )
+
+        ConnectionSettingsCard(serverIp = "192.168.0.100") {}
     }
 }
 
@@ -195,7 +198,7 @@ private fun PidSettingsCardHeader(
         Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        TitleSectionText(R.string.pid_group_title)
+        TitleSectionText(R.string.settings_group_pid_title)
 
         Spacer(Modifier.weight(1F))
 
@@ -227,7 +230,7 @@ private fun GeneralSettingsCard(
     onCleanLeftMotor: () -> Unit,
     onCleanRightMotor: () -> Unit
 ) {
-    TitleSectionText(R.string.pid_group_title)
+    TitleSectionText(R.string.settings_group_general_title)
 
     Column(
         Modifier
@@ -249,6 +252,75 @@ private fun GeneralSettingsCard(
             onClickFirst = onCleanLeftMotor,
             onClickSecond = onCleanRightMotor
         )
+    }
+}
+
+@Composable
+private fun ConnectionSettingsCard(
+    serverIp: String,
+    onReconnect: (String) -> Unit
+) {
+    TitleSectionText(R.string.settings_group_connection_title)
+
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .border(width = 1.dp, color = MaterialTheme.colorScheme.onBackground, shape = RoundedCornerShape(8.dp))
+    ) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                modifier = Modifier.padding(vertical = 8.dp),
+                text = stringResource(R.string.settings_connection_title),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+
+            Spacer(Modifier.weight(1F))
+
+            Text(
+                text = "192.168.0.",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+
+            Box(
+                modifier = Modifier
+                    .heightIn(min = 40.dp)
+                    .border(
+                        border = BorderStroke(1.dp, color = MaterialTheme.colorScheme.primary),
+                        shape = RoundedCornerShape(8.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                BasicTextField(
+                    state = TextFieldState("100"),
+                    lineLimits = TextFieldLineLimits.SingleLine,
+                    textStyle = TextStyle(
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    ),
+                )
+            }
+
+            IconButton(
+                modifier = Modifier.border(border = BorderStroke(1.dp, color = MaterialTheme.colorScheme.onPrimary),
+                    RoundedCornerShape(8.dp))
+                onClick = {}
+            ) {
+                Icon(
+                    imageVector =  Icons.Default.Refresh,
+                    contentDescription = null)
+            }
+        }
     }
 }
 

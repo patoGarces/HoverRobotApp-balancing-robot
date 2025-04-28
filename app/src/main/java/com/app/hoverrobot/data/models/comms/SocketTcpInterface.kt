@@ -8,4 +8,6 @@ import java.nio.ByteBuffer
 interface SocketTcpInterface {
     val receivedDataFlow: SharedFlow<ByteBuffer>
     val connectionsStatus: StateFlow<StatusConnection>
+
+    fun reconnect(serverIp: String, port: Int)
 }

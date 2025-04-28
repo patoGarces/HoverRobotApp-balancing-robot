@@ -25,10 +25,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import java.nio.BufferUnderflowException
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import javax.inject.Inject
+
+
+// TODO: sacar de aca
+//val IP_HOVER_ROBOT_DEFAULT = "192.168.0.102"    // ip prototipo TODO: hacer configurable
+val IP_HOVER_ROBOT_DEFAULT = "192.168.0.101"    // ip robot TODO: hacer configurable
+val APP_DEFAULT_PORT = 8080
 
 interface CommsRepository {
 
@@ -37,6 +42,8 @@ interface CommsRepository {
     val dynamicDataRobotFlow: SharedFlow<RobotDynamicData>
 
     val robotLocalConfigFlow: SharedFlow<RobotLocalConfig?>
+
+    fun reconnectSocket(serverIp: String, port: Int)
 
     fun sendPidParams(pidParams: PidSettings)
 
@@ -50,10 +57,8 @@ interface CommsRepository {
 class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val context: Context) :
     CommsRepository {
 
-     private val IP_HOVER_ROBOT = "192.168.0.102"    // ip prototipo TODO: hacer configurable
-//     private val IP_HOVER_ROBOT = "192.168.0.101"    // ip robot TODO: hacer configurable
 //    private val serverSocket = ServerTcpImpl()
-    private val serverSocket = ClientTcpImpl(IP_HOVER_ROBOT) // TODO: renombrar variable y elimianr ip harcode
+    private val serverSocket = ClientTcpImpl()  // TODO: renombrar variable
 
     private val _connectionState = MutableStateFlow(ConnectionState())                // Es un stateFlow, porque busco que emita SOLO si cambia el valor de su contenido
     override val connectionState: StateFlow<ConnectionState> = _connectionState
@@ -147,11 +152,15 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
 
         ioScope.launch {
             serverSocket.connectionsStatus.collect {
-                if (it == StatusConnection.WAITING) {
+                if (it == StatusConnection.SEARCHING) {
                     _robotLocalConfigFlow.emit(RobotLocalConfig())                                            // Para forzar el collect al reconectar
                 }
             }
         }
+    }
+
+    override fun reconnectSocket(serverIp: String, port: Int) {
+        serverSocket.reconnect(serverIp, port)
     }
 
     override fun sendPidParams(pidParams: PidSettings) {
