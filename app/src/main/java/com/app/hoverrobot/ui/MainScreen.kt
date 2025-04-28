@@ -49,9 +49,7 @@ fun MainScreen(navController: NavHostController) {
                 networkState = robotStateViewModel.connectionNetworkState,
                 tempImu = robotStateViewModel.robotDynamicData?.tempImu ?: 0F,
                 batteryState = robotStateViewModel.batteryState
-            ) {
-                context.startActivity(Intent(Settings.ACTION_WIFI_SETTINGS))
-            }
+            ) { navController.goToScreen(NavigationScreens.STATUS_DATA) }
         }
 
         MainNavHost(
@@ -68,14 +66,19 @@ fun MainScreen(navController: NavHostController) {
             tabs = tabs,
             selectedIndex = selectedIndex
         ) { screen ->
-            navController.navigate(screen.route) {
-                popUpTo(navController.graph.startDestinationId) {
-                    saveState = true
-                }
-                launchSingleTop = true
-                restoreState = true
-            }
+            navController.goToScreen(screen)
         }
+    }
+}
+
+private fun NavHostController.goToScreen(screen: NavigationScreens) {
+    val navController = this
+    navController.navigate(screen.route) {
+        popUpTo(navController.graph.startDestinationId) {
+            saveState = true
+        }
+        launchSingleTop = true
+        restoreState = true
     }
 }
 
