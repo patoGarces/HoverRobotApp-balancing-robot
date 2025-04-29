@@ -138,7 +138,7 @@ private fun NormalSection(
     ) {
         Text(
             text = stringResource(title),
-            style = CustomTextStyles.textStyle14Normal
+            style = CustomTextStyles.textStyle14Bold
         )
 
         CustomButton(
@@ -172,7 +172,7 @@ fun SelectorSection(
     ) {
         Text(
             text = title,
-            style = CustomTextStyles.textStyle14Normal
+            style = CustomTextStyles.textStyle14Bold
         )
 
         CustomSelectorComponent(
@@ -206,7 +206,7 @@ private fun ConnectionSection(
                     .padding(horizontal = 16.dp)
                     .padding(bottom = 8.dp),
                 text = stringResource(R.string.title_connection_status),
-                style = CustomTextStyles.textStyle14Normal,
+                style = CustomTextStyles.textStyle14Bold,
                 textAlign = TextAlign.Start
             )
 
