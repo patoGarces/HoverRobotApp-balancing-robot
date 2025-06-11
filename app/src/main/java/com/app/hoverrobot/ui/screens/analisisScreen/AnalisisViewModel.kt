@@ -181,7 +181,7 @@ class AnalisisViewModel @Inject constructor(
                 }
 
                 SelectedDataset.DATASET_PID_SPEED -> {
-                    setPidMode(1050F)
+                    setPidMode(15F)
                     LineData(
                         lineDataMap[LineDataKeys.LINEDATA_KEY_SETPOINT_SPEED],
                         lineDataMap[LineDataKeys.LINEDATA_KEY_ACTUAL_SPEED],

@@ -57,7 +57,8 @@ object EntriesMaps {
         this[LineDataKeys.LINEDATA_KEY_SETPOINT_SPEED]?.add(Entry(newFrame.timeStamp, newFrame.robotData.setPointSpeed))
         this[LineDataKeys.LINEDATA_KEY_POS_IN_MTS]?.add(Entry(newFrame.timeStamp, newFrame.robotData.posInMeters))
         this[LineDataKeys.LINEDATA_KEY_OUTPUT_YAW]?.add(Entry(newFrame.timeStamp, newFrame.robotData.outputYawControl))
-        this[LineDataKeys.LINEDATA_KEY_ACTUAL_SPEED]?.add(Entry(newFrame.timeStamp, newFrame.robotData.speedL.toFloat()))  // TODO: tomar velocidad promedio
+        val meanSpeed = (newFrame.robotData.speedR - newFrame.robotData.speedL).toFloat() / 2F
+        this[LineDataKeys.LINEDATA_KEY_ACTUAL_SPEED]?.add(Entry(newFrame.timeStamp, meanSpeed))
         this[LineDataKeys.LINEDATA_KEY_BATTERY_LVL]?.add(Entry(newFrame.timeStamp, newFrame.robotData.batVoltage.toPercentLevel().toFloat()))
     }
 }

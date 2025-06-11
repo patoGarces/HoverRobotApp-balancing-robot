@@ -7,7 +7,7 @@ import com.app.hoverrobot.ui.composeUtils.CustomColors
 object StatusMapper {
     fun StatusConnection.toStringRes(): Int =
         when (this) {
-            StatusConnection.INIT -> R.string.status_connection_init
+            StatusConnection.DISCONNECTED -> R.string.status_connection_disconnected
             StatusConnection.WAITING -> R.string.status_connection_waiting
             StatusConnection.SEARCHING -> R.string.status_connection_searching
             StatusConnection.CONNECTED -> R.string.status_connection_connected
@@ -52,7 +52,7 @@ object StatusMapper {
 
     fun StatusConnection.toColor(): Color =
         when (this) {
-            StatusConnection.INIT -> CustomColors.StatusOrange
+            StatusConnection.DISCONNECTED -> CustomColors.StatusOrange
             StatusConnection.WAITING -> CustomColors.StatusTurquesa
             StatusConnection.SEARCHING -> CustomColors.StatusTurquesa
             StatusConnection.CONNECTED -> CustomColors.StatusBlue
@@ -61,7 +61,7 @@ object StatusMapper {
 }
 
 enum class StatusConnection {
-    INIT,
+    DISCONNECTED,
     WAITING,
     SEARCHING,
     CONNECTED,

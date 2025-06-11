@@ -7,7 +7,6 @@ import com.app.hoverrobot.data.utils.ToolBox.ioScope
 import com.app.hoverrobot.data.utils.toByteBuffer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -20,7 +19,6 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.net.ServerSocket
 import java.net.Socket
-import java.net.SocketException
 import java.nio.ByteBuffer
 import java.util.Timer
 import java.util.TimerTask
@@ -32,7 +30,7 @@ class ServerTcpImpl(): SocketTcpInterface {
     private val _receivedDataFlow = MutableSharedFlow<ByteBuffer>()
     override val receivedDataFlow: SharedFlow<ByteBuffer> = _receivedDataFlow
 
-    private val _connectionsStatus = MutableStateFlow(StatusConnection.INIT)
+    private val _connectionsStatus = MutableStateFlow(StatusConnection.DISCONNECTED)
     override val connectionsStatus: StateFlow<StatusConnection> = _connectionsStatus
 
     private var socketRunningJob: Job? = null
@@ -50,7 +48,7 @@ class ServerTcpImpl(): SocketTcpInterface {
     private var contPackets = 0
 
     init {
-        setNewConnectStatus(StatusConnection.INIT)
+        setNewConnectStatus(StatusConnection.DISCONNECTED)
         measureReception()
     }
 

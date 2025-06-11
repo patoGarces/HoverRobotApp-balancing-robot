@@ -15,11 +15,23 @@ object ToolBox {
         return (this * factor).roundToInt() / factor
     }
 
-    fun Int.toIpString(): String? {
-        return String.format(
-            Locale.getDefault(),
-            "%d.%d.%d.%d", (this and 0xff), (this shr 8 and 0xff), (this shr 16 and 0xff),
-            (this shr 24 and 0xff)
-        ).takeIf { this != 0 }
+    fun Int.formatAsIp(): String? {
+        if (this == 0) return null
+
+        val bytes = listOf(
+            this and 0xFF,
+            (this shr 8) and 0xFF,
+            (this shr 16) and 0xFF,
+            (this shr 24) and 0xFF
+        )
+        return bytes.joinToString(".")
+    }
+
+    fun Int.toIpStringWithSuffix(defaultIpFormat: String = "192.168.0.%d"): String {
+        return String.format(Locale.getDefault(), defaultIpFormat, this)
+    }
+
+    fun String.getIpLastSuffix(): Int {
+        return this.removePrefix("192.168.0.").toInt()
     }
 }

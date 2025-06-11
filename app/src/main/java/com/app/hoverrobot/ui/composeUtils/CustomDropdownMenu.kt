@@ -45,6 +45,7 @@ import com.app.hoverrobot.ui.theme.MyAppTheme
 @Composable
 fun CustomDropdownMenu(
     @ArrayRes options: Int,
+    actualIndex: Int,
     initialExpanded: Boolean = false,
     onIndexChange: (Int) -> Unit
 ) {
@@ -57,9 +58,8 @@ fun CustomDropdownMenu(
     )
 
     var isDropdownMenuExpanded by remember { mutableStateOf(initialExpanded) }
-    var dropDownMenuSelectedItem by remember { mutableIntStateOf(0) }
 
-    val outlineColor by remember { derivedStateOf { listColor[dropDownMenuSelectedItem] } }
+    val outlineColor = listColor[actualIndex]
 
     Box(
         modifier = Modifier
@@ -77,7 +77,7 @@ fun CustomDropdownMenu(
         ) {
             Text(
                 modifier = Modifier.weight(1f),
-                text = optionDropDownMenu.getOrNull(dropDownMenuSelectedItem) ?: "Unknown",
+                text = optionDropDownMenu.getOrNull(actualIndex) ?: "Unknown",
                 style = CustomTextStyles.textStyle14Bold
             )
             val trailingIcon =
@@ -103,7 +103,6 @@ fun CustomDropdownMenu(
                         Text(item, color = MaterialTheme.colorScheme.onSurface)
                     },
                     onClick = {
-                        dropDownMenuSelectedItem = index
                         onIndexChange(index)
                         isDropdownMenuExpanded = false
                     },
@@ -119,6 +118,10 @@ fun CustomDropdownMenu(
 @CustomPreviewComponent
 private fun CustomDropdownMenuPreview() {
     MyAppTheme {
-        CustomDropdownMenu(R.array.dropdown_menu_pid_items, initialExpanded = true) { }
+        CustomDropdownMenu(
+            options = R.array.dropdown_menu_pid_items,
+            actualIndex = 0,
+            initialExpanded = true
+        ) { }
     }
 }

@@ -21,12 +21,15 @@ import com.app.hoverrobot.data.models.comms.Wheel
 import com.app.hoverrobot.data.models.toPercentLevel
 import com.app.hoverrobot.data.repositories.APP_DEFAULT_PORT
 import com.app.hoverrobot.data.repositories.CommsRepository
+import com.app.hoverrobot.data.repositories.IP_ADDRESS_CLIENT_NULL
 import com.app.hoverrobot.data.repositories.IP_ADDRESS_CLIENT_ROBOT_DEFAULT
 import com.app.hoverrobot.data.repositories.IP_ADDRESS_CLIENT_RASPI_DEFAULT
 import com.app.hoverrobot.data.repositories.StoreSettings
 import com.app.hoverrobot.data.utils.StatusConnection
 import com.app.hoverrobot.data.utils.StatusRobot
+import com.app.hoverrobot.data.utils.ToolBox.getIpLastSuffix
 import com.app.hoverrobot.data.utils.ToolBox.round
+import com.app.hoverrobot.data.utils.ToolBox.toIpStringWithSuffix
 import com.app.hoverrobot.ui.screens.navigationScreen.NavigationScreenAction
 import com.app.hoverrobot.ui.screens.navigationScreen.NavigationScreenAction.OnDearmedAction
 import com.app.hoverrobot.ui.screens.navigationScreen.NavigationScreenAction.OnNewDragCompassInteraction
@@ -38,6 +41,7 @@ import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnCali
 import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnCleanLeftMotor
 import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnCleanRightMotor
 import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnNewSettings
+import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnReconnectToRaspi
 import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnReconnectToRobot
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -85,8 +89,20 @@ class RobotStateViewModel @Inject constructor(
     private var lastDistance = 0f // La última distancia recibida
 
     init {
-        commsRepository.reconnectRobotSocket(IP_ADDRESS_CLIENT_ROBOT_DEFAULT, APP_DEFAULT_PORT)
-        commsRepository.reconnectRaspiSocket(IP_ADDRESS_CLIENT_RASPI_DEFAULT, APP_DEFAULT_PORT)
+        viewModelScope.launch {
+            val ipRobot = storeSettings.getIpRobot()?.toIpStringWithSuffix()
+                    ?: IP_ADDRESS_CLIENT_ROBOT_DEFAULT
+            if (ipRobot != IP_ADDRESS_CLIENT_NULL) {
+                commsRepository.reconnectRobotSocket(ipRobot, APP_DEFAULT_PORT)
+            }
+
+            val ipRaspi = storeSettings.getIpRaspi()?.toIpStringWithSuffix()
+                    ?: IP_ADDRESS_CLIENT_RASPI_DEFAULT
+            if (ipRaspi != IP_ADDRESS_CLIENT_NULL) {
+                commsRepository.reconnectRaspiSocket(ipRaspi, APP_DEFAULT_PORT)
+            }
+        }
+
         viewModelScope.launch {
             while (true) {
                 if (isRobotConnected.value && isRobotStabilized.value) {
@@ -105,7 +121,9 @@ class RobotStateViewModel @Inject constructor(
         viewModelScope.launch {
             commsRepository.robotLocalConfigFlow.collect {
                 it?.let { localConfig ->
-                    localConfigFromRobot = localConfig
+                    if (localConfig != localConfigFromRobot) {
+                        localConfigFromRobot = localConfig
+                    }
                 }
             }
         }
@@ -151,11 +169,7 @@ class RobotStateViewModel @Inject constructor(
             is OnYawLeftAction -> sendNewMoveRelYaw(action.relativeYaw.toFloat())
             is OnYawRightAction -> sendNewMoveRelYaw(action.relativeYaw.toFloat())
             is OnNewDragCompassInteraction -> sendNewMoveAbsYaw(action.newDegress)
-            is NavigationScreenAction.OnFixedDistance -> sendNewMovePosition(
-                abs(action.meters),
-                action.meters < 0
-            )
-
+            is NavigationScreenAction.OnFixedDistance -> sendNewMovePosition(action.meters)
             is OnNewJoystickInteraction -> {
                 actualJoyPosition = DirectionControl(action.x.toShort(), action.y.toShort())
             }
@@ -173,10 +187,24 @@ class RobotStateViewModel @Inject constructor(
                 CommandsRobot.CLEAN_WHEELS, Wheel.LEFT_WHEEL.ordinal.toFloat()
             )
             is OnReconnectToRobot -> {
-                commsRepository.reconnectRobotSocket(action.ip, APP_DEFAULT_PORT)
+                viewModelScope.launch { storeSettings.setIpRobot(action.lastIntIp) }
+                val ipRobot = action.lastIntIp.toIpStringWithSuffix()
+                if (ipRobot != IP_ADDRESS_CLIENT_NULL) {
+                    commsRepository.reconnectRobotSocket(
+                        ipRobot,
+                        APP_DEFAULT_PORT
+                    )
+                }
             }
-            is SettingsScreenActions.OnReconnectToRaspi -> {
-                commsRepository.reconnectRaspiSocket(action.ip, APP_DEFAULT_PORT)
+            is OnReconnectToRaspi -> {
+                viewModelScope.launch { storeSettings.setIpRaspi(action.lastIntIp) }
+                val ipRaspi = action.lastIntIp.toIpStringWithSuffix()
+                if (ipRaspi != IP_ADDRESS_CLIENT_NULL) {
+                    commsRepository.reconnectRobotSocket(
+                        ipRaspi,
+                        APP_DEFAULT_PORT
+                    )
+                }
             }
         }
     }
@@ -231,12 +259,9 @@ class RobotStateViewModel @Inject constructor(
         }
     }
 
-    private fun sendNewMovePosition(distanceInMts: Float, isBackward: Boolean = false) {
-        val command =
-            if (isBackward) CommandsRobot.MOVE_BACKWARD else CommandsRobot.MOVE_FORWARD
-
+    private fun sendNewMovePosition(distanceInMts: Float) {
         if (isRobotConnected.value) {
-            commsRepository.sendCommand(command, distanceInMts)
+            commsRepository.sendCommand(CommandsRobot.MOVE_DISTANCE, distanceInMts)
         }
     }
 

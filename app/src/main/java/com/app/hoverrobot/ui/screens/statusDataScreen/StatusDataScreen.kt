@@ -38,6 +38,7 @@ import com.app.hoverrobot.R
 import com.app.hoverrobot.data.models.Aggressiveness
 import com.app.hoverrobot.data.models.comms.ConnectionState
 import com.app.hoverrobot.data.models.comms.NetworkState
+import com.app.hoverrobot.data.repositories.IP_ADDRESS_CLIENT_NULL
 import com.app.hoverrobot.data.utils.StatusConnection
 import com.app.hoverrobot.data.utils.StatusMapper.toColor
 import com.app.hoverrobot.data.utils.StatusMapper.toStringRes
@@ -245,7 +246,7 @@ private fun ConnectionSection(
             )
 
             Text(
-                text = networkState.localIp.toString(),
+                text = networkState.localIp?.toString() ?: stringResource(R.string.unknown_ip),
                 style = CustomTextStyles.textStyle14Normal
             )
         }
@@ -264,7 +265,7 @@ private fun ConnectionSection(
             )
 
             Text(
-                text = networkState.statusRobotClient.addressIp.toString(),
+                text = networkState.statusRobotClient.addressIp ?: IP_ADDRESS_CLIENT_NULL,
                 style = CustomTextStyles.textStyle14Normal
             )
 
@@ -289,7 +290,7 @@ private fun ConnectionSection(
             )
 
             Text(
-                text = networkState.statusRaspiClient.addressIp.toString(),
+                text = networkState.statusRaspiClient.addressIp ?: IP_ADDRESS_CLIENT_NULL,
                 style = CustomTextStyles.textStyle14Normal
             )
 
