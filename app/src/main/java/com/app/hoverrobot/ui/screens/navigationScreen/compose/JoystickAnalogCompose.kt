@@ -23,6 +23,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.hapticfeedback.HapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.changedToDown
+import androidx.compose.ui.input.pointer.changedToUp
+import androidx.compose.ui.platform.LocalHapticFeedback
 import com.app.hoverrobot.R
 import com.app.hoverrobot.ui.composeUtils.CustomPreview
 import com.app.hoverrobot.ui.theme.MyAppTheme
@@ -61,6 +66,8 @@ fun JoystickAnalogCompose(
         var positionX by remember { mutableFloatStateOf(0f) }
         var positionY by remember { mutableFloatStateOf(0f) }
 
+        val hapticFeedback = LocalHapticFeedback.current
+
         Image(
             painterResource(id = backgroundImage),
             contentDescription = "JoyStickBackground",
@@ -80,14 +87,35 @@ fun JoystickAnalogCompose(
                 }
                 .size(dotSize)
                 .pointerInput(Unit) {
-                    detectDragGestures(onDragEnd = {
-                        offsetX = centerX
-                        offsetY = centerY
-                        radius = 0f
-                        theta = 0f
-                        positionX = 0f
-                        positionY = 0f
-                    }) { pointerInputChange: PointerInputChange, offset: Offset ->
+                    awaitPointerEventScope {
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            val touch = event.changes.firstOrNull() ?: continue
+
+                            if (touch.changedToDown()) {
+                                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                            }
+
+                            if (touch.changedToUp()) {
+                                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                            }
+                        }
+                    }
+                }
+                .pointerInput(Unit) {
+                    detectDragGestures(
+                        onDragStart = {
+//                            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                        },
+                        onDragEnd = {
+                            offsetX = centerX
+                            offsetY = centerY
+                            radius = 0f
+                            theta = 0f
+                            positionX = 0f
+                            positionY = 0f
+                        })
+                    { pointerInputChange: PointerInputChange, offset: Offset ->
                         val x = offsetX + offset.x - centerX
                         val y = offsetY + offset.y - centerY
 

@@ -27,6 +27,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,7 +36,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.app.hoverrobot.R
@@ -49,7 +49,6 @@ import com.app.hoverrobot.ui.screens.analisisScreen.AnalisisScreenActions.OnPaus
 import com.app.hoverrobot.ui.screens.analisisScreen.compose.LogScreen
 import com.app.hoverrobot.ui.screens.analisisScreen.resources.SelectedDataset
 import com.app.hoverrobot.ui.composeUtils.CustomButton
-import com.app.hoverrobot.ui.composeUtils.CustomColors
 import com.app.hoverrobot.ui.composeUtils.CustomPreview
 import com.app.hoverrobot.ui.composeUtils.LineChartCompose
 import com.app.hoverrobot.ui.theme.MyAppTheme
@@ -63,10 +62,8 @@ fun AnalisisScreen(
     statusRobot: State<StatusRobot?>,
     onActionAnalisisScreen: (AnalisisScreenActions) -> Unit
 ) {
-    var logMode by remember { mutableStateOf(false) }
-
-    var isAutoScaled by remember { mutableStateOf(false) }
-
+    var isAutoScaled by rememberSaveable { mutableStateOf(false) }
+    var indexDataset by rememberSaveable { mutableIntStateOf(0) }
     val listOfLogs = remember { mutableStateListOf<Triple<Long, StatusRobot, String?>>() }
 
     LaunchedEffect(statusRobot.value) {
@@ -82,7 +79,7 @@ fun AnalisisScreen(
             .fillMaxSize()
             .padding(8.dp)
     ) {
-        if (logMode) {
+        if (indexDataset == SelectedDataset.entries.size) {
             LogScreen(
                 modifier = Modifier.weight(1F),
                 listOfLogs = listOfLogs
@@ -105,10 +102,15 @@ fun AnalisisScreen(
         Spacer(Modifier.width(8.dp))
 
         SettingsChartMenuScreen(
+            initAutoScale = isAutoScaled,
+            selectedDataset = indexDataset,
             onClearChart = { onActionAnalisisScreen(OnClearData) },
-            onDatasetChange = {
-                logMode = it == null
-                onActionAnalisisScreen(OnDatasetChange(it))
+            onIndexDatasetChange = {
+                indexDataset = it
+                if (it < SelectedDataset.entries.size) {
+                    val dataset = SelectedDataset.entries.find { it.ordinal == indexDataset }!!
+                    onActionAnalisisScreen(OnDatasetChange(dataset))
+                }
             },
             onAutoScaleChange = { isAutoScaled = it },
         )
@@ -159,13 +161,12 @@ private fun HighlightValues(dynamicItem: RobotDynamicData) {
 
 @Composable
 fun SettingsChartMenuScreen(
+    initAutoScale: Boolean,
+    selectedDataset: Int,
     onClearChart: () -> Unit,
-    onDatasetChange: (SelectedDataset?) -> Unit,
+    onIndexDatasetChange: (Int) -> Unit,
     onAutoScaleChange: (Boolean) -> Unit
 ) {
-    var datasetSelected by remember { mutableIntStateOf(0) }
-    var autoscaleState by remember { mutableStateOf(false) }
-
     val mapTitleDataset = listOf(
         R.string.dataset_imu_data,
         R.string.dataset_power_data,
@@ -200,12 +201,8 @@ fun SettingsChartMenuScreen(
                 CheckboxItem(
                     nameItem = mapTitleDataset[item],
                     indexItem = item,
-                    datasetSelected = datasetSelected,
-                    onItemSelected = {
-                        datasetSelected = item
-                        val selected = SelectedDataset.entries.find { it.ordinal == item }!!
-                        onDatasetChange(selected)
-                    }
+                    datasetSelected = selectedDataset,
+                    onItemSelected = { onIndexDatasetChange(item) }
                 )
             }
 
@@ -213,19 +210,15 @@ fun SettingsChartMenuScreen(
                 CheckboxItem(
                     nameItem = R.string.dataset_log_mode,
                     indexItem = SelectedDataset.entries.size,
-                    datasetSelected = datasetSelected,
-                    onItemSelected = {
-                        datasetSelected = SelectedDataset.entries.size
-                        onDatasetChange(null)
-                    }
+                    datasetSelected = selectedDataset,
+                    onItemSelected = { onIndexDatasetChange(SelectedDataset.entries.size) }
                 )
             }
 
             item {
                 SwitchItem(
-                    checkedState = autoscaleState,
+                    checkedState = initAutoScale,
                     onCheckedChange = {
-                        autoscaleState = it
                         onAutoScaleChange(it)
                     }
                 )
@@ -325,8 +318,8 @@ private fun AnalisisScreenPreview() {
         tempImu = 36.5F,
         tempMcb = 40.1F,
         tempMainboard = 42.3F,
-        speedR = 10,
-        speedL = 10,
+        speedR = 10F,
+        speedL = 10F,
         currentR = 1.2F,
         currentL = 1.3F,
         pitchAngle = 0.5F,

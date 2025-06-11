@@ -68,7 +68,7 @@
     <string name="settings_connection_raspi_title">Direccion server raspi</string>
 
     <!--    Mapper status connection -->
-    <string name="status_connection_init">Iniciando</string>
+    <string name="status_connection_disconnected">Desconectado</string>
     <string name="status_connection_waiting">Esperando conexion</string>
     <string name="status_connection_searching">Buscando</string>
     <string name="status_connection_connected">Conectado</string>
@@ -119,22 +119,24 @@
     <string name="btn_pause_title">Pause</string>
 
     <!--    Name datasets analisis fragment-->
-    <string name="dataset_angle_pitch">"Pitch Angle"</string>
-    <string name="dataset_angle_yaw">"Yaw Angle"</string>
-    <string name="dataset_angle_roll">"Roll Angle"</string>
-    <string name="dataset_speed_motor_l">"Speed L x10"</string>
-    <string name="dataset_speed_motor_r">"Speed R x10"</string>
-    <string name="dataset_current_motor_l">"Current L(A)"</string>
-    <string name="dataset_current_motor_r">"Current R(A)"</string>
-    <string name="dataset_set_point_angle">"setPoint Angle"</string>
-    <string name="dataset_set_point_pos">"setPoint Pos"</string>
-    <string name="dataset_set_point_yaw">"setPoint Yaw"</string>
-    <string name="dataset_set_point_speed">"setPoint Speed"</string>
+    <string name="dataset_angle_pitch">"Pitch Angle [°]"</string>
+    <string name="dataset_angle_yaw">"Yaw Angle [°]"</string>
+    <string name="dataset_angle_roll">"Roll Angle [°]"</string>
+    <string name="dataset_speed_motor_l">"Speed L [M/s]"</string>
+    <string name="dataset_speed_motor_r">"Speed R [M/s]"</string>
+    <string name="dataset_current_motor_l">"Current L [A]"</string>
+    <string name="dataset_current_motor_r">"Current R [A]"</string>
+    <string name="dataset_set_point_angle">"setPoint Angle [°]"</string>
+    <string name="dataset_set_point_pos">"setPoint Pos [Cm]"</string>
+    <string name="dataset_set_point_yaw">"setPoint Yaw [°]"</string>
+    <string name="dataset_set_point_speed">"setPoint Speed [M/s]"</string>
     <string name="dataset_output_yaw">"Output Yaw"</string>
-    <string name="dataset_position_meters">"Pos in mts"</string>
-    <string name="dataset_speed">"Actual Speed"</string>
-    <string name="dataset_battery_level">"Battery Level %"</string>
+    <string name="dataset_position_meters">"Position [Cm]"</string>
+    <string name="dataset_speed">"Actual Speed [M/s]"</string>
+    <string name="dataset_battery_level">"Battery Level [%]"</string>
     <string name="dataset_default">"none"</string>
 
     <string name="dearmed_button">Desarmar</string>
+
+    <string name="unknown_ip">IP desconocida</string>
 </resources>

@@ -18,6 +18,8 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "se
 class StoreSettings @Inject constructor(@ApplicationContext private val context: Context) {
 
     private val KEY_AGGRESSIVENESS = intPreferencesKey("aggressiveness_key")
+    private val KEY_IP_ROBOT = intPreferencesKey("robot_ip_key")
+    private val KEY_IP_RASPI = intPreferencesKey("raspi_ip_key")
 
     suspend fun getAggressiveness() =
         Aggressiveness.entries[
@@ -28,6 +30,28 @@ class StoreSettings @Inject constructor(@ApplicationContext private val context:
     suspend fun saveAggressiveness(aggressiveness: Aggressiveness) {
         context.dataStore.edit { preferences ->
             preferences[KEY_AGGRESSIVENESS] = aggressiveness.ordinal
+        }
+    }
+
+    suspend fun getIpRobot(): Int? =
+        context.dataStore.data.map { preferences ->
+            preferences[KEY_IP_ROBOT]
+        }.first()
+
+    suspend fun setIpRobot(ip: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[KEY_IP_ROBOT] = ip
+        }
+    }
+
+    suspend fun getIpRaspi(): Int? =
+        context.dataStore.data.map { preferences ->
+            preferences[KEY_IP_RASPI]
+        }.first()
+
+    suspend fun setIpRaspi(ip: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[KEY_IP_RASPI] = ip
         }
     }
 }

@@ -17,7 +17,7 @@ import com.app.hoverrobot.data.models.comms.asRobotDynamicData
 import com.app.hoverrobot.data.models.comms.asRobotLocalConfig
 import com.app.hoverrobot.data.utils.StatusConnection
 import com.app.hoverrobot.data.utils.ToolBox.ioScope
-import com.app.hoverrobot.data.utils.ToolBox.toIpString
+import com.app.hoverrobot.data.utils.ToolBox.formatAsIp
 import com.app.hoverrobot.data.utils.toByteBuffer
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.delay
@@ -31,9 +31,10 @@ import java.nio.ByteOrder
 import javax.inject.Inject
 
 
-val IP_ADDRESS_CLIENT_RASPI_DEFAULT = "192.168.0.102"
-val IP_ADDRESS_CLIENT_ROBOT_DEFAULT = "192.168.0.101"
-val APP_DEFAULT_PORT = 8080
+const val IP_ADDRESS_CLIENT_NULL = "192.168.0.0"
+const val IP_ADDRESS_CLIENT_RASPI_DEFAULT = "192.168.0.0"
+const val IP_ADDRESS_CLIENT_ROBOT_DEFAULT = "192.168.0.101"
+const val APP_DEFAULT_PORT = 8080
 
 interface CommsRepository {
     val connectionNetworkState: StateFlow<NetworkState>
@@ -139,11 +140,11 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
         ioScope.launch {
             while(true) {
                 val wifiInfo = getWifiInfo(context)
-                _localIp.emit(wifiInfo.ipAddress.toIpString())
+                _localIp.emit(wifiInfo.ipAddress.formatAsIp())
 
                 _connectionNetworkState.emit(
                     NetworkState(
-                        status = StatusConnection.INIT,                             // TODO: monitorizar la conexion wifi
+                        status = StatusConnection.DISCONNECTED,                             // TODO: monitorizar la conexion wifi
                         statusRobotClient = ConnectionState(
                             status = socketClientRobot.connectionsStatus.value,
                             receiverPacketRates = contPackets,
@@ -157,7 +158,7 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
                         rssi = wifiInfo.rssi,
                         strength = WifiManager.calculateSignalLevel(wifiInfo.rssi, 5),
                         frequency = wifiInfo.frequency,
-                        localIp = wifiInfo.ipAddress.toIpString(),
+                        localIp = wifiInfo.ipAddress.formatAsIp().takeIf { it != null },
                     )
                 )
 

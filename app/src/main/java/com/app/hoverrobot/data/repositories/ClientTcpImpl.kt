@@ -31,7 +31,7 @@ class ClientTcpImpl() : SocketTcpInterface {
     private val _receivedDataFlow = MutableSharedFlow<ByteBuffer>()
     override val receivedDataFlow: SharedFlow<ByteBuffer> = _receivedDataFlow
 
-    private val _connectionsStatus = MutableStateFlow(StatusConnection.INIT)
+    private val _connectionsStatus = MutableStateFlow(StatusConnection.DISCONNECTED)
     override val connectionsStatus: StateFlow<StatusConnection> = _connectionsStatus
 
     private var socketRunningJob: Job? = null
@@ -47,7 +47,7 @@ class ClientTcpImpl() : SocketTcpInterface {
     private var contPackets = 0
 
     init {
-        setNewConnectStatus(StatusConnection.INIT)
+        setNewConnectStatus(StatusConnection.DISCONNECTED)
         measureReception()
     }
 

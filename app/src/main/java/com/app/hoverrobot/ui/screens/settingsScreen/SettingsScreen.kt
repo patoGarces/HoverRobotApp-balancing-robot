@@ -35,6 +35,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -58,6 +59,7 @@ import com.app.hoverrobot.data.models.comms.PidSettings
 import com.app.hoverrobot.data.models.comms.RobotLocalConfig
 import com.app.hoverrobot.data.models.comms.asPidSettings
 import com.app.hoverrobot.data.models.comms.isDiffWithOriginalLocalConfig
+import com.app.hoverrobot.data.repositories.IP_ADDRESS_CLIENT_NULL
 import com.app.hoverrobot.data.utils.StatusConnection
 import com.app.hoverrobot.data.utils.StatusRobot
 import com.app.hoverrobot.ui.composeUtils.CustomButton
@@ -96,8 +98,8 @@ fun SettingsScreen(
 
         ConnectionSettingsCard(
             networkState = networkState,
-            onReconnectRobot =  { onActionScreen(SettingsScreenActions.OnReconnectToRobot(it)) },
-            onReconnectRaspi =  { onActionScreen(SettingsScreenActions.OnReconnectToRaspi(it)) }
+            onReconnectRobot = { onActionScreen(SettingsScreenActions.OnReconnectToRobot(it)) },
+            onReconnectRaspi = { onActionScreen(SettingsScreenActions.OnReconnectToRaspi(it)) }
         )
     }
 }
@@ -108,29 +110,30 @@ private fun PidSettingsCard(
     onSendPidSettings: (PidSettings) -> Unit,
     onPidSave: (PidSettings) -> Boolean,
 ) {
-    var indexPid by remember { mutableIntStateOf(0) }
+    var indexPid by rememberSaveable { mutableIntStateOf(0) }
     var newPidSettings by remember { mutableStateOf(originalLocalConfig.asPidSettings(indexPid)) }
-    var enablePidSave by remember { mutableStateOf(false) }
-    var enablePidReset by remember { mutableStateOf(false) }
+    var lastPidSettings by remember { mutableStateOf(originalLocalConfig.asPidSettings(indexPid)) }
+    var isDiffSettings by remember { mutableStateOf(false) }
 
     // TODO: simplificar estos 2 launchedEffect en 1 solo
     LaunchedEffect(originalLocalConfig) {
         newPidSettings = originalLocalConfig.asPidSettings(indexPid)
-        enablePidReset = newPidSettings.isDiffWithOriginalLocalConfig(originalLocalConfig)
-        enablePidSave = newPidSettings.isDiffWithOriginalLocalConfig(originalLocalConfig)
+        isDiffSettings = newPidSettings.isDiffWithOriginalLocalConfig(originalLocalConfig)
     }
 
     LaunchedEffect(newPidSettings) {
-        enablePidReset = newPidSettings.isDiffWithOriginalLocalConfig(originalLocalConfig)
-        enablePidSave = newPidSettings.isDiffWithOriginalLocalConfig(originalLocalConfig)
-        onSendPidSettings(newPidSettings)
+        if (lastPidSettings != newPidSettings) {
+            isDiffSettings = newPidSettings.isDiffWithOriginalLocalConfig(originalLocalConfig)
+            onSendPidSettings(newPidSettings)
+            lastPidSettings = newPidSettings
+        }
     }
 
     PidSettingsCardHeader(
-        enablePidSave = enablePidSave,
+        isDiffSettings = isDiffSettings,
+        indexPid = indexPid,
         onPidSave = { onPidSave(newPidSettings) },
         onPidSync = { onSendPidSettings(newPidSettings) }, // simplemente reenvio el pidSetting
-        enablePidReset = enablePidReset,
         onPidReset = {
             newPidSettings = originalLocalConfig.asPidSettings(indexPid)
             onSendPidSettings(newPidSettings)
@@ -138,6 +141,7 @@ private fun PidSettingsCard(
         onIndexPidChange = {
             indexPid = it
             newPidSettings = originalLocalConfig.asPidSettings(indexPid)
+            lastPidSettings = newPidSettings
         }
     )
 
@@ -145,24 +149,31 @@ private fun PidSettingsCard(
         Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
-            .border(width = 1.dp, color = MaterialTheme.colorScheme.onBackground, shape = RoundedCornerShape(8.dp))
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.onBackground,
+                shape = RoundedCornerShape(8.dp)
+            )
     ) {
         Column(Modifier.padding(vertical = 16.dp)) {
             SliderParam(
                 nameId = R.string.pid_parameter_p_title,
-                initialValue = newPidSettings.kp
+                initialValue = newPidSettings.kp,
+                range = 0F..10F                                             // TODO: traer de afuera
             ) { newValue ->
                 newPidSettings = newPidSettings.copy(kp = newValue)
             }
             SliderParam(
                 nameId = R.string.pid_parameter_i_title,
-                initialValue = newPidSettings.ki
+                initialValue = newPidSettings.ki,
+                range = 0F..10F                                             // TODO: traer de afuera
             ) { newValue ->
                 newPidSettings = newPidSettings.copy(ki = newValue)
             }
             SliderParam(
                 nameId = R.string.pid_parameter_d_title,
-                initialValue = newPidSettings.kd
+                initialValue = newPidSettings.kd,
+                range = 0F..10F                                             // TODO: traer de afuera
             ) { newValue ->
                 newPidSettings = newPidSettings.copy(kd = newValue)
             }
@@ -183,7 +194,7 @@ private fun PidSettingsCard(
                 nameId = R.string.pid_parameter_limits_title,
                 stepSize = 1F,
                 initialValue = newPidSettings.safetyLimits,
-                range = 0F..60F                                             // TODO: traer de afuera
+                range = 15F..60F                                             // TODO: traer de afuera
             ) { newSafetyLimits ->
                 newPidSettings = newPidSettings.copy(safetyLimits = newSafetyLimits)
             }
@@ -194,9 +205,9 @@ private fun PidSettingsCard(
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 private fun PidSettingsCardHeader(
-    enablePidReset: Boolean,
     onPidReset: () -> Unit,
-    enablePidSave: Boolean,
+    isDiffSettings: Boolean,
+    indexPid: Int,
     onPidSave: () -> Boolean,
     onPidSync: () -> Unit,
     onIndexPidChange: (Int) -> Unit
@@ -214,21 +225,31 @@ private fun PidSettingsCardHeader(
         CustomButton(
             title = stringResource(R.string.btn_pid_reset),
             modifier = Modifier.padding(horizontal = 8.dp),
-            enable = enablePidReset
-        ) { onPidReset() }
+            enable = isDiffSettings
+        ) {
+            onPidReset()
+        }
 
         CustomButton(
             title = stringResource(R.string.btn_pid_save),
             modifier = Modifier.padding(horizontal = 8.dp),
-            enable = enablePidSave
-        ) { buttonSaveEnable = onPidSave() }
+            enable = isDiffSettings
+        ) {
+            buttonSaveEnable = onPidSave()
+        }
 
         CustomButton(
             title = stringResource(R.string.btn_pid_sync),
             modifier = Modifier.padding(horizontal = 8.dp),
-        ) { onPidSync() }
+        ) {
+            onPidSync()
+        }
 
-        CustomDropdownMenu(R.array.dropdown_menu_pid_items, onIndexChange = onIndexPidChange)
+        CustomDropdownMenu(
+            options = R.array.dropdown_menu_pid_items,
+            actualIndex = indexPid,
+            onIndexChange = onIndexPidChange
+        )
     }
 }
 
@@ -245,7 +266,11 @@ private fun GeneralSettingsCard(
         Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
-            .border(width = 1.dp, color = MaterialTheme.colorScheme.onBackground, shape = RoundedCornerShape(8.dp))
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.onBackground,
+                shape = RoundedCornerShape(8.dp)
+            )
     ) {
         GeneralSettingsItem(
             titleItem = R.string.general_commands_calibrate_imu_title,
@@ -267,8 +292,8 @@ private fun GeneralSettingsCard(
 @Composable
 private fun ConnectionSettingsCard(
     networkState: NetworkState,
-    onReconnectRobot: (String) -> Unit,
-    onReconnectRaspi: (String) -> Unit,
+    onReconnectRobot: (Int) -> Unit,
+    onReconnectRaspi: (Int) -> Unit,
 ) {
     TitleSectionText(R.string.settings_group_connection_title)
 
@@ -276,23 +301,23 @@ private fun ConnectionSettingsCard(
         Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
-            .border(width = 1.dp, color = MaterialTheme.colorScheme.onBackground, shape = RoundedCornerShape(8.dp))
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.onBackground,
+                shape = RoundedCornerShape(8.dp)
+            )
     ) {
-        networkState.statusRobotClient.addressIp?.let { clientRobotAddress ->
-            IpAddressItem(
-                titleItem = R.string.settings_connection_robot_title,
-                ipAddress = clientRobotAddress,
-                onConfirmClick = onReconnectRobot
-            )
-        }
+        IpAddressItem(
+            titleItem = R.string.settings_connection_robot_title,
+            ipAddress = networkState.statusRobotClient.addressIp ?: IP_ADDRESS_CLIENT_NULL,
+            onConfirmClick = onReconnectRobot
+        )
 
-        networkState.statusRaspiClient.addressIp?.let { clientRaspiAddress ->
-            IpAddressItem(
-                titleItem = R.string.settings_connection_raspi_title,
-                ipAddress = clientRaspiAddress,
-                onConfirmClick = onReconnectRaspi
-            )
-        }
+        IpAddressItem(
+            titleItem = R.string.settings_connection_raspi_title,
+            ipAddress = networkState.statusRaspiClient.addressIp ?: IP_ADDRESS_CLIENT_NULL,
+            onConfirmClick = onReconnectRaspi
+        )
     }
 }
 
@@ -349,9 +374,8 @@ private fun GeneralSettingsItem(
 private fun IpAddressItem(
     @StringRes titleItem: Int,
     ipAddress: String,
-    onConfirmClick: (String) -> Unit
-){
-
+    onConfirmClick: (Int) -> Unit
+) {
     var textFieldValue by remember { mutableStateOf(TextFieldValue(ipAddress.substringAfterLast("."))) }
     var isError by remember { mutableStateOf(false) }
     Row(
@@ -426,7 +450,7 @@ private fun IpAddressItem(
                     BorderStroke(1.dp, color = colorButton),
                     shape = RoundedCornerShape(8.dp)
                 )
-                .clickable { onConfirmClick("192.168.0.${textFieldValue.text}") },
+                .clickable { onConfirmClick(textFieldValue.text.toInt()) },
             contentAlignment = Alignment.Center
         ) {
             Icon(
