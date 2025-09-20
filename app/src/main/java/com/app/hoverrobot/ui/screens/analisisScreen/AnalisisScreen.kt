@@ -20,11 +20,9 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -59,20 +57,11 @@ fun AnalisisScreen(
     lastDynamicData: State<FrameRobotDynamicData?>,
     actualLineData: State<LineData?>,
     chartLimitsConfig: State<ChartLimitsConfig>,
-    statusRobot: State<StatusRobot?>,
+    historicStatusRobot: List<Triple<Long, StatusRobot, String?>>,
     onActionAnalisisScreen: (AnalisisScreenActions) -> Unit
 ) {
     var isAutoScaled by rememberSaveable { mutableStateOf(false) }
     var indexDataset by rememberSaveable { mutableIntStateOf(0) }
-    val listOfLogs = remember { mutableStateListOf<Triple<Long, StatusRobot, String?>>() }
-
-    LaunchedEffect(statusRobot.value) {
-        statusRobot.value?.let {
-            if (!listOfLogs.isNotEmpty() || listOfLogs.last().second != statusRobot.value) {
-                listOfLogs.add(0, Triple(System.currentTimeMillis(), it, null))
-            }
-        }
-    }
 
     Row(
         Modifier
@@ -82,8 +71,8 @@ fun AnalisisScreen(
         if (indexDataset == SelectedDataset.entries.size) {
             LogScreen(
                 modifier = Modifier.weight(1F),
-                listOfLogs = listOfLogs
-            )
+                listOfLogs = historicStatusRobot
+            ) { onActionAnalisisScreen(AnalisisScreenActions.OnClearLogs)}
         } else {
             Column(Modifier.weight(1F)) {
                 LineChartCompose(
@@ -339,7 +328,7 @@ private fun AnalisisScreenPreview() {
         FrameRobotDynamicData(mockRobotDynamicData, 0F))
     }
     val dummyLineData = remember { mutableStateOf<LineData?>(null) }
-    val dummyStatusRobot = remember { mutableStateOf(StatusRobot.TEST_MODE) }
+    val dummyStatusRobot = mutableListOf(Triple(0L, StatusRobot.STABILIZED, null))
     val dummyChartLimitsConfig = remember { mutableStateOf(ChartLimitsConfig(100F, null)) }
 
     MyAppTheme {
@@ -348,7 +337,7 @@ private fun AnalisisScreenPreview() {
                 lastDynamicData = dummyFrameDynamicData,
                 actualLineData = dummyLineData,
                 chartLimitsConfig = dummyChartLimitsConfig,
-                statusRobot = dummyStatusRobot
+                historicStatusRobot = dummyStatusRobot
             ) {}
         }
     }

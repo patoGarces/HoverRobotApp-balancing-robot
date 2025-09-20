@@ -7,6 +7,7 @@ import com.app.hoverrobot.data.utils.ToolBox.ioScope
 import com.app.hoverrobot.data.utils.toByteBuffer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -75,7 +76,8 @@ class ClientTcpImpl() : SocketTcpInterface {
                     val input = BufferedInputStream(tcpSocket?.getInputStream())
                     input.handleReception()
                 } catch (e: IOException) {
-                    Log.e(TAG, "Error al conectar: ${e.message}", e)
+                    Log.i(TAG, "Error intentando conectar: ${e.message}")
+                    delay(3000)
                 } finally {
                     tcpSocket?.close()
                 }

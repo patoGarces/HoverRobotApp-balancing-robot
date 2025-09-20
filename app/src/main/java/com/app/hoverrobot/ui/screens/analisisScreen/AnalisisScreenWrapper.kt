@@ -40,7 +40,7 @@ fun AnalisisScreenWrapper(
     AnalisisScreen(
         lastDynamicData = analisisViewModel.newDataAnalisis.collectAsState(),
         actualLineData = analisisViewModel.actualLineData,
-        statusRobot = analisisViewModel.statusCode,
+        historicStatusRobot = analisisViewModel.historicStatusCode,
         chartLimitsConfig = analisisViewModel.chartLimitsConfig,
         onActionAnalisisScreen = onActionAnalisisScreen
     )

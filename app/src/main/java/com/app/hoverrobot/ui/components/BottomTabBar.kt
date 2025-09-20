@@ -28,7 +28,7 @@ fun BottomTabBar(
 ) {
     TabRow(
         modifier = Modifier
-            .widthIn(max = 400.dp)
+            .widthIn(max = 450.dp)
             .height(35.dp),
         containerColor = Color.Transparent,
         contentColor = Color.Red,

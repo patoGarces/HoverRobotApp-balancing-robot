@@ -27,7 +27,6 @@ import com.app.hoverrobot.data.repositories.IP_ADDRESS_CLIENT_RASPI_DEFAULT
 import com.app.hoverrobot.data.repositories.StoreSettings
 import com.app.hoverrobot.data.utils.StatusConnection
 import com.app.hoverrobot.data.utils.StatusRobot
-import com.app.hoverrobot.data.utils.ToolBox.getIpLastSuffix
 import com.app.hoverrobot.data.utils.ToolBox.round
 import com.app.hoverrobot.data.utils.ToolBox.toIpStringWithSuffix
 import com.app.hoverrobot.ui.screens.navigationScreen.NavigationScreenAction
@@ -48,7 +47,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
-import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -85,6 +83,11 @@ class RobotStateViewModel @Inject constructor(
 
     private var actualJoyPosition = DirectionControl()
 
+    private var touchUpJoystick: Boolean = false
+
+    private val DirectionControl.isNotZero: Boolean
+        get() = this.joyAxisX.toInt() != 0 || this.joyAxisY.toInt() != 0
+
     private var currentPosition = Offset(0f, 0f)
     private var lastDistance = 0f // La última distancia recibida
 
@@ -105,10 +108,14 @@ class RobotStateViewModel @Inject constructor(
 
         viewModelScope.launch {
             while (true) {
-                if (isRobotConnected.value && isRobotStabilized.value) {
+                if (isRobotConnected.value &&
+                    isRobotStabilized.value &&
+                    (actualJoyPosition.isNotZero || touchUpJoystick)) {
+
                     newCoordinatesJoystick(actualJoyPosition.joyAxisX, actualJoyPosition.joyAxisY)
+                    touchUpJoystick = false
                 }
-                delay(50)
+                delay(25)
             }
         }
 
@@ -172,6 +179,7 @@ class RobotStateViewModel @Inject constructor(
             is NavigationScreenAction.OnFixedDistance -> sendNewMovePosition(action.meters)
             is OnNewJoystickInteraction -> {
                 actualJoyPosition = DirectionControl(action.x.toShort(), action.y.toShort())
+                touchUpJoystick = true
             }
         }
     }

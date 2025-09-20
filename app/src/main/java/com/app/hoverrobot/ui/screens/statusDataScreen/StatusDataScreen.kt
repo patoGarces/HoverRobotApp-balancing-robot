@@ -2,6 +2,7 @@ package com.app.hoverrobot.ui.screens.statusDataScreen
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -61,49 +62,52 @@ fun StatusDataScreen(
     onOpenNetworkSettings: () -> Unit,
     onAggressivenessChange: (Aggressiveness) -> Unit
 ) {
-    Column(
-        Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally,
+    Box(
+        modifier = Modifier.fillMaxSize(),
     ) {
-        TitleScreen(stringResource(R.string.title_status_screen))
-
-        val options = listOf("Suave", "Moderado", "Agresivo")
-        SelectorSection(
-            title = stringResource(R.string.title_aggressiveness),
-            defaultOption = defaultAggressiveness,
-            options = options
-        ) { optionSelected ->
-            onAggressivenessChange(Aggressiveness.entries[optionSelected])
-        }
-
-        NormalSection(
-            title = R.string.title_status_robot,
-            buttonText = statusRobot.toStringRes(networkState.statusRobotClient.status),
-            colorOutline = statusRobot.toColor(networkState.statusRobotClient.status),
-        ) { }
-
-        ConnectionSection(
-            networkState = networkState,
-            onOpenNetworkSettings = onOpenNetworkSettings
-        )
-
-        Row(
+        Column(
             Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceEvenly
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            TemperatureComponent(title = R.string.title_mainboard_temp, temp = mainboardTemp)
+            TitleScreen(stringResource(R.string.title_status_screen))
 
-            TemperatureComponent(title = R.string.title_motorboard_temp, temp = motorControllerTemp)
+            val options = listOf("Suave", "Moderado", "Agresivo")
+            SelectorSection(
+                title = stringResource(R.string.title_aggressiveness),
+                defaultOption = defaultAggressiveness,
+                options = options
+            ) { optionSelected ->
+                onAggressivenessChange(Aggressiveness.entries[optionSelected])
+            }
 
-            TemperatureComponent(title = R.string.title_imu_temp, temp = imuTemp)
+            NormalSection(
+                title = R.string.title_status_robot,
+                buttonText = statusRobot.toStringRes(networkState.statusRobotClient.status),
+                colorOutline = statusRobot.toColor(networkState.statusRobotClient.status),
+            ) { }
+
+            ConnectionSection(
+                networkState = networkState,
+                onOpenNetworkSettings = onOpenNetworkSettings
+            )
+
+            Row(
+                Modifier
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                TemperatureComponent(title = R.string.title_mainboard_temp, temp = mainboardTemp)
+
+                TemperatureComponent(title = R.string.title_motorboard_temp, temp = motorControllerTemp)
+
+                TemperatureComponent(title = R.string.title_imu_temp, temp = imuTemp)
+            }
         }
 
-        Version()
+        Version(Modifier.align(Alignment.BottomCenter))
     }
 }
 
@@ -310,9 +314,9 @@ private fun ConnectionSection(
 }
 
 @Composable
-private fun Version() {
+private fun Version(modifier: Modifier) {
     Text(
-        modifier = Modifier.padding(vertical = 4.dp),
+        modifier = modifier.padding(vertical = 4.dp),
         text = stringResource(R.string.app_name),
         fontSize = 14.sp,
         color = MaterialTheme.colorScheme.onBackground

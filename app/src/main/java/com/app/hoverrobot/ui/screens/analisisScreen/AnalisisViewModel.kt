@@ -1,6 +1,5 @@
 package com.app.hoverrobot.ui.screens.analisisScreen
 
-import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -38,9 +37,6 @@ class AnalisisViewModel @Inject constructor(
     private var _newRobotConfig : MutableLiveData<RobotLocalConfig> = MutableLiveData()
     val newRobotConfig : LiveData<RobotLocalConfig> get() = _newRobotConfig
 
-    private var _statusCode = mutableStateOf<StatusRobot?>(null)
-    val statusCode : State<StatusRobot?> get() = _statusCode
-
     private val initTimeStamp: Long = System.currentTimeMillis()
 
     private var selectedDataset: SelectedDataset? = SelectedDataset.DATASET_IMU
@@ -53,6 +49,9 @@ class AnalisisViewModel @Inject constructor(
     val datasetKeys = LineDataKeys.entries.toList()
     var actualLineData = mutableStateOf<LineData?>(null)
     var chartLimitsConfig = mutableStateOf<ChartLimitsConfig>(ChartLimitsConfig(100F, null))
+
+    var historicStatusCode = mutableListOf<Triple<Long, StatusRobot, String?>>()
+
     private var isAnalisisPaused = false
 
     var isGraphInitialize = false
@@ -70,7 +69,13 @@ class AnalisisViewModel @Inject constructor(
             commsRepository.dynamicDataRobotFlow.collect { newData ->
                 val actualTimeInSec = ((System.currentTimeMillis() - initTimeStamp).toFloat()) / 1000
                 _newDataAnalisis.value = FrameRobotDynamicData(newData,actualTimeInSec)
-                _statusCode.value = newData.statusCode
+
+                if (newData.statusCode != historicStatusCode.firstOrNull()?.second) {
+                    historicStatusCode.add(
+                        0,
+                        Triple(System.currentTimeMillis(), newData.statusCode, null)
+                    )
+                }
 
                 if (isGraphInitialize && _newDataAnalisis.value != null) newDynamicFrame(_newDataAnalisis.value!!)
             }
@@ -87,15 +92,10 @@ class AnalisisViewModel @Inject constructor(
 
     fun onAnalisisScreenActions(action: AnalisisScreenActions) {
         when (action) {
-            is OnDatasetChange -> {
-                selectedDataset = action.selectedDataset
-            }
-            is OnPauseChange -> {
-                isAnalisisPaused = action.isPaused
-            }
-            is OnClearData -> {
-                entryMap.values.forEach { it.clear() }
-            }
+            is OnDatasetChange -> selectedDataset = action.selectedDataset
+            is OnPauseChange -> isAnalisisPaused = action.isPaused
+            is OnClearData -> entryMap.values.forEach { it.clear() }
+            is AnalisisScreenActions.OnClearLogs -> historicStatusCode.clear()
         }
     }
 
@@ -200,28 +200,14 @@ class AnalisisViewModel @Inject constructor(
 
         newRobotConfig.value?.let { robotConfig ->
 
-            val centerAngleLimitLine = LimitLine(robotConfig.centerAngle, "Centro de gravedad")
-            centerAngleLimitLine.lineWidth = 2f
-            centerAngleLimitLine.enableDashedLine(20f, 10f, 10f)
-            centerAngleLimitLine.labelPosition = LimitLine.LimitLabelPosition.LEFT_TOP
-            centerAngleLimitLine.textSize = 10f
-            centerAngleLimitLine.lineColor = colorCenterAngle
-
-            val upperLimitLine =
-                LimitLine(
-                    robotConfig.centerAngle + robotConfig.safetyLimits,
-                    "Limite seguridad superior"
-                )
+            val upperLimitLine = LimitLine(robotConfig.safetyLimits, "Limite seguridad superior")
             upperLimitLine.lineWidth = 2f
             upperLimitLine.enableDashedLine(20f, 10f, 10f)
             upperLimitLine.labelPosition = LimitLine.LimitLabelPosition.LEFT_TOP
             upperLimitLine.textSize = 10f
             upperLimitLine.lineColor = colorSafetyLimits
 
-            val lowerLimitLine = LimitLine(
-                robotConfig.centerAngle - robotConfig.safetyLimits,
-                "Limite seguridad inferior"
-            )
+            val lowerLimitLine = LimitLine(robotConfig.safetyLimits,"Limite seguridad inferior")
             lowerLimitLine.lineWidth = 2f
             lowerLimitLine.enableDashedLine(20f, 10f, 10f)
             lowerLimitLine.labelPosition = LimitLine.LimitLabelPosition.LEFT_TOP
@@ -230,7 +216,10 @@ class AnalisisViewModel @Inject constructor(
 
             chartLimitsConfig.value = ChartLimitsConfig(
                 180F,
-                listOf(centerAngleLimitLine, upperLimitLine, lowerLimitLine)
+                listOfNotNull(
+                    upperLimitLine.takeIf { robotConfig.safetyLimits != 0F },
+                    lowerLimitLine.takeIf { robotConfig.safetyLimits != 0F }
+                )
             )
         }
     }

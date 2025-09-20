@@ -35,7 +35,8 @@ import kotlin.collections.mutableListOf
 @Composable
 fun LogScreen(
     modifier: Modifier,
-    listOfLogs: MutableList<Triple<Long, StatusRobot, String?>>
+    listOfLogs: List<Triple<Long, StatusRobot, String?>>,
+    onClearLogs: () -> Unit
 ) {
     val scrollState = rememberLazyListState()
 
@@ -83,7 +84,7 @@ fun LogScreen(
             modifier = Modifier.align(Alignment.BottomEnd),
             icon = Icons.Default.Delete,
             color = Color.Red
-        ) { listOfLogs.clear() }
+        ) { onClearLogs() }
     }
 }
 
@@ -102,7 +103,8 @@ private fun LogScreenPreview() {
     Column {
         LogScreen(
             modifier = Modifier,
-            listOfLogs = simulatedLog
+            listOfLogs = simulatedLog,
+            onClearLogs = {}
         )
     }
 }
