@@ -29,7 +29,7 @@ fun CustomSelectorComponent(
 
     SingleChoiceSegmentedButtonRow(
         Modifier
-            .width(280.dp)
+            .width(300.dp)
             .padding(4.dp)
     ) {
         options.forEachIndexed { index, label ->

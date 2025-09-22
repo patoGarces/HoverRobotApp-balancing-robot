@@ -10,6 +10,8 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.app.hoverrobot.data.models.comms.Temperatures
+import com.app.hoverrobot.data.models.comms.CollisionSensors
 import com.app.hoverrobot.ui.RobotStateViewModel
 import com.app.hoverrobot.ui.screens.analisisScreen.AnalisisScreenWrapper
 import com.app.hoverrobot.ui.screens.analisisScreen.AnalisisViewModel
@@ -35,9 +37,7 @@ fun MainNavHost(
                 statusRobot = robotStateViewModel.statusRobot,
                 networkState = robotStateViewModel.connectionNetworkState,
                 defaultAggressiveness = robotStateViewModel.getAggressivenessLevel().ordinal,
-                mainboardTemp = robotStateViewModel.robotDynamicData?.tempMainboard ?: 0F,
-                motorControllerTemp = robotStateViewModel.robotDynamicData?.tempMcb ?: 0F,
-                imuTemp = robotStateViewModel.robotDynamicData?.tempImu ?: 0F,
+                temperatures = robotStateViewModel.robotDynamicData?.temperatures ?: Temperatures(),
                 onOpenNetworkSettings = {
                     context.startActivity(Intent(Settings.ACTION_WIFI_SETTINGS))
                 },
@@ -56,7 +56,9 @@ fun MainNavHost(
                 isRobotStabilized = robotStateViewModel.isRobotStabilized,
                 isRobotConnected = robotStateViewModel.isRobotConnected,
                 newPointCloudItem = robotStateViewModel.pointCloud,
-                actualDegrees = actualDegrees
+                actualDegrees = actualDegrees,
+                distanceSensors = robotStateViewModel.robotDynamicData?.collisionSensors ?:
+                    CollisionSensors()
             ) { robotStateViewModel.onNavigationAction(it) }
         }
 

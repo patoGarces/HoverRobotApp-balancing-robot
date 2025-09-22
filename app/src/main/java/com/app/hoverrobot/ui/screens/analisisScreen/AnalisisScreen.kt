@@ -40,6 +40,8 @@ import com.app.hoverrobot.R
 import com.app.hoverrobot.data.models.ChartLimitsConfig
 import com.app.hoverrobot.data.models.comms.FrameRobotDynamicData
 import com.app.hoverrobot.data.models.comms.RobotDynamicData
+import com.app.hoverrobot.data.models.comms.Temperatures
+import com.app.hoverrobot.data.models.comms.CollisionSensors
 import com.app.hoverrobot.data.utils.StatusRobot
 import com.app.hoverrobot.ui.screens.analisisScreen.AnalisisScreenActions.OnClearData
 import com.app.hoverrobot.ui.screens.analisisScreen.AnalisisScreenActions.OnDatasetChange
@@ -304,9 +306,11 @@ private fun AnalisisScreenPreview() {
     val mockRobotDynamicData = RobotDynamicData(
         isCharging = false,
         batVoltage = 39.2F,
-        tempImu = 36.5F,
-        tempMcb = 40.1F,
-        tempMainboard = 42.3F,
+        temperatures = Temperatures(
+            tempImu = 36.5F,
+            tempMcb = 40.1F,
+            tempMainboard = 42.3F,
+        ),
         speedR = 10F,
         speedL = 10F,
         currentR = 1.2F,
@@ -314,6 +318,7 @@ private fun AnalisisScreenPreview() {
         pitchAngle = 0.5F,
         rollAngle = -1.2F,
         yawAngle = 3.4F,
+        collisionSensors = CollisionSensors(),
         posInMeters = 12.7F,
         outputYawControl = 0.8F,
         setPointAngle = 0.0F,
