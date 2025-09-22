@@ -9,12 +9,13 @@
 
     <!--    Status Data screen-->
     <string name="title_status_screen">Estado general</string>
-    <string name="title_aggressiveness">Agresividad:</string>
-    <string name="title_status_robot">Estado robot:</string>
-    <string name="title_connection_status">Estado conexion:</string>
+    <string name="title_aggressiveness">Agresividad</string>
+    <string name="title_status_robot">Estado robot</string>
+    <string name="title_connection_status">Estado conexion</string>
     <string name="title_connection_local_ip">Dirección IP local:</string>
     <string name="title_robot_connection_status">Estado conexion robot:</string>
     <string name="title_raspi_connection_status">Estado conexion Raspi:</string>
+    <string name="title_temperature_status">Temperatura</string>
     <string name="placeholder_local_ip">Local IP: %s</string>
     <string name="title_battery_temp">Bateria</string>
     <string name="title_motorboard_temp">Motor controller</string>
@@ -92,6 +93,8 @@
     <!--    Navigation screen-->
     <string name="title_forward">Avanzar</string>
     <string name="title_backward">Retroceder</string>
+    <string name="placeholder_distances">%.2f cm</string>
+    <string name="unknown_distance">-- cm</string>
 
     <!--    Analisis screen-->
     <string name="dataset_title">Datasets</string>

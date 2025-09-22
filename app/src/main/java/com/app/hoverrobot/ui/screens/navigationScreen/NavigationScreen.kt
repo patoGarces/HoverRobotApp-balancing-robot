@@ -34,7 +34,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.app.hoverrobot.R
 import com.app.hoverrobot.data.models.comms.PointCloudItem
+import com.app.hoverrobot.data.models.comms.CollisionSensors
+import com.app.hoverrobot.ui.composeUtils.CustomColors
 import com.app.hoverrobot.ui.composeUtils.CustomPreview
+import com.app.hoverrobot.ui.composeUtils.CustomTextStyles.textStyle14Bold
 import com.app.hoverrobot.ui.composeUtils.DistancePickerDialog
 import com.app.hoverrobot.ui.screens.navigationScreen.NavigationScreenAction.OnDearmedAction
 import com.app.hoverrobot.ui.screens.navigationScreen.NavigationScreenAction.OnNewDragCompassInteraction
@@ -43,6 +46,8 @@ import com.app.hoverrobot.ui.screens.navigationScreen.compose.FixedDirection
 import com.app.hoverrobot.ui.screens.navigationScreen.compose.JoystickAnalogCompose
 import com.app.hoverrobot.ui.theme.MyAppTheme
 
+const val MAX_LINEAR_VELOCITY_MPS   = 1.0F      // m/s
+const val MAX_ANGULAR_VELOCITY_RPS  = 3.0F      // rad/s
 
 @Composable
 fun NavigationScreen(
@@ -51,6 +56,7 @@ fun NavigationScreen(
     newPointCloudItem: State<PointCloudItem?>,
     actualDegrees: State<Int>,
     disableCompass: Boolean = false,
+    distanceSensors: CollisionSensors,
     onActionScreen: (NavigationScreenAction) -> Unit
 ) {
     var joystickX by remember { mutableIntStateOf(0) }
@@ -148,7 +154,7 @@ fun NavigationScreen(
                     dotSize = 50.dp,
                     fixedDirection = FixedDirection.VERTICAL
                 ) { x: Float, y: Float ->
-                    joystickY = (y * 100F).toInt()
+                    joystickY = (y * 100F * MAX_LINEAR_VELOCITY_MPS).toInt()
                 }
 
                 Column(
@@ -169,7 +175,7 @@ fun NavigationScreen(
                     dotSize = 50.dp,
                     fixedDirection = FixedDirection.HORIZONTAL
                 ) { x: Float, y: Float ->
-                    joystickX = (x * 100F).toInt()
+                    joystickX = (x * 100F * MAX_ANGULAR_VELOCITY_RPS).toInt()
                 }
             }
 
@@ -180,6 +186,8 @@ fun NavigationScreen(
                 }
             }
         }
+
+        DistanceSensors(modifier = Modifier.align(Alignment.BottomCenter),distanceSensors)
     }
 }
 
@@ -295,7 +303,57 @@ fun TrajectoryMap(
     }
 }
 
+private val Float?.toFormatStringDistance: String
+    @Composable
+    get() = this?.let {
+        stringResource(R.string.placeholder_distances, this)
+    } ?: stringResource(R.string.unknown_distance)
 
+private val Float?.toFormatColorDistance: Color
+    @Composable
+    get() = if ( this!= null && this < 30) {
+        CustomColors.StatusRed
+    } else MaterialTheme.colorScheme.onBackground
+
+@Composable
+private fun DistanceSensors(
+    modifier: Modifier,
+    distances: CollisionSensors
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(bottom = 32.dp)
+    ) {
+        Text(
+            modifier = Modifier.weight(1F),
+            text = distances.sensorFrontLeft.toFormatStringDistance,
+            style = textStyle14Bold,
+            color = distances.sensorFrontLeft.toFormatColorDistance
+        )
+
+        Text(
+            modifier = Modifier.weight(1F),
+            text = distances.sensorRearLeft.toFormatStringDistance,
+            style = textStyle14Bold,
+            color = distances.sensorRearLeft.toFormatColorDistance
+        )
+
+        Text(
+            modifier = Modifier.weight(1F),
+            text = distances.sensorRearRight.toFormatStringDistance,
+            style = textStyle14Bold,
+            color = distances.sensorRearRight.toFormatColorDistance
+        )
+
+        Text(
+            modifier = Modifier.weight(1F),
+            text = distances.sensorFrontRight.toFormatStringDistance,
+            style = textStyle14Bold,
+            color = distances.sensorFrontRight.toFormatColorDistance
+        )
+    }
+}
 
 
 @Composable
@@ -312,6 +370,7 @@ fun NavigationButtonPreview() {
             newPointCloudItem = dummyPointCloudItem,
             isRobotConnected = dummyRobotConnected,
             isRobotStabilized = dummyRobotStabilized,
+            distanceSensors = CollisionSensors(),
             disableCompass = true
         ) { }
     }

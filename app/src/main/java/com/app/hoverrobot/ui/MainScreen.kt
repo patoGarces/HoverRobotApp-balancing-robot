@@ -47,7 +47,7 @@ fun MainScreen(navController: NavHostController) {
             StatusBarScreen(
                 statusRobot = robotStateViewModel.statusRobot,
                 networkState = robotStateViewModel.connectionNetworkState,
-                tempImu = robotStateViewModel.robotDynamicData?.tempImu ?: 0F,
+                tempImu = robotStateViewModel.robotDynamicData?.temperatures?.tempImu ?: 0F,
                 batteryState = robotStateViewModel.batteryState
             ) { navController.goToScreen(NavigationScreens.STATUS_DATA) }
         }

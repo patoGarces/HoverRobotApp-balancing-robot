@@ -92,44 +92,60 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
                 byteBuffer.flip()
 
                 while (true) {
-                    if (byteBuffer.remaining() < 2) {
-                        // No hay suficientes bytes para leer un header
-                        break
-                    }
-
-                    byteBuffer.mark() // Marca la posición antes de leer
-                    val headerBytes = ByteArray(2)
-                    byteBuffer.get(headerBytes)
-
-                    val byte0 = headerBytes[0].toInt() and 0xFF
-                    val byte1 = headerBytes[1].toInt() and 0xFF
-                    val headerPackage = ((byte1 shl 8) or byte0)
-
-                    val expectedSize = when (headerPackage) {
-                        HEADER_PACKAGE_STATUS -> ROBOT_DYNAMIC_DATA_SIZE
-                        HEADER_PACKAGE_LOCAL_CONFIG -> ROBOT_LOCAL_CONFIG_SIZE
-                        else -> {
-                            Log.i(TAG, "Unrecognized package: 0x${headerPackage.toString(16)}")
-                            continue
+                    try {
+                        if (byteBuffer.remaining() < 2) {
+                            // No hay suficientes bytes para leer un header
+                            break
                         }
-                    }
 
-                    if (byteBuffer.remaining() < expectedSize) {
-                        // No tenemos todos los datos todavía, esperamos a la próxima recepción
-                        byteBuffer.reset() // Volvemos al punto anterior (antes de leer el header)
-                        break
-                    }
+                        byteBuffer.mark() // Marca la posición antes de leer
+                        val headerBytes = ByteArray(2)
+                        byteBuffer.get(headerBytes)
 
-                    val dataBytes = ByteArray(expectedSize)
-                    byteBuffer.get(dataBytes)
+                        val byte0 = headerBytes[0].toInt() and 0xFF
+                        val byte1 = headerBytes[1].toInt() and 0xFF
+                        val headerPackage = ((byte1 shl 8) or byte0)
 
-                    when (headerPackage) {
-                        HEADER_PACKAGE_STATUS -> {
-                            contPackets++
-                            _dynamicDataRobotFlow.emit(dataBytes.toByteBuffer().asRobotDynamicData)
+                        val expectedSize = when (headerPackage) {
+                            HEADER_PACKAGE_STATUS -> ROBOT_DYNAMIC_DATA_SIZE
+                            HEADER_PACKAGE_LOCAL_CONFIG -> ROBOT_LOCAL_CONFIG_SIZE
+                            else -> {
+                                Log.i(TAG, "Unrecognized package: 0x${headerPackage.toString(16)}")
+                                continue
+                            }
                         }
-                        HEADER_PACKAGE_LOCAL_CONFIG -> _robotLocalConfigFlow.emit(dataBytes.toByteBuffer().asRobotLocalConfig)
-                        else -> Log.i(TAG, "Unrecognized len package: 0x${headerPackage.toString(16)} , size: ${dataBytes.size}")
+
+                        if (byteBuffer.remaining() < expectedSize) {
+                            // No tenemos todos los datos todavía, esperamos a la próxima recepción
+                            byteBuffer.reset() // Volvemos al punto anterior (antes de leer el header)
+                            break
+                        }
+
+                        val dataBytes = ByteArray(expectedSize)
+                        byteBuffer.get(dataBytes)
+
+                        val dataInByteBuffer = dataBytes.toByteBuffer()
+                        when (headerPackage) {
+                            HEADER_PACKAGE_STATUS -> {
+                                if (dataInByteBuffer.remaining() >= ROBOT_DYNAMIC_DATA_SIZE) {
+                                    contPackets++
+                                    _dynamicDataRobotFlow.emit(dataInByteBuffer.asRobotDynamicData)
+                                }
+                            }
+
+                            HEADER_PACKAGE_LOCAL_CONFIG -> {
+                                if (dataInByteBuffer.remaining() >= ROBOT_LOCAL_CONFIG_SIZE) {
+                                    _robotLocalConfigFlow.emit(dataBytes.toByteBuffer().asRobotLocalConfig)
+                                }
+                            }
+
+                            else -> Log.i(
+                                TAG,
+                                "Unrecognized len package: 0x${headerPackage.toString(16)} , size: ${dataBytes.size}"
+                            )
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error parsing data: $e")
                     }
                 }
 
