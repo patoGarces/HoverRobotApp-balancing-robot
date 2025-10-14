@@ -132,9 +132,11 @@ class ServerTcpImpl(): SocketTcpInterface {
     fun sendData(data: ByteArray) {
         ioScope.launch {
             socket?.let { sock ->
-                val outputStream: OutputStream = sock.getOutputStream()
-                outputStream.write(data)
-                outputStream.flush()
+                if (sock.isConnected == true) {
+                    val outputStream: OutputStream = sock.getOutputStream()
+                    outputStream.write(data)
+                    outputStream.flush()
+                }
             }
         }
     }

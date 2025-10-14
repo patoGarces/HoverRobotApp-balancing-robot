@@ -39,10 +39,10 @@ fun LineChartCompose(
     isDataLoading: Boolean = false,
     actualLineData: State<LineData?>,
     isAutoScaled: Boolean,
+    isPaused: Boolean,
     chartLimitsConfig: State<ChartLimitsConfig>,
     onPause: (Boolean) -> Unit
 ) {
-    var onPauseState by remember { mutableStateOf(false) }
     val textColor = MaterialTheme.colorScheme.onBackground.toArgb()
     
     Box(
@@ -134,10 +134,9 @@ fun LineChartCompose(
 
         CustomFloatingButton(
             modifier = Modifier.align(Alignment.BottomEnd),
-            icon = if (onPauseState) Icons.Filled.PlayArrow else Icons.Filled.Pause
+            icon = if (isPaused) Icons.Filled.PlayArrow else Icons.Filled.Pause
         ) {
-            onPauseState = !onPauseState
-            onPause(onPauseState)
+            onPause(!isPaused)
         }
     }
 }
@@ -174,6 +173,7 @@ private fun LineChartComposePreview() {
             isDataLoading = true,
             actualLineData = dummyLineData,
             isAutoScaled = false,
+            isPaused = false,
             chartLimitsConfig = dummyLimitAxis
         ) {}
     }

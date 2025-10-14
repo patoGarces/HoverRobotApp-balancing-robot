@@ -131,9 +131,11 @@ class ClientTcpImpl() : SocketTcpInterface {
     fun sendData(data: ByteArray) {
         ioScope.launch {
             tcpSocket?.let { socket ->
-                val outputStream: OutputStream = socket.getOutputStream()
-                outputStream.write(data)
-                outputStream.flush()
+                if (socket.isConnected == true) {
+                    val outputStream: OutputStream = socket.getOutputStream()
+                    outputStream.write(data)
+                    outputStream.flush()
+                }
             }
         }
     }

@@ -1,5 +1,7 @@
 package com.app.hoverrobot.ui.screens.analisisScreen
 
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -52,16 +54,14 @@ class AnalisisViewModel @Inject constructor(
 
     var historicStatusCode = mutableListOf<Triple<Long, StatusRobot, String?>>()
 
-    private var isAnalisisPaused = false
+    private var _isAnalisisPaused: MutableState<Boolean> = mutableStateOf(false)
+    val isAnalisisPaused: State<Boolean> = _isAnalisisPaused
 
     var isGraphInitialize = false
         internal set
 
 
     var colorSafetyLimits: Int = 0 // TODO: eliminar esto
-        internal set
-
-    var colorCenterAngle: Int = 0 // TODO: eliminar esto
         internal set
 
     init {
@@ -93,15 +93,14 @@ class AnalisisViewModel @Inject constructor(
     fun onAnalisisScreenActions(action: AnalisisScreenActions) {
         when (action) {
             is OnDatasetChange -> selectedDataset = action.selectedDataset
-            is OnPauseChange -> isAnalisisPaused = action.isPaused
+            is OnPauseChange -> _isAnalisisPaused.value = action.isPaused
             is OnClearData -> entryMap.values.forEach { it.clear() }
             is AnalisisScreenActions.OnClearLogs -> historicStatusCode.clear()
         }
     }
 
-    fun initGraph(colorSafetyLimit: Int, colorCenterAngle: Int,) {
+    fun initGraph(colorSafetyLimit: Int) {
         this.colorSafetyLimits = colorSafetyLimit
-        this.colorCenterAngle = colorCenterAngle
         isGraphInitialize = true
     }
 
@@ -126,7 +125,7 @@ class AnalisisViewModel @Inject constructor(
         if (isGraphInitialize) {
             entryMap.updateWithFrame(newFrame)
             lineDataMap.values.forEach { it.notifyDataSetChanged() }
-            if (!isAnalisisPaused) updateDataset(selectedDataset)
+            if (!isAnalisisPaused.value) updateDataset(selectedDataset)
         }
     }
 
@@ -154,7 +153,7 @@ class AnalisisViewModel @Inject constructor(
                 }
 
                 SelectedDataset.DATASET_PID_ANGLE -> {
-                    setPidAngleMode()
+                    setChartLimits(15F)
                     LineData(
                         lineDataMap[LineDataKeys.LINEDATA_KEY_SETPOINT_ANGLE],
                         lineDataMap[LineDataKeys.LINEDATA_KEY_ANGLE_PITCH],
@@ -163,16 +162,16 @@ class AnalisisViewModel @Inject constructor(
                 }
 
                 SelectedDataset.DATASET_PID_POS -> {
-                    setPidMode(10F)
+                    setChartLimits(2F)
                     LineData(
                         lineDataMap[LineDataKeys.LINEDATA_KEY_SETPOINT_POS],
                         lineDataMap[LineDataKeys.LINEDATA_KEY_POS_IN_MTS],
-                        lineDataMap[LineDataKeys.LINEDATA_KEY_SETPOINT_ANGLE]
+                        lineDataMap[LineDataKeys.LINEDATA_KEY_SETPOINT_SPEED]
                     )
                 }
 
                 SelectedDataset.DATASET_PID_YAW -> {
-                    setPidMode(190F)
+                    setChartLimits(190F)
                     LineData(
                         lineDataMap[LineDataKeys.LINEDATA_KEY_SETPOINT_YAW],
                         lineDataMap[LineDataKeys.LINEDATA_KEY_OUTPUT_YAW],
@@ -181,7 +180,7 @@ class AnalisisViewModel @Inject constructor(
                 }
 
                 SelectedDataset.DATASET_PID_SPEED -> {
-                    setPidMode(15F)
+                    setChartLimits(15F)
                     LineData(
                         lineDataMap[LineDataKeys.LINEDATA_KEY_SETPOINT_SPEED],
                         lineDataMap[LineDataKeys.LINEDATA_KEY_ACTUAL_SPEED],
@@ -224,20 +223,7 @@ class AnalisisViewModel @Inject constructor(
         }
     }
 
-    private fun setPidAngleMode() {
-        newRobotConfig.value?.let { robotConfig ->
-            val centerAngleLimitLine = LimitLine(robotConfig.centerAngle, "center Angle")
-            centerAngleLimitLine.lineWidth = 2f
-            centerAngleLimitLine.enableDashedLine(20f, 10f, 10f)
-            centerAngleLimitLine.labelPosition = LimitLine.LimitLabelPosition.LEFT_TOP
-            centerAngleLimitLine.textSize = 10f
-            centerAngleLimitLine.lineColor = colorCenterAngle
-
-            chartLimitsConfig.value = ChartLimitsConfig(15F, null)
-        }
-    }
-
-    private fun setPidMode(limit: Float) {
+    private fun setChartLimits(limit: Float) {
         chartLimitsConfig.value = ChartLimitsConfig(limit, null)
     }
 }

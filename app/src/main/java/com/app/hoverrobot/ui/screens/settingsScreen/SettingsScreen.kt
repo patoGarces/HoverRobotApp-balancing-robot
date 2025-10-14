@@ -30,6 +30,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -51,9 +52,11 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.app.hoverrobot.BuildConfig
 import com.app.hoverrobot.R
 import com.app.hoverrobot.data.models.comms.ConnectionState
 import com.app.hoverrobot.data.models.comms.NetworkState
+import com.app.hoverrobot.data.models.comms.PidIndexSetting
 import com.app.hoverrobot.data.models.comms.PidParams
 import com.app.hoverrobot.data.models.comms.PidSettings
 import com.app.hoverrobot.data.models.comms.RobotLocalConfig
@@ -67,6 +70,10 @@ import com.app.hoverrobot.ui.composeUtils.CustomDropdownMenu
 import com.app.hoverrobot.ui.composeUtils.CustomPreview
 import com.app.hoverrobot.ui.composeUtils.CustomSlider
 import com.app.hoverrobot.ui.composeUtils.CustomTextStyles
+import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnCalibrateImu
+import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnCleanLeftMotor
+import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnCleanRightMotor
+import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnPidAngleTest
 import com.app.hoverrobot.ui.theme.MyAppTheme
 
 @Composable
@@ -77,6 +84,11 @@ fun SettingsScreen(
     onPidSave: (PidSettings) -> Boolean,
     onActionScreen: (SettingsScreenActions) -> Unit,
 ) {
+
+    LaunchedEffect(Unit) {
+        onActionScreen(SettingsScreenActions.OnRefreshLocalConfig)
+    }
+
     Column(
         Modifier
             .fillMaxSize()
@@ -91,9 +103,7 @@ fun SettingsScreen(
 
         GeneralSettingsCard(
             statusRobot = statusRobot,
-            onCalibrateImu = { onActionScreen(SettingsScreenActions.OnCalibrateImu) },
-            onCleanLeftMotor = { onActionScreen(SettingsScreenActions.OnCleanLeftMotor) },
-            onCleanRightMotor = { onActionScreen(SettingsScreenActions.OnCleanRightMotor) }
+            onActionSettings = onActionScreen,
         )
 
         ConnectionSettingsCard(
@@ -114,6 +124,16 @@ private fun PidSettingsCard(
     var newPidSettings by remember { mutableStateOf(originalLocalConfig.asPidSettings(indexPid)) }
     var lastPidSettings by remember { mutableStateOf(originalLocalConfig.asPidSettings(indexPid)) }
     var isDiffSettings by remember { mutableStateOf(false) }
+    val maxValuesPid by remember(indexPid) {
+        derivedStateOf {
+            when (PidIndexSetting.entries[indexPid]) {
+                PidIndexSetting.PID_ANGLE -> BuildConfig.MAX_PID_ANGLE
+                PidIndexSetting.PID_POS -> BuildConfig.MAX_PID_POS
+                PidIndexSetting.PID_SPEED -> BuildConfig.MAX_PID_SPEED
+                PidIndexSetting.PID_YAW -> BuildConfig.MAX_PID_YAW
+            }
+        }
+    }
 
     // TODO: simplificar estos 2 launchedEffect en 1 solo
     LaunchedEffect(originalLocalConfig) {
@@ -159,42 +179,30 @@ private fun PidSettingsCard(
             SliderParam(
                 nameId = R.string.pid_parameter_p_title,
                 initialValue = newPidSettings.kp,
-                range = 0F..10F                                             // TODO: traer de afuera
+                range = 0F..maxValuesPid
             ) { newValue ->
                 newPidSettings = newPidSettings.copy(kp = newValue)
             }
             SliderParam(
                 nameId = R.string.pid_parameter_i_title,
                 initialValue = newPidSettings.ki,
-                range = 0F..10F                                             // TODO: traer de afuera
+                range = 0F..maxValuesPid
             ) { newValue ->
                 newPidSettings = newPidSettings.copy(ki = newValue)
             }
             SliderParam(
                 nameId = R.string.pid_parameter_d_title,
                 initialValue = newPidSettings.kd,
-                range = 0F..10F                                             // TODO: traer de afuera
+                range = 0F..maxValuesPid
             ) { newValue ->
                 newPidSettings = newPidSettings.copy(kd = newValue)
-            }
-
-            SliderParam(
-                nameId = R.string.pid_parameter_center_title,
-                edgeIndicators = Pair(
-                    stringResource(R.string.pid_center_back),
-                    stringResource(R.string.pid_center_front)
-                ),
-                initialValue = newPidSettings.centerAngle,
-                range = -10F..10F
-            ) { newCenterAngle ->
-                newPidSettings = newPidSettings.copy(centerAngle = newCenterAngle)
             }
 
             SliderParam(
                 nameId = R.string.pid_parameter_limits_title,
                 stepSize = 1F,
                 initialValue = newPidSettings.safetyLimits,
-                range = 15F..60F                                             // TODO: traer de afuera
+                range = 15F..BuildConfig.MAX_SAFETY_ANGLE
             ) { newSafetyLimits ->
                 newPidSettings = newPidSettings.copy(safetyLimits = newSafetyLimits)
             }
@@ -256,9 +264,7 @@ private fun PidSettingsCardHeader(
 @Composable
 private fun GeneralSettingsCard(
     statusRobot: StatusRobot,
-    onCalibrateImu: () -> Unit,
-    onCleanLeftMotor: () -> Unit,
-    onCleanRightMotor: () -> Unit
+    onActionSettings: (SettingsScreenActions) -> Unit
 ) {
     TitleSectionText(R.string.settings_group_general_title)
 
@@ -275,7 +281,7 @@ private fun GeneralSettingsCard(
         GeneralSettingsItem(
             titleItem = R.string.general_commands_calibrate_imu_title,
             firstButtonTitle = R.string.general_commands_calibrate_imu_title,
-            onClickFirst = onCalibrateImu
+            onClickFirst = { onActionSettings(OnCalibrateImu) }
         )
 
         GeneralSettingsItem(
@@ -283,8 +289,15 @@ private fun GeneralSettingsCard(
             firstButtonTitle = R.string.general_command_btn_clean_left,
             secondButtonTitle = R.string.general_command_btn_clean_right,
             isLoading = statusRobot == StatusRobot.TEST_MODE,
-            onClickFirst = onCleanLeftMotor,
-            onClickSecond = onCleanRightMotor
+            onClickFirst = { onActionSettings(OnCleanLeftMotor) },
+            onClickSecond = { onActionSettings(OnCleanRightMotor) }
+        )
+
+        GeneralSettingsItem(
+            titleItem = R.string.general_command_test_angle_pid,
+            firstButtonTitle = R.string.general_command_test_angle_start,
+            isLoading = statusRobot == StatusRobot.TEST_MODE,
+            onClickFirst = { onActionSettings(OnPidAngleTest) }
         )
     }
 }
@@ -558,7 +571,6 @@ private fun SettingsScreenPreview() {
         pids = listOf(
             PidParams(1f, 2f, 3f)
         ),
-        centerAngle = 4f,
         safetyLimits = 5f
     )
 

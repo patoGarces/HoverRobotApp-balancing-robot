@@ -190,7 +190,7 @@ private fun ConnectionSection(
     networkState: NetworkState,
     onOpenNetworkSettings: () -> Unit
 ) {
-    var isContentExpanded by remember { mutableStateOf(false) }
+    var isContentExpanded by remember { mutableStateOf(true) }
 
     Column(Modifier.padding(bottom = 8.dp)) {
         Row(

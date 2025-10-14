@@ -6,6 +6,8 @@ sealed class SettingsScreenActions {
     data object OnCalibrateImu: SettingsScreenActions()
     data object OnCleanLeftMotor: SettingsScreenActions()
     data object OnCleanRightMotor: SettingsScreenActions()
+    data object OnPidAngleTest: SettingsScreenActions()
+    data object OnRefreshLocalConfig: SettingsScreenActions()
     data class OnNewSettings(val pidSettings: PidSettings): SettingsScreenActions()
     data class OnReconnectToRobot(val lastIntIp: Int): SettingsScreenActions()
     data class OnReconnectToRaspi(val lastIntIp: Int): SettingsScreenActions()
