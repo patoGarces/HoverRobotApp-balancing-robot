@@ -47,7 +47,7 @@ import com.app.hoverrobot.ui.screens.navigationScreen.compose.JoystickAnalogComp
 import com.app.hoverrobot.ui.theme.MyAppTheme
 
 const val MAX_LINEAR_VELOCITY_MPS   = 1.0F      // m/s
-const val MAX_ANGULAR_VELOCITY_RPS  = 3.0F      // rad/s
+const val MAX_ANGULAR_VELOCITY_RPS  = 1.0F      // rad/s
 
 @Composable
 fun NavigationScreen(

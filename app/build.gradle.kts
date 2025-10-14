@@ -19,6 +19,12 @@ android {
         versionCode = 2
         versionName = "2.2.0"
 
+        buildConfigField("Float", "MAX_PID_ANGLE", "2F")
+        buildConfigField("Float", "MAX_PID_POS", "2F")
+        buildConfigField("Float", "MAX_PID_SPEED", "10F")
+        buildConfigField("Float", "MAX_PID_YAW", "4F")
+        buildConfigField("Float", "MAX_SAFETY_ANGLE", "60F")
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

@@ -60,6 +60,7 @@ fun AnalisisScreen(
     actualLineData: State<LineData?>,
     chartLimitsConfig: State<ChartLimitsConfig>,
     historicStatusRobot: List<Triple<Long, StatusRobot, String?>>,
+    isPaused: Boolean,
     onActionAnalisisScreen: (AnalisisScreenActions) -> Unit
 ) {
     var isAutoScaled by rememberSaveable { mutableStateOf(false) }
@@ -81,6 +82,7 @@ fun AnalisisScreen(
                     modifier = Modifier.weight(1F),
                     actualLineData = actualLineData,
                     isAutoScaled = isAutoScaled,
+                    isPaused = isPaused,
                     chartLimitsConfig = chartLimitsConfig,
                 ) {
                     onActionAnalisisScreen(OnPauseChange(it))
@@ -132,12 +134,6 @@ private fun HighlightValues(dynamicItem: RobotDynamicData) {
 
         Text(
             text = stringResource(R.string.placeholder_yaw, dynamicItem.yawAngle),
-            color = MaterialTheme.colorScheme.onBackground,
-            fontSize = 14.sp
-        )
-
-        Text(
-            text = stringResource(R.string.placeholder_center, dynamicItem.centerAngle),
             color = MaterialTheme.colorScheme.onBackground,
             fontSize = 14.sp
         )
@@ -325,7 +321,6 @@ private fun AnalisisScreenPreview() {
         setPointPos = 15.0F,
         setPointYaw = 2.1F,
         setPointSpeed = 5.0F,
-        centerAngle = -0.2F,
         statusCode = StatusRobot.STABILIZED
     )
 
@@ -342,6 +337,7 @@ private fun AnalisisScreenPreview() {
                 lastDynamicData = dummyFrameDynamicData,
                 actualLineData = dummyLineData,
                 chartLimitsConfig = dummyChartLimitsConfig,
+                isPaused = false,
                 historicStatusRobot = dummyStatusRobot
             ) {}
         }

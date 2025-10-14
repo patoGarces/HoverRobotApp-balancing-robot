@@ -45,7 +45,6 @@
     <string name="pid_parameter_p_title">Parametro P:</string>
     <string name="pid_parameter_i_title">Parametro I:</string>
     <string name="pid_parameter_d_title">Parametro D:</string>
-    <string name="pid_parameter_center_title">Angulo de equilibrio:</string>
     <string name="pid_parameter_limits_title">Limites de seguridad:</string>
     <string name="pid_value_default">0.00</string>
     <string name="btn_pid_sync">Sync</string>
@@ -57,8 +56,9 @@
     <string name="general_command_clean_wheels_title">Limpieza de ruedas</string>
     <string name="general_command_btn_clean_left">Limpiar rueda izq.</string>
     <string name="general_command_btn_clean_right">Limpiar rueda der.</string>
-    <string name="pid_center_front">Front</string>
-    <string name="pid_center_back">Back</string>
+    <string name="general_command_test_angle_pid">Test Pid Angle</string>
+    <string name="general_command_test_angle_start">Iniciar</string>
+
     <string-array name="dropdown_menu_pid_items">
         <item>PID ANGLE</item>
         <item>PID POS</item>
@@ -98,7 +98,6 @@
 
     <!--    Analisis screen-->
     <string name="dataset_title">Datasets</string>
-    <string name="placeholder_center">Center: %.2f</string>
     <string name="placeholder_position">Pos: %.2fmts</string>
     <string name="placeholder_roll">Roll:  %.2f</string>
     <string name="placeholder_pitch">Pitch:  %.2f</string>

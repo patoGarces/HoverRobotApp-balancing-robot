@@ -204,10 +204,9 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
         val paramList = listOf(
             HEADER_PACKAGE_SETTINGS,
             pidParams.indexPid.toShort(),
-            (pidParams.kp * PRECISION_DECIMALS_COMMS).toInt().toShort(),
-            (pidParams.ki * PRECISION_DECIMALS_COMMS).toInt().toShort(),
-            (pidParams.kd * PRECISION_DECIMALS_COMMS).toInt().toShort(),
-            (pidParams.centerAngle * PRECISION_DECIMALS_COMMS).toInt().toShort(),
+            (pidParams.kp * PRECISION_DECIMALS_COMMS * 10).toInt().toShort(),
+            (pidParams.ki * PRECISION_DECIMALS_COMMS * 10).toInt().toShort(),
+            (pidParams.kd * PRECISION_DECIMALS_COMMS * 10).toInt().toShort(),
             (pidParams.safetyLimits * PRECISION_DECIMALS_COMMS).toInt().toShort()
         )
         val buffer =

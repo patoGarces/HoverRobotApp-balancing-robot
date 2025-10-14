@@ -42,7 +42,6 @@ data class RobotDynamicData(
     val setPointPos: Float,
     val setPointYaw: Float,
     val setPointSpeed: Float,
-    val centerAngle: Float,
     val statusCode: StatusRobot,
 )
 
@@ -74,8 +73,7 @@ val ByteBuffer.asRobotDynamicData: RobotDynamicData
         setPointPos = this.short.toFloat() / PRECISION_DECIMALS_COMMS,
         setPointYaw = this.short.toFloat() / PRECISION_DECIMALS_COMMS,
         setPointSpeed = this.short.toFloat() / PRECISION_DECIMALS_COMMS,
-        centerAngle = this.short.toFloat() / PRECISION_DECIMALS_COMMS,
         statusCode = StatusRobot.entries[this.short.toInt()]
     )
 
-const val ROBOT_DYNAMIC_DATA_SIZE = 48
+const val ROBOT_DYNAMIC_DATA_SIZE = 46

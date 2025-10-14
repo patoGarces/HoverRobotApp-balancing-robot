@@ -4,7 +4,6 @@ import com.app.hoverrobot.data.repositories.PRECISION_DECIMALS_COMMS
 import java.nio.ByteBuffer
 
 data class RobotLocalConfig(
-    val centerAngle: Float = 0F,
     val safetyLimits: Float = 0F,
     val pids: List<PidParams> = listOf(
         PidParams(0f, 0f, 0f),
@@ -15,11 +14,10 @@ data class RobotLocalConfig(
 )
 
 const val CANT_PIDS = 4                     // OJO: en sync con el firmware
-const val ROBOT_LOCAL_CONFIG_SIZE = 28
+const val ROBOT_LOCAL_CONFIG_SIZE = 26
 
 val ByteBuffer.asRobotLocalConfig: RobotLocalConfig
     get() {
-        val centerAngle = this.short.toFloat() / PRECISION_DECIMALS_COMMS
         val safetyLimits = this.short.toFloat() / PRECISION_DECIMALS_COMMS
 
         val pidParams = mutableListOf<PidParams>()
@@ -29,7 +27,7 @@ val ByteBuffer.asRobotLocalConfig: RobotLocalConfig
             val kd = short.toFloat() / PRECISION_DECIMALS_COMMS
             pidParams.add(PidParams(kp, ki, kd))
         }
-        return RobotLocalConfig(centerAngle, safetyLimits, pidParams)
+        return RobotLocalConfig( safetyLimits, pidParams)
     }
 
 fun RobotLocalConfig.asPidSettings(indexPid: Int): PidSettings {
@@ -38,7 +36,6 @@ fun RobotLocalConfig.asPidSettings(indexPid: Int): PidSettings {
         kp = pids[indexPid].kp,
         ki = pids[indexPid].ki,
         kd = pids[indexPid].kd,
-        centerAngle = centerAngle,
         safetyLimits = safetyLimits,
     )
 }
@@ -47,5 +44,4 @@ fun PidSettings.isDiffWithOriginalLocalConfig(originalLocalConfig: RobotLocalCon
     this.kp != originalLocalConfig.pids[this.indexPid].kp ||
     this.ki != originalLocalConfig.pids[this.indexPid].ki ||
     this.kd != originalLocalConfig.pids[this.indexPid].kd ||
-    this.centerAngle != originalLocalConfig.centerAngle ||
     this.safetyLimits != originalLocalConfig.safetyLimits

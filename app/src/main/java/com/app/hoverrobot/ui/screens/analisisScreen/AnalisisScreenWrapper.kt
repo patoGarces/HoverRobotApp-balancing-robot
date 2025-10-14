@@ -30,10 +30,7 @@ fun AnalisisScreenWrapper(
                 )
             }
 
-            analisisViewModel.initGraph(
-                context.getColor(R.color.status_turquesa),
-                context.getColor(R.color.status_blue)
-            )
+            analisisViewModel.initGraph(context.getColor(R.color.status_turquesa))
         }
     }
 
@@ -42,6 +39,7 @@ fun AnalisisScreenWrapper(
         actualLineData = analisisViewModel.actualLineData,
         historicStatusRobot = analisisViewModel.historicStatusCode,
         chartLimitsConfig = analisisViewModel.chartLimitsConfig,
+        isPaused = analisisViewModel.isAnalisisPaused.value,
         onActionAnalisisScreen = onActionAnalisisScreen
     )
 }

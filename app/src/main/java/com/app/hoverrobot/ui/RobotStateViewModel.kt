@@ -40,8 +40,10 @@ import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnCali
 import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnCleanLeftMotor
 import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnCleanRightMotor
 import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnNewSettings
+import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnPidAngleTest
 import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnReconnectToRaspi
 import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnReconnectToRobot
+import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnRefreshLocalConfig
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -187,6 +189,7 @@ class RobotStateViewModel @Inject constructor(
     fun onSettingsScreenActions(action: SettingsScreenActions) {
         when (action) {
             is OnNewSettings -> sendNewPidSettings(action.pidSettings)
+            is OnRefreshLocalConfig -> sendCommand(CommandsRobot.GET_PARAMS_SETTINGS)
             is OnCalibrateImu -> sendCommand(CommandsRobot.CALIBRATE_IMU)
             is OnCleanRightMotor -> sendCommand(
                 CommandsRobot.CLEAN_WHEELS, Wheel.RIGHT_WHEEL.ordinal.toFloat()
@@ -194,6 +197,7 @@ class RobotStateViewModel @Inject constructor(
             is OnCleanLeftMotor -> sendCommand(
                 CommandsRobot.CLEAN_WHEELS, Wheel.LEFT_WHEEL.ordinal.toFloat()
             )
+            is OnPidAngleTest -> sendCommand(CommandsRobot.PID_ANGLE_TEST)
             is OnReconnectToRobot -> {
                 viewModelScope.launch { storeSettings.setIpRobot(action.lastIntIp) }
                 val ipRobot = action.lastIntIp.toIpStringWithSuffix()
