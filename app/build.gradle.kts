@@ -16,8 +16,8 @@ android {
         applicationId = "com.app.hoverrobot"
         minSdk = 29
         targetSdk = 34
-        versionCode = 2
-        versionName = "2.2.0"
+        versionCode = 3
+        versionName = "3.0.0"
 
         buildConfigField("Float", "MAX_PID_ANGLE", "2F")
         buildConfigField("Float", "MAX_PID_POS", "2F")

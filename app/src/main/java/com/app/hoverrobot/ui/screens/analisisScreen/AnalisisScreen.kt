@@ -309,6 +309,8 @@ private fun AnalisisScreenPreview() {
         ),
         speedR = 10F,
         speedL = 10F,
+        poswheelR = 10F,
+        posWheelL = 10F,
         currentR = 1.2F,
         currentL = 1.3F,
         pitchAngle = 0.5F,

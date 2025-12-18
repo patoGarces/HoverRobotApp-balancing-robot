@@ -30,6 +30,8 @@ data class RobotDynamicData(
     val temperatures: Temperatures,
     val speedR: Float,
     val speedL: Float,
+    val poswheelR: Float,
+    val posWheelL: Float,
     val currentR: Float,
     val currentL: Float,
     val pitchAngle: Float,
@@ -56,6 +58,8 @@ val ByteBuffer.asRobotDynamicData: RobotDynamicData
         ),
         speedR = this.short.toFloat() / PRECISION_DECIMALS_COMMS,
         speedL = this.short.toFloat() / PRECISION_DECIMALS_COMMS,
+        poswheelR = this.short.toFloat() / PRECISION_DECIMALS_COMMS,
+        posWheelL = this.short.toFloat() / PRECISION_DECIMALS_COMMS,
         currentR = this.short.toFloat() / PRECISION_DECIMALS_COMMS,
         currentL = this.short.toFloat() / PRECISION_DECIMALS_COMMS,
         pitchAngle = this.short.toFloat() / PRECISION_DECIMALS_COMMS,
@@ -76,4 +80,4 @@ val ByteBuffer.asRobotDynamicData: RobotDynamicData
         statusCode = StatusRobot.entries[this.short.toInt()]
     )
 
-const val ROBOT_DYNAMIC_DATA_SIZE = 46
+const val ROBOT_DYNAMIC_DATA_SIZE = 50  // Total de BYTES sin el headerPackage
