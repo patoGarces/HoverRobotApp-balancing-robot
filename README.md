@@ -1,6 +1,6 @@
 # HoverRobotApp
 
-Aplicación desarrollada en kotlin para el control de un balancing robot
+Aplicación desarrollada en kotlin para el control del proyecto [HoverRobot ESP32](https://github.com/patoGarces/HoverRobot_ProyectoFinal).
 
 ## Descripción
 
@@ -16,14 +16,35 @@ Esta aplicación está diseñada para controlar un balancing robot, un tipo de r
 
 - **Control del robot mediante joystick**: Permite la posibilidad de controlar la dirección del robot mediante un joystick analógico.
 
-### Desarrollado en Kotlin con Android Studio
+### Desarrollado en Kotlin con Android Studio y Jetpack Compose
 
-Esta aplicación está desarrollada en Kotlin utilizando Android Studio, al ser una aplicación nativa con el soporte de google, garantiza un rendimiento óptimo y una experiencia de desarrollo sólida.
+Esta aplicación está desarrollada **100% en Kotlin** utilizando **Android Studio** como IDE principal. Está construida con **Jetpack Compose**, el moderno toolkit de UI declarativa de Android, lo que permite interfaces **flexibles, reactivas y altamente mantenibles**, sin la necesidad de usar XML.
 
-### Compatibilidad con ESP32 y Bluetooth Standard
+Entre las características técnicas destacadas se incluyen:
 
-El protocolo de comunicación utilizado en esta aplicación es Bluetooth Standard, no Bluetooth de Baja Energía (BLE). Esto significa que es compatible solo con los dispositivos ESP32 que admiten Bluetooth estándar(No ESP32s3!).
+- **Arquitectura moderna basada en Compose**: toda la UI está diseñada con composables, siguiendo las mejores prácticas de **State Hoisting**, **ViewModel** y **unidirectional data flow**.
+- **Navegación con Compose Navigation**: gestión de pantallas y rutas de manera declarativa, con soporte para argumentos y animaciones de transición.
+- **Material3 y theming dinámico**: uso de **Material You** para colores, tipografía y componentes, con soporte para modos claro y oscuro.
+- **Compatibilidad y rendimiento optimizado**: al ser una aplicación nativa, garantiza fluidez, rápido tiempo de renderizado y bajo consumo de memoria.
+- **Integración con APIs modernas**: fácil extensión para llamadas a servicios REST, manejo de datos en **Flow/StateFlow**, y arquitectura preparada para **pruebas unitarias y de UI**.
+- **Inyección de dependencias y escalabilidad**: preparada para integrar **Hilt/Dagger**, lo que facilita el manejo de dependencias y mejora la testabilidad.
+- **Coroutines y programación reactiva**: para operaciones asíncronas eficientes, evitando bloqueos en el hilo principal.
+- **Animaciones avanzadas**: soporte completo de animaciones declarativas en Compose para transiciones y feedback visual.
 
+Esta implementación refleja el **estado del arte en desarrollo de aplicaciones Android**, garantizando escalabilidad y mantenibilidad, además de proporcionar una **experiencia de usuario moderna y consistente**.
+
+### Comunicación mediante Wi-Fi con Sockets TCP
+
+La aplicación se comunica ahora mediante **Wi-Fi utilizando Sockets TCP**, reemplazando la implementación anterior basada en Bluetooth Standard.  
+
+Esto permite:
+
+- **Conexión más estable y rápida** con los dispositivos ESP32, sin limitaciones de compatibilidad de Bluetooth.  
+- **Mayor alcance y flexibilidad**, ya que la comunicación puede realizarse dentro de la red local sin necesidad de emparejamiento físico.  
+- **Compatibilidad con múltiples dispositivos** conectados simultáneamente.  
+- **Preparada para integración con ROS 2** o cualquier otro módulo que requiera comunicación en red.  
+
+> Nota: La aplicación ya no depende de Bluetooth y es compatible con todos los ESP32 que soporten Wi-Fi.
 ### Instalación y Uso
 
 #### Requisitos Previos
@@ -41,21 +62,17 @@ El protocolo de comunicación utilizado en esta aplicación es Bluetooth Standar
 
 #### Capturas de pantalla
 
-App inicial, solicitud de permiso bluetooth
-![Captura 1](https://github.com/patoGarces/HoverRobotApp-balancing-robot/assets/34481371/94284a00-69e1-4c19-a39b-b29b7adcb026)
-
-Lista de devices bluetooth disponibles
-![Captura 2](https://github.com/patoGarces/HoverRobotApp-balancing-robot/assets/34481371/e1e8e132-2f5d-4009-967c-1e28e722331c)
+Pantalla inicial de navegacion
+![app-navigation](https://github.com/user-attachments/assets/1c80b68e-5921-4382-9f80-e05869f88b9a)
 
 Pantalla de status
-![Captura 3](https://github.com/patoGarces/HoverRobotApp-balancing-robot/assets/34481371/a73e8de6-efa4-460e-9dc4-93441408b287)
+![app-status](https://github.com/user-attachments/assets/65812812-bffc-4be5-853c-b66ca013d852)
 
-Grafico para el analisis del sistema de control PID
-![Captura 4](https://github.com/patoGarces/HoverRobotApp-balancing-robot/assets/34481371/a29883c7-613d-493c-b484-71cb54ea8e5d)
+Grafico para el analisis del sistema de control PID y otras variables
+![app-analisis](https://github.com/user-attachments/assets/f77fa208-e06c-42a5-9f63-53753bdf1cb0)
 
 Pantalla de configuración
-![Captura 5](https://github.com/patoGarces/HoverRobotApp-balancing-robot/assets/34481371/3f6a52e6-67a2-4f6b-8c24-272257c3a837)
-
+![app-settings](https://github.com/user-attachments/assets/2799a547-c04b-4f6d-b19d-8bbf6ccd9eb8)
 
 ## Contribuciones
 
