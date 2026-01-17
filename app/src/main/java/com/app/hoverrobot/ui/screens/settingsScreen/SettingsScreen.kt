@@ -131,7 +131,7 @@ private fun PidSettingsCard(
                 PidIndexSetting.PID_POS -> BuildConfig.MAX_PID_POS
                 PidIndexSetting.PID_SPEED -> BuildConfig.MAX_PID_SPEED
                 PidIndexSetting.PID_YAW -> BuildConfig.MAX_PID_YAW
-            }
+            }.toFloat()
         }
     }
 

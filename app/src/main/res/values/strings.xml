@@ -120,6 +120,10 @@
     <string name="btn_play_title">Play</string>
     <string name="btn_pause_title">Pause</string>
 
+    <!--    Error version firmware dialog -->
+    <string name="firmware_dialog_title">Version incompatible</string>
+    <string name="firmware_dialog_description">Detectamos que la version del firmware es incompatible con la app</string>
+
     <!--    Name datasets analisis fragment-->
     <string name="dataset_angle_pitch">"Pitch Angle [°]"</string>
     <string name="dataset_angle_yaw">"Yaw Angle [°]"</string>

@@ -17,13 +17,14 @@ android {
         minSdk = 29
         targetSdk = 34
         versionCode = 3
-        versionName = "3.0.0"
+        versionName = "3.1.0"
 
-        buildConfigField("Float", "MAX_PID_ANGLE", "2F")
-        buildConfigField("Float", "MAX_PID_POS", "2F")
-        buildConfigField("Float", "MAX_PID_SPEED", "10F")
-        buildConfigField("Float", "MAX_PID_YAW", "4F")
-        buildConfigField("Float", "MAX_SAFETY_ANGLE", "60F")
+        buildConfigField("float", "MAX_PID_ANGLE", "2")
+        buildConfigField("float", "MAX_PID_POS", "2")
+        buildConfigField("float", "MAX_PID_SPEED", "10")
+        buildConfigField("float", "MAX_PID_YAW", "4")
+        buildConfigField("float", "MAX_SAFETY_ANGLE", "60")
+        buildConfigField("int", "FIRMWARE_VERSION_COMPATIBLE", "1")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
