@@ -4,6 +4,7 @@ import com.app.hoverrobot.data.repositories.PRECISION_DECIMALS_COMMS
 import java.nio.ByteBuffer
 
 data class RobotLocalConfig(
+    val versionFirmware: Int = 0,
     val safetyLimits: Float = 0F,
     val pids: List<PidParams> = listOf(
         PidParams(0f, 0f, 0f),
@@ -14,10 +15,11 @@ data class RobotLocalConfig(
 )
 
 const val CANT_PIDS = 4                     // OJO: en sync con el firmware
-const val ROBOT_LOCAL_CONFIG_SIZE = 26
+const val ROBOT_LOCAL_CONFIG_SIZE = 4 + (CANT_PIDS * 6)
 
 val ByteBuffer.asRobotLocalConfig: RobotLocalConfig
     get() {
+        val versionFirmware = this.short.toInt()
         val safetyLimits = this.short.toFloat() / PRECISION_DECIMALS_COMMS
 
         val pidParams = mutableListOf<PidParams>()
@@ -27,7 +29,7 @@ val ByteBuffer.asRobotLocalConfig: RobotLocalConfig
             val kd = short.toFloat() / PRECISION_DECIMALS_COMMS
             pidParams.add(PidParams(kp, ki, kd))
         }
-        return RobotLocalConfig( safetyLimits, pidParams)
+        return RobotLocalConfig(versionFirmware, safetyLimits, pidParams)
     }
 
 fun RobotLocalConfig.asPidSettings(indexPid: Int): PidSettings {
