@@ -247,7 +247,7 @@ private fun ConnectionSection(
 
                     Text(
                         modifier = Modifier.weight(2F),
-                        text = networkState.localIp?.toString()
+                        text = networkState.localIp
                             ?: stringResource(R.string.unknown_ip),
                         style = textStyle14Normal
                     )

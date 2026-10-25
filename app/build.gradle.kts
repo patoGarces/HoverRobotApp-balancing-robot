@@ -2,15 +2,14 @@ import com.android.build.api.variant.VariantBuilder
 
 plugins {
     alias(libs.plugins.androidApplication)
-    alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.compose.compiler)
-    kotlin("kapt")
-    id("dagger.hilt.android.plugin")
+    alias(libs.plugins.hilt)
+    alias(libs.plugins.ksp)
 }
 
 android {
     namespace = "com.app.hoverrobot"
-    compileSdk = 35
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.app.hoverrobot"
@@ -81,10 +80,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
-
     buildFeatures {
         compose = true
         viewBinding = true
@@ -100,7 +95,6 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
-    implementation(libs.androidx.ui)
 
     // Dependencias de Jetpack Compose
     implementation(libs.androidx.ui)
@@ -117,7 +111,6 @@ dependencies {
 
     // Dependencias para la integración con ViewModel y otras herramientas
     implementation(libs.androidx.lifecycle.viewmodel.compose)
-    implementation(libs.androidx.material.icons.core)
 
     implementation(libs.androidx.ui.tooling.preview.android)
     implementation(libs.androidx.runtime)
@@ -141,13 +134,8 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
     implementation (libs.hilt.android)
     debugImplementation(libs.androidx.ui.tooling)
-    kapt (libs.hilt.compiler)
+    ksp(libs.hilt.compiler)
 
     // Compass view
     implementation("com.github.kix2902:CompassView:master-SNAPSHOT")
 }
-
-kapt {
-    correctErrorTypes = true
-}
-

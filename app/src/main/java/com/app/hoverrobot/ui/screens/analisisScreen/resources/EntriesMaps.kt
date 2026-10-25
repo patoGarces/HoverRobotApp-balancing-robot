@@ -47,8 +47,8 @@ object EntriesMaps {
         this[LineDataKeys.LINEDATA_KEY_ANGLE_PITCH]?.add(Entry(newFrame.timeStamp, newFrame.robotData.pitchAngle))
         this[LineDataKeys.LINEDATA_KEY_ANGLE_ROLL]?.add(Entry(newFrame.timeStamp, newFrame.robotData.rollAngle))
         this[LineDataKeys.LINEDATA_KEY_ANGLE_YAW]?.add(Entry(newFrame.timeStamp, newFrame.robotData.yawAngle))
-        this[LineDataKeys.LINEDATA_KEY_SPEED_L]?.add(Entry(newFrame.timeStamp, newFrame.robotData.speedL.toFloat() / 10))
-        this[LineDataKeys.LINEDATA_KEY_SPEED_R]?.add(Entry(newFrame.timeStamp, newFrame.robotData.speedR.toFloat() / 10))
+        this[LineDataKeys.LINEDATA_KEY_SPEED_L]?.add(Entry(newFrame.timeStamp, newFrame.robotData.speedL / 10))
+        this[LineDataKeys.LINEDATA_KEY_SPEED_R]?.add(Entry(newFrame.timeStamp, newFrame.robotData.speedR / 10))
         this[LineDataKeys.LINEDATA_KEY_CURRENT_L]?.add(Entry(newFrame.timeStamp, newFrame.robotData.currentL))
         this[LineDataKeys.LINEDATA_KEY_CURRENT_R]?.add(Entry(newFrame.timeStamp, newFrame.robotData.currentR))
         this[LineDataKeys.LINEDATA_KEY_SETPOINT_ANGLE]?.add(Entry(newFrame.timeStamp, newFrame.robotData.setPointAngle))
@@ -57,7 +57,7 @@ object EntriesMaps {
         this[LineDataKeys.LINEDATA_KEY_SETPOINT_SPEED]?.add(Entry(newFrame.timeStamp, newFrame.robotData.setPointSpeed))
         this[LineDataKeys.LINEDATA_KEY_POS_IN_MTS]?.add(Entry(newFrame.timeStamp, newFrame.robotData.posInMeters))
         this[LineDataKeys.LINEDATA_KEY_OUTPUT_YAW]?.add(Entry(newFrame.timeStamp, newFrame.robotData.outputYawControl))
-        val meanSpeed = (newFrame.robotData.speedR - newFrame.robotData.speedL).toFloat() / 2F
+        val meanSpeed = (newFrame.robotData.speedR - newFrame.robotData.speedL) / 2F
         this[LineDataKeys.LINEDATA_KEY_ACTUAL_SPEED]?.add(Entry(newFrame.timeStamp, meanSpeed))
         this[LineDataKeys.LINEDATA_KEY_BATTERY_LVL]?.add(Entry(newFrame.timeStamp, newFrame.robotData.batVoltage.toPercentLevel().toFloat()))
     }
