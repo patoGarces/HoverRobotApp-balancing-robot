@@ -1,7 +1,7 @@
 package com.app.hoverrobot.data.repositories
 
 import android.util.Log
-import com.app.hoverrobot.data.models.comms.SocketTcpInterface
+import com.app.hoverrobot.data.models.comms.RobotSocketInterface
 import com.app.hoverrobot.data.utils.StatusConnection
 import com.app.hoverrobot.data.utils.ToolBox.ioScope
 import com.app.hoverrobot.data.utils.toByteBuffer
@@ -23,7 +23,7 @@ import java.nio.ByteBuffer
 import java.util.Timer
 import java.util.TimerTask
 
-class ServerTcpImpl(): SocketTcpInterface {
+class ServerImplRobot(): RobotSocketInterface {
 
     var tcpSocket: ServerSocket? = null
 
@@ -52,7 +52,7 @@ class ServerTcpImpl(): SocketTcpInterface {
         measureReception()
     }
 
-    override fun reconnect(serverIp: String, port: Int) {
+    override suspend fun reconnect(host: String, port: Int) {
         socketRunningJob?.cancel()
         initSocket(port)
     }
@@ -62,7 +62,7 @@ class ServerTcpImpl(): SocketTcpInterface {
             while (isActive) {
                 tcpSocket?.close()
                 tcpSocket = null
-                setNewConnectStatus(StatusConnection.WAITING)
+                setNewConnectStatus(StatusConnection.CONNECTING)
                 tcpSocket = ServerSocket(port)
                 socket = tcpSocket?.accept()
 
@@ -129,7 +129,7 @@ class ServerTcpImpl(): SocketTcpInterface {
         }
     }
 
-    fun sendData(data: ByteArray) {
+    override suspend fun send(data: ByteArray) {
         ioScope.launch {
             socket?.let { sock ->
                 if (sock.isConnected == true) {

@@ -5,9 +5,11 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.nio.ByteBuffer
 
-interface SocketTcpInterface {
+interface RobotSocketInterface {
     val receivedDataFlow: SharedFlow<ByteBuffer>
     val connectionsStatus: StateFlow<StatusConnection>
 
-    fun reconnect(serverIp: String, port: Int)
+    suspend fun reconnect(host: String, port: Int)
+
+    suspend fun send(data: ByteArray)
 }

@@ -8,7 +8,7 @@ object StatusMapper {
     fun StatusConnection.toStringRes(): Int =
         when (this) {
             StatusConnection.DISCONNECTED -> R.string.status_connection_disconnected
-            StatusConnection.WAITING -> R.string.status_connection_waiting
+            StatusConnection.CONNECTING -> R.string.status_connection_waiting
             StatusConnection.SEARCHING -> R.string.status_connection_searching
             StatusConnection.CONNECTED -> R.string.status_connection_connected
             StatusConnection.ERROR -> R.string.status_connection_error
@@ -53,7 +53,7 @@ object StatusMapper {
     fun StatusConnection.toColor(): Color =
         when (this) {
             StatusConnection.DISCONNECTED -> CustomColors.StatusOrange
-            StatusConnection.WAITING -> CustomColors.StatusTurquesa
+            StatusConnection.CONNECTING -> CustomColors.StatusTurquesa
             StatusConnection.SEARCHING -> CustomColors.StatusTurquesa
             StatusConnection.CONNECTED -> CustomColors.StatusBlue
             StatusConnection.ERROR -> CustomColors.StatusRed
@@ -62,7 +62,7 @@ object StatusMapper {
 
 enum class StatusConnection {
     DISCONNECTED,
-    WAITING,
+    CONNECTING,
     SEARCHING,
     CONNECTED,
     ERROR

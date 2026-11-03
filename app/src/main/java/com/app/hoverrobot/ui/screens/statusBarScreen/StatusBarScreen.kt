@@ -123,7 +123,7 @@ fun StatusBarScreenPreview() {
             addressIp = "255.255.255.254"
         ),
         statusRaspiClient = ConnectionState(
-            status = StatusConnection.WAITING,
+            status = StatusConnection.CONNECTING,
             addressIp = "255.255.255.255"
         ),
         localIp = "192.168.0.0"
