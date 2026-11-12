@@ -1,5 +1,6 @@
 package com.app.hoverrobot.ui
 
+import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -24,7 +25,9 @@ import com.app.hoverrobot.data.repositories.CommsRepository
 import com.app.hoverrobot.data.repositories.IP_ADDRESS_CLIENT_NULL
 import com.app.hoverrobot.data.repositories.IP_ADDRESS_CLIENT_ROBOT_DEFAULT
 import com.app.hoverrobot.data.repositories.IP_ADDRESS_CLIENT_RASPI_DEFAULT
+import com.app.hoverrobot.data.repositories.RobotWebSocketClient
 import com.app.hoverrobot.data.repositories.StoreSettings
+import com.app.hoverrobot.data.repositories.createRobotHttpClient
 import com.app.hoverrobot.data.utils.StatusConnection
 import com.app.hoverrobot.data.utils.StatusRobot
 import com.app.hoverrobot.data.utils.ToolBox.round
@@ -45,12 +48,14 @@ import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnReco
 import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnReconnectToRobot
 import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnRefreshLocalConfig
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.ktor.client.HttpClient
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.time.Duration.Companion.seconds
 
 @HiltViewModel
 class RobotStateViewModel @Inject constructor(
@@ -170,6 +175,41 @@ class RobotStateViewModel @Inject constructor(
 //                delay(100)
 //            }
 //        }
+
+        viewModelScope.launch {
+
+            val httpClient = createRobotHttpClient()
+            robotSocket = RobotWebSocketClient(httpClient)
+
+            robotSocket?.reconnect("192.168.2.108", 8765)
+
+            delay(5.seconds)
+
+            Log.i("websocket", "iniciando comandos")
+//            while(true) {
+//                sendTestCommand()
+//                Log.i("websocket", "comando enviado")
+//                delay(1.seconds)
+//            }
+        }
+    }
+
+    private var robotSocket: RobotWebSocketClient? = null
+
+    fun sendTestCommand() {
+        viewModelScope.launch {
+            runCatching {
+//                robotSocket?.send("""{"type":"command","action":"ping"}""")
+            }.onFailure {
+                // Mostrar el error en el estado de UI o registrarlo.
+            }
+        }
+    }
+
+    fun disconnect() {
+        viewModelScope.launch {
+            robotSocket?.disconnect()
+        }
     }
 
     fun onNavigationAction(action: NavigationScreenAction) {
@@ -187,35 +227,40 @@ class RobotStateViewModel @Inject constructor(
     }
 
     fun onSettingsScreenActions(action: SettingsScreenActions) {
-        when (action) {
-            is OnNewSettings -> sendNewPidSettings(action.pidSettings)
-            is OnRefreshLocalConfig -> sendCommand(CommandsRobot.GET_PARAMS_SETTINGS)
-            is OnCalibrateImu -> sendCommand(CommandsRobot.CALIBRATE_IMU)
-            is OnCleanRightMotor -> sendCommand(
-                CommandsRobot.CLEAN_WHEELS, Wheel.RIGHT_WHEEL.ordinal.toFloat()
-            )
-            is OnCleanLeftMotor -> sendCommand(
-                CommandsRobot.CLEAN_WHEELS, Wheel.LEFT_WHEEL.ordinal.toFloat()
-            )
-            is OnPidAngleTest -> sendCommand(CommandsRobot.PID_ANGLE_TEST)
-            is OnReconnectToRobot -> {
-                viewModelScope.launch { storeSettings.setIpRobot(action.lastIntIp) }
-                val ipRobot = action.lastIntIp.toIpStringWithSuffix()
-                if (ipRobot != IP_ADDRESS_CLIENT_NULL) {
-                    commsRepository.reconnectRobotSocket(
-                        ipRobot,
-                        APP_DEFAULT_PORT
-                    )
+        viewModelScope.launch {
+            when (action) {
+                is OnNewSettings -> sendNewPidSettings(action.pidSettings)
+                is OnRefreshLocalConfig -> sendCommand(CommandsRobot.GET_PARAMS_SETTINGS)
+                is OnCalibrateImu -> sendCommand(CommandsRobot.CALIBRATE_IMU)
+                is OnCleanRightMotor -> sendCommand(
+                    CommandsRobot.CLEAN_WHEELS, Wheel.RIGHT_WHEEL.ordinal.toFloat()
+                )
+
+                is OnCleanLeftMotor -> sendCommand(
+                    CommandsRobot.CLEAN_WHEELS, Wheel.LEFT_WHEEL.ordinal.toFloat()
+                )
+
+                is OnPidAngleTest -> sendCommand(CommandsRobot.PID_ANGLE_TEST)
+                is OnReconnectToRobot -> {
+                    storeSettings.setIpRobot(action.lastIntIp)
+                    val ipRobot = action.lastIntIp.toIpStringWithSuffix()
+                    if (ipRobot != IP_ADDRESS_CLIENT_NULL) {
+                        commsRepository.reconnectRobotSocket(
+                            ipRobot,
+                            APP_DEFAULT_PORT
+                        )
+                    }
                 }
-            }
-            is OnReconnectToRaspi -> {
-                viewModelScope.launch { storeSettings.setIpRaspi(action.lastIntIp) }
-                val ipRaspi = action.lastIntIp.toIpStringWithSuffix()
-                if (ipRaspi != IP_ADDRESS_CLIENT_NULL) {
-                    commsRepository.reconnectRaspiSocket(
-                        ipRaspi,
-                        APP_DEFAULT_PORT
-                    )
+
+                is OnReconnectToRaspi -> {
+                    storeSettings.setIpRaspi(action.lastIntIp)
+                    val ipRaspi = action.lastIntIp.toIpStringWithSuffix()
+                    if (ipRaspi != IP_ADDRESS_CLIENT_NULL) {
+                        commsRepository.reconnectRaspiSocket(
+                            ipRaspi,
+                            APP_DEFAULT_PORT
+                        )
+                    }
                 }
             }
         }

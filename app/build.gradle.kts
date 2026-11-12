@@ -139,6 +139,11 @@ dependencies {
     // Compass view
     implementation("com.github.kix2902:CompassView:master-SNAPSHOT")
 
+    // Kton para comunicacion websocket
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.cio)
+    implementation(libs.ktor.client.websockets)
+
     // Scene view para visualizar pointcloud y 3d
     implementation(libs.sceneview)
 }
