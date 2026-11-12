@@ -45,9 +45,12 @@ import com.app.hoverrobot.ui.screens.navigationScreen.compose.CompassComposable
 import com.app.hoverrobot.ui.screens.navigationScreen.compose.FixedDirection
 import com.app.hoverrobot.ui.screens.navigationScreen.compose.JoystickAnalogCompose
 import com.app.hoverrobot.ui.theme.MyAppTheme
+import io.github.sceneview.math.Position
+import kotlin.math.cos
+import kotlin.math.sin
 
-const val MAX_LINEAR_VELOCITY_MPS   = 1.0F      // m/s
-const val MAX_ANGULAR_VELOCITY_RPS  = 1.0F      // rad/s
+const val MAX_LINEAR_VELOCITY_MPS   = 2.0F      // m/s
+const val MAX_ANGULAR_VELOCITY_RPS  = 2.0F      // rad/s
 
 @Composable
 fun NavigationScreen(
@@ -76,8 +79,6 @@ fun NavigationScreen(
         onActionScreen(NavigationScreenAction.OnNewJoystickInteraction(joystickX, joystickY))
     }
 
-    if (!isRobotConnected.value) return
-
     if (showDialog) {
         DistancePickerDialog(
             directionTitle = if (isForwardMove) R.string.title_forward else R.string.title_backward,
@@ -94,95 +95,127 @@ fun NavigationScreen(
     Box {
 //        ScatterChartCompose(newPointCloudItem)
 
-        TrajectoryMap(
-            points = pointList.map { Offset(it.x, it.y) },
+
+        val points = remember {
+            // Tu PointCloud de prueba
+            buildList {
+                for (angle in -110..110 step 5) {
+                    val rad = Math.toRadians(angle.toDouble())
+
+                    for (height in 0..7) {
+                        val radius = 2f
+
+                        add(
+                            Position(
+                                x = (radius * cos(rad)).toFloat(),
+                                y = 0.15f + height * 0.17f,
+                                z = (radius * sin(rad)).toFloat()
+                            )
+                        )
+                    }
+                }
+            }
+        }
+        HoverRobot3DViewer(
+            pointCloud = points,
+            robotYawDegrees = -actualDegrees.value.toFloat(),
+            robotPosition = Position(-0.9f, -0.05f, 0.45f),
+            robotModelPath = "models/HoverRobot.glb",
             modifier = Modifier.fillMaxSize()
         )
+//        }
 
-        Column(Modifier.align(Alignment.BottomCenter)) {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 32.dp),
-                Arrangement.SpaceBetween
-            ) {
-                OutlinedButton(
-                    modifier = Modifier
-                        .wrapContentSize()
-                        .background(Color.Transparent),
-                    onClick = {
-                        isForwardMove = false
-                        showDialog = true
-                    },
-                    shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.onBackground)
-                ) {
-                    Text(
-                        text = stringResource(R.string.title_backward),
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                }
+//        TrajectoryMap(
+//            points = pointList.map { Offset(it.x, it.y) },
+//            modifier = Modifier.fillMaxSize()
+//        )
+        if (isRobotConnected.value) {
 
-                OutlinedButton(
-                    modifier = Modifier
-                        .wrapContentSize()
-                        .widthIn(80.dp)
-                        .background(Color.Transparent),
-                    onClick = {
-                        isForwardMove = true
-                        showDialog = true
-                    },
-                    shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.onBackground)
-                ) {
-                    Text(
-                        text = stringResource(R.string.title_forward),
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                }
-            }
-            Row(
-                modifier = Modifier
-                    .padding(horizontal = 32.dp)
-                    .padding(bottom = 32.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Bottom
-            ) {
-                JoystickAnalogCompose(
-                    modifier = Modifier.padding(top = 8.dp),
-                    size = 100.dp,
-                    dotSize = 50.dp,
-                    fixedDirection = FixedDirection.VERTICAL
-                ) { x: Float, y: Float ->
-                    joystickY = (y * 100F * MAX_LINEAR_VELOCITY_MPS).toInt()
-                }
-
-                Column(
+            Column(Modifier.align(Alignment.BottomCenter)) {
+                Row(
                     Modifier
-                        .padding(horizontal = 32.dp)
-                        .weight(1F),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .fillMaxWidth()
+                        .padding(horizontal = 32.dp),
+                    Arrangement.SpaceBetween
                 ) {
-                    YawControlButtons(
-                        isRobotStabilized = isRobotStabilized.value,
-                        onDearmedClick = { onActionScreen(OnDearmedAction) }
-                    )
+                    OutlinedButton(
+                        modifier = Modifier
+                            .wrapContentSize()
+                            .background(Color.Transparent),
+                        onClick = {
+                            isForwardMove = false
+                            showDialog = true
+                        },
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onBackground)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.title_backward),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+
+                    OutlinedButton(
+                        modifier = Modifier
+                            .wrapContentSize()
+                            .widthIn(80.dp)
+                            .background(Color.Transparent),
+                        onClick = {
+                            isForwardMove = true
+                            showDialog = true
+                        },
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onBackground)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.title_forward),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                }
+                Row(
+                    modifier = Modifier
+                        .padding(horizontal = 32.dp)
+                        .padding(bottom = 32.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    JoystickAnalogCompose(
+                        modifier = Modifier.padding(top = 8.dp),
+                        size = 100.dp,
+                        dotSize = 50.dp,
+                        fixedDirection = FixedDirection.VERTICAL
+                    ) { x: Float, y: Float ->
+                        joystickY = (y * 100F * MAX_LINEAR_VELOCITY_MPS).toInt()
+                    }
+
+                    Column(
+                        Modifier
+                            .padding(horizontal = 32.dp)
+                            .weight(1F),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        YawControlButtons(
+                            isRobotStabilized = isRobotStabilized.value,
+                            onDearmedClick = { onActionScreen(OnDearmedAction) }
+                        )
+                    }
+
+                    JoystickAnalogCompose(
+                        modifier = Modifier.padding(top = 8.dp),
+                        size = 100.dp,
+                        dotSize = 50.dp,
+                        fixedDirection = FixedDirection.HORIZONTAL
+                    ) { x: Float, y: Float ->
+                        joystickX = (x * 100F * MAX_ANGULAR_VELOCITY_RPS).toInt()
+                    }
                 }
 
-                JoystickAnalogCompose(
-                    modifier = Modifier.padding(top = 8.dp),
-                    size = 100.dp,
-                    dotSize = 50.dp,
-                    fixedDirection = FixedDirection.HORIZONTAL
-                ) { x: Float, y: Float ->
-                    joystickX = (x * 100F * MAX_ANGULAR_VELOCITY_RPS).toInt()
-                }
-            }
-
-            // TODO: revisar por que al mostrar este composable se rompe la preview
-            if (!disableCompass) {
-                CompassComposable(actualDegrees) {
-                    onActionScreen(OnNewDragCompassInteraction(it))
+                // TODO: revisar por que al mostrar este composable se rompe la preview
+                if (!disableCompass) {
+                    CompassComposable(actualDegrees) {
+                        onActionScreen(OnNewDragCompassInteraction(it))
+                    }
                 }
             }
         }

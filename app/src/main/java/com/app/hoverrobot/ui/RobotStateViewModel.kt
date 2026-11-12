@@ -212,7 +212,7 @@ class RobotStateViewModel @Inject constructor(
                 viewModelScope.launch { storeSettings.setIpRaspi(action.lastIntIp) }
                 val ipRaspi = action.lastIntIp.toIpStringWithSuffix()
                 if (ipRaspi != IP_ADDRESS_CLIENT_NULL) {
-                    commsRepository.reconnectRobotSocket(
+                    commsRepository.reconnectRaspiSocket(
                         ipRaspi,
                         APP_DEFAULT_PORT
                     )
