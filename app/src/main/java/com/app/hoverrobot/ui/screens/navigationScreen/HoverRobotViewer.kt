@@ -1,14 +1,21 @@
 package com.app.hoverrobot.ui.screens.navigationScreen
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import com.app.hoverrobot.data.models.pointCloud.PointCloudItem
 import com.google.android.filament.LightManager
+import com.google.android.filament.RenderableManager
+import dev.romainguy.kotlin.math.Float4
 import io.github.sceneview.SceneView
+import io.github.sceneview.geometries.Geometry
 import io.github.sceneview.math.Position
 import io.github.sceneview.math.Rotation
 import io.github.sceneview.math.Scale
+import io.github.sceneview.node.GeometryNode
 import io.github.sceneview.rememberCameraNode
 import io.github.sceneview.rememberEngine
 import io.github.sceneview.rememberMaterialLoader
@@ -19,7 +26,7 @@ import io.github.sceneview.rememberModelLoader
 @Composable
 fun HoverRobot3DViewer(
     modifier: Modifier = Modifier,
-    pointCloud: List<Position>,
+    pointCloud: PointCloudItem,
     robotPosition: Position,
     robotYawDegrees: Float = 0f,
     robotModelPath: String = "models/hoverrobot.glb"
@@ -94,6 +101,90 @@ fun HoverRobot3DViewer(
         }
     }
 
+    val pointCloudGeometryData = remember(pointCloud) {
+        val count = minOf(
+            pointCloud.pointCount,
+            pointCloud.positions.size / 3
+        )
+
+        if (count == 0) {
+            listOf(Geometry.Vertex(position = Position())) to listOf(0)
+        } else {
+            val vertices = ArrayList<Geometry.Vertex>(count)
+            val indices = ArrayList<Int>(count)
+
+            for (i in 0 until count) {
+                val offset = i * 3
+                val colorOffset = i * 4
+
+                vertices.add(
+                    Geometry.Vertex(
+                        position = Position(
+                            pointCloud.positions[offset],
+                            pointCloud.positions[offset + 1],
+                            pointCloud.positions[offset + 2]
+                        ),
+                        color = Float4(
+                            pointCloud.colors[colorOffset],
+                            pointCloud.colors[colorOffset + 1],
+                            pointCloud.colors[colorOffset + 2],
+                            pointCloud.colors[colorOffset + 3]
+                        )
+                    )
+                )
+
+                indices.add(i)
+            }
+
+            vertices to indices
+        }
+    }
+
+    val pointCloudNode = remember(engine, pointMaterial) {
+        val initialGeometry = Geometry.Builder(
+            RenderableManager.PrimitiveType.POINTS
+        )
+            .vertices(
+                listOf(
+                    Geometry.Vertex(
+                        position = Position(0.001f, 0.001f, 0.001f)
+                    )
+                )
+            )
+            .indices(listOf(0))
+            .build(engine)
+
+        GeometryNode(
+            engine = engine,
+            geometry = initialGeometry,
+            materialInstance = pointMaterial,
+            builderApply = {
+                culling(false)
+                castShadows(false)
+                receiveShadows(false)
+            }
+        )
+    }
+
+    SideEffect {
+        val (vertices, indices) = pointCloudGeometryData
+
+        pointCloudNode.isVisible = pointCloud.pointCount > 0
+
+        if (pointCloud.pointCount > 0) {
+            pointCloudNode.updateGeometry(
+                vertices = vertices,
+                indices = listOf(indices)
+            )
+        }
+    }
+
+    DisposableEffect(pointCloudNode) {
+        onDispose {
+            pointCloudNode.destroy()
+        }
+    }
+
     SceneView(
         modifier = modifier,
         engine = engine,
@@ -155,13 +246,11 @@ fun HoverRobot3DViewer(
             )
 
             // PointCloud en coordenadas del mundo, con origen en el robot.
-            pointCloud.forEach { point ->
-                SphereNode(
-                    radius = 0.015f,
-                    position = point,
-                    materialInstance = pointMaterial
-                )
-            }
+            Node(
+                apply = {
+                    addChildNode(pointCloudNode)
+                }
+            )
         }
 
         LightNode(

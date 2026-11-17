@@ -1,8 +1,10 @@
 package com.app.hoverrobot.data.repositories
 
 import android.content.Context
+import android.net.ConnectivityManager
 import android.net.wifi.WifiInfo
 import android.net.wifi.WifiManager
+import android.os.Build
 import android.util.Log
 import com.app.hoverrobot.data.models.comms.CommandsRobot
 import com.app.hoverrobot.data.models.comms.ConnectionState
@@ -13,28 +15,41 @@ import com.app.hoverrobot.data.models.comms.ROBOT_DYNAMIC_DATA_SIZE
 import com.app.hoverrobot.data.models.comms.ROBOT_LOCAL_CONFIG_SIZE
 import com.app.hoverrobot.data.models.comms.RobotDynamicData
 import com.app.hoverrobot.data.models.comms.RobotLocalConfig
+import com.app.hoverrobot.data.models.comms.SocketMessage
+import com.app.hoverrobot.data.models.comms.TelemetryData
 import com.app.hoverrobot.data.models.comms.asRobotDynamicData
 import com.app.hoverrobot.data.models.comms.asRobotLocalConfig
+import com.app.hoverrobot.data.models.pointCloud.PointCloudData
+import com.app.hoverrobot.data.models.pointCloud.PointCloudMetadata
 import com.app.hoverrobot.data.utils.StatusConnection
-import com.app.hoverrobot.data.utils.ToolBox.ioScope
 import com.app.hoverrobot.data.utils.ToolBox.formatAsIp
+import com.app.hoverrobot.data.utils.ToolBox.ioScope
 import com.app.hoverrobot.data.utils.toByteBuffer
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 
-
+const val IP_ADDRESS_CLIENT_START_DEFAULT = "192.168."
 const val IP_ADDRESS_CLIENT_NULL = "192.168.0.0"
-const val IP_ADDRESS_CLIENT_RASPI_DEFAULT = "192.168.0.0"
+const val IP_ADDRESS_CLIENT_RASPI_DEFAULT = "192.168.0.102"
 const val IP_ADDRESS_CLIENT_ROBOT_DEFAULT = "192.168.0.101"
 const val APP_DEFAULT_PORT = 8080
+const val WEBSOCKET_DEFAULT_PORT = 8765
+const val MESSAGE_TYPE_POINTCLOUD = "pointcloud2"
+const val MESSAGE_TYPE_TELEMETRY = "system_telemetry"
 
 interface CommsRepository {
     val connectionNetworkState: StateFlow<NetworkState>
@@ -42,6 +57,10 @@ interface CommsRepository {
     val dynamicDataRobotFlow: SharedFlow<RobotDynamicData>
 
     val robotLocalConfigFlow: SharedFlow<RobotLocalConfig?>
+
+    val pointCloudFlow: SharedFlow<PointCloudData>
+
+    val raspiTelemetryData: StateFlow<TelemetryData?>
 
     val localIp: StateFlow<String?>
 
@@ -63,9 +82,8 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
 //    private val socketClientRobot = ClientImplRobot()
 
     val httpClient = createRobotHttpClient()
-    private val socketClientRobot = RobotWebSocketClient(httpClient)
-
-    private val socketClientRaspi = ClientImplRobot()
+    private val socketClientRobot = ClientImplRobot()
+    private val socketClientRaspi = RobotWebSocketClient(httpClient)
 
     private val _connectionNetworkState = MutableStateFlow(NetworkState())                      // Es un stateFlow, porque busco que emita SOLO si cambia el valor de su contenido
     override val connectionNetworkState: StateFlow<NetworkState> = _connectionNetworkState
@@ -79,8 +97,20 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
     )
     override val dynamicDataRobotFlow: SharedFlow<RobotDynamicData> = _dynamicDataRobotFlow
 
-    private val _robotLocalConfigFlow = MutableStateFlow<RobotLocalConfig>(RobotLocalConfig())
+    private val _robotLocalConfigFlow = MutableStateFlow(RobotLocalConfig())
     override val robotLocalConfigFlow: StateFlow<RobotLocalConfig> = _robotLocalConfigFlow
+
+    override val raspiTelemetryData: StateFlow<TelemetryData?>
+        field = MutableStateFlow<TelemetryData?>(null)
+
+    private val _pointCloudFlow = MutableSharedFlow<PointCloudData>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+
+    override val pointCloudFlow = _pointCloudFlow.asSharedFlow()
+
+    private var pendingPointCloudMetadata: PointCloudMetadata? = null
 
     private val TAG = "CommsRepository"
 
@@ -92,98 +122,104 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
 
         ioScope.launch {
             socketClientRobot.receivedDataFlow.collect { newPacket ->
-                byteBuffer.put(newPacket)
-                byteBuffer.flip()
+                when(newPacket) {
+                    is SocketMessage.Binary -> {
+                        byteBuffer.put(newPacket.data)
+                        byteBuffer.flip()
 
-                while (true) {
-                    try {
-                        if (byteBuffer.remaining() < 2) {
-                            // No hay suficientes bytes para leer un header
-                            break
-                        }
-
-                        byteBuffer.mark() // Marca la posición antes de leer
-                        val headerBytes = ByteArray(2)
-                        byteBuffer.get(headerBytes)
-
-                        val byte0 = headerBytes[0].toInt() and 0xFF
-                        val byte1 = headerBytes[1].toInt() and 0xFF
-                        val headerPackage = ((byte1 shl 8) or byte0)
-
-                        val expectedSize = when (headerPackage) {
-                            HEADER_PACKAGE_STATUS -> ROBOT_DYNAMIC_DATA_SIZE
-                            HEADER_PACKAGE_LOCAL_CONFIG -> ROBOT_LOCAL_CONFIG_SIZE
-                            else -> {
-                                Log.i(TAG, "Unrecognized package: 0x${headerPackage.toString(16)}")
-                                continue
-                            }
-                        }
-
-                        if (byteBuffer.remaining() < expectedSize) {
-                            // No tenemos todos los datos todavía, esperamos a la próxima recepción
-                            byteBuffer.reset() // Volvemos al punto anterior (antes de leer el header)
-                            break
-                        }
-
-                        val dataBytes = ByteArray(expectedSize)
-                        byteBuffer.get(dataBytes)
-
-                        val dataInByteBuffer = dataBytes.toByteBuffer()
-                        when (headerPackage) {
-                            HEADER_PACKAGE_STATUS -> {
-                                if (dataInByteBuffer.remaining() >= ROBOT_DYNAMIC_DATA_SIZE) {
-                                    contPackets++
-                                    _dynamicDataRobotFlow.emit(dataInByteBuffer.asRobotDynamicData)
+                        while (true) {
+                            try {
+                                if (byteBuffer.remaining() < 2) {
+                                    // No hay suficientes bytes para leer un header
+                                    break
                                 }
-                            }
 
-                            HEADER_PACKAGE_LOCAL_CONFIG -> {
-                                if (dataInByteBuffer.remaining() >= ROBOT_LOCAL_CONFIG_SIZE) {
-                                    _robotLocalConfigFlow.emit(dataBytes.toByteBuffer().asRobotLocalConfig)
+                                byteBuffer.mark() // Marca la posición antes de leer
+                                val headerBytes = ByteArray(2)
+                                byteBuffer.get(headerBytes)
+
+                                val byte0 = headerBytes[0].toInt() and 0xFF
+                                val byte1 = headerBytes[1].toInt() and 0xFF
+                                val headerPackage = ((byte1 shl 8) or byte0)
+
+                                val expectedSize = when (headerPackage) {
+                                    HEADER_PACKAGE_STATUS -> ROBOT_DYNAMIC_DATA_SIZE
+                                    HEADER_PACKAGE_LOCAL_CONFIG -> ROBOT_LOCAL_CONFIG_SIZE
+                                    else -> {
+                                        Log.i(TAG, "Unrecognized package: 0x${headerPackage.toString(16)}")
+                                        continue
+                                    }
                                 }
-                            }
 
-                            else -> Log.i(
-                                TAG,
-                                "Unrecognized len package: 0x${headerPackage.toString(16)} , size: ${dataBytes.size}"
-                            )
+                                if (byteBuffer.remaining() < expectedSize) {
+                                    // No tenemos todos los datos todavía, esperamos a la próxima recepción
+                                    byteBuffer.reset() // Volvemos al punto anterior (antes de leer el header)
+                                    break
+                                }
+
+                                val dataBytes = ByteArray(expectedSize)
+                                byteBuffer.get(dataBytes)
+
+                                val dataInByteBuffer = dataBytes.toByteBuffer()
+                                when (headerPackage) {
+                                    HEADER_PACKAGE_STATUS -> {
+                                        if (dataInByteBuffer.remaining() >= ROBOT_DYNAMIC_DATA_SIZE) {
+                                            contPackets++
+                                            _dynamicDataRobotFlow.emit(dataInByteBuffer.asRobotDynamicData)
+                                        }
+                                    }
+
+                                    HEADER_PACKAGE_LOCAL_CONFIG -> {
+                                        if (dataInByteBuffer.remaining() >= ROBOT_LOCAL_CONFIG_SIZE) {
+                                            _robotLocalConfigFlow.emit(dataBytes.toByteBuffer().asRobotLocalConfig)
+                                        }
+                                    }
+
+                                    else -> Log.i(
+                                        TAG,
+                                        "Unrecognized len package: 0x${headerPackage.toString(16)} , size: ${dataBytes.size}"
+                                    )
+                                }
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Error parsing data: $e")
+                            }
                         }
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Error parsing data: $e")
+
+                        byteBuffer.compact()
                     }
+                    else -> {}
                 }
-
-                byteBuffer.compact()
             }
         }
 
         ioScope.launch {
             while(true) {
                 val wifiInfo = getWifiInfo(context)
-                _localIp.emit(wifiInfo.ipAddress.formatAsIp())
+                _localIp.emit(wifiInfo?.ipAddress?.formatAsIp())
 
-                _connectionNetworkState.emit(
-                    NetworkState(
-                        status = StatusConnection.DISCONNECTED,                             // TODO: monitorizar la conexion wifi
-                        statusRobotClient = ConnectionState(
-                            status = socketClientRobot.connectionsStatus.value,
-                            receiverPacketRates = contPackets,
-                            addressIp = null // socketClientRobot.serverAddress,            // TODO: no aplica, borrar
-                        ),
-                        statusRaspiClient = ConnectionState(
-                            status = socketClientRaspi.connectionsStatus.value,
+                wifiInfo?.let {
+                    _connectionNetworkState.emit(
+                        NetworkState(
+                            status = StatusConnection.DISCONNECTED,                             // TODO: monitorizar la conexion wifi
+                            statusRobotClient = ConnectionState(
+                                status = socketClientRobot.connectionsStatus.value,
+                                receiverPacketRates = contPackets,
+                                addressIp = socketClientRobot.serverAddress,
+                            ),
+                            statusRaspiClient = ConnectionState(
+                                status = socketClientRaspi.connectionsStatus.value,
 //                            receiverPacketRates = 0,
-                            addressIp = socketClientRaspi.serverAddress,
-                        ),
-                        rssi = wifiInfo.rssi,
-                        strength = WifiManager.calculateSignalLevel(wifiInfo.rssi, 5),
-                        frequency = wifiInfo.frequency,
-                        localIp = wifiInfo.ipAddress.formatAsIp().takeIf { it != null },
+                                addressIp = socketClientRaspi.serverAddress,      // TODO: revisar esto
+                            ),
+                            rssi = wifiInfo.rssi,
+                            strength = WifiManager.calculateSignalLevel(wifiInfo.rssi, 5),
+                            frequency = wifiInfo.frequency,
+                            localIp = localIp.value,
+                        )
                     )
-                )
-
-                contPackets = 0
-                delay(1000)
+                    contPackets = 0
+                }
+                delay(1.seconds)
             }
         }
 
@@ -191,6 +227,49 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
             socketClientRobot.connectionsStatus.collect {
                 if (it == StatusConnection.SEARCHING) {
                     _robotLocalConfigFlow.emit(RobotLocalConfig())                                            // Para forzar el collect al reconectar
+                }
+            }
+        }
+
+        ioScope.launch {
+            socketClientRaspi.connectionsStatus.collect {
+                Log.i("RaspiWS", "newConnectionStatus: $it")
+            }
+        }
+
+        ioScope.launch {
+            socketClientRaspi.receivedDataFlow.collect { message ->
+                when (message) {
+                    is SocketMessage.Text -> {
+                        val jsonObject = Json.parseToJsonElement(message.value).jsonObject
+                        val jsonType = jsonObject["type"]?.jsonPrimitive?.content
+
+                        when(jsonType) {
+                            MESSAGE_TYPE_POINTCLOUD -> {
+                                pendingPointCloudMetadata = Json.decodeFromString<PointCloudMetadata>(
+                                    message.value
+                                )
+                            }
+
+                            MESSAGE_TYPE_TELEMETRY -> {
+                                val telemetryData = Json.decodeFromString<TelemetryData>(message.value)
+                                raspiTelemetryData.value = telemetryData
+                            }
+                        }
+                    }
+
+                    is SocketMessage.Binary -> {
+                        val metadata = pendingPointCloudMetadata ?: return@collect
+
+                        pendingPointCloudMetadata = null
+
+                        _pointCloudFlow.emit(
+                            PointCloudData(
+                                metadata = metadata,
+                                data = message.data
+                            )
+                        )
+                    }
                 }
             }
         }
@@ -247,13 +326,21 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
         ioScope.launch { socketClientRobot.send(buffer.array()) }
     }
 
-    private fun getWifiInfo(context: Context): WifiInfo {
-        val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+    private fun getWifiInfo(context: Context): WifiInfo? {
+        val wifiManager = context.applicationContext
+            .getSystemService(Context.WIFI_SERVICE) as WifiManager
 
-        return  if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-            WifiInfo.Builder().build()
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val connectivityManager = context.getSystemService(
+                Context.CONNECTIVITY_SERVICE
+            ) as ConnectivityManager
+
+            connectivityManager.getNetworkCapabilities(
+                connectivityManager.activeNetwork
+            )?.transportInfo as? WifiInfo
         } else {
-            wifiManager.connectionInfo // Para API < 30
+            @Suppress("DEPRECATION")
+            wifiManager.connectionInfo
         }
     }
 

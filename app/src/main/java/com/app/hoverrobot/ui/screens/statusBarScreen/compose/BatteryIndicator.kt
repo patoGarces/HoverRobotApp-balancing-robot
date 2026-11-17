@@ -1,10 +1,24 @@
 package com.app.hoverrobot.ui.screens.statusBarScreen.compose
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.BatteryUnknown
+import androidx.compose.material.icons.outlined.Battery0Bar
+import androidx.compose.material.icons.outlined.Battery1Bar
+import androidx.compose.material.icons.outlined.Battery2Bar
+import androidx.compose.material.icons.outlined.Battery3Bar
+import androidx.compose.material.icons.outlined.Battery4Bar
+import androidx.compose.material.icons.outlined.Battery6Bar
+import androidx.compose.material.icons.outlined.BatteryChargingFull
+import androidx.compose.material.icons.outlined.BatteryFull
+import androidx.compose.material.icons.outlined.Thermostat
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -18,7 +32,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.app.hoverrobot.R
 import com.app.hoverrobot.data.models.BATTERY_LEVEL_EMPTY
@@ -28,6 +41,7 @@ import com.app.hoverrobot.data.models.BATTERY_LEVEL_MEDIUM
 import com.app.hoverrobot.data.models.Battery
 import com.app.hoverrobot.ui.composeUtils.CustomColors
 import com.app.hoverrobot.ui.composeUtils.CustomPreviewComponent
+import com.app.hoverrobot.ui.composeUtils.CustomTextStyles.textStyle14Bold
 import com.app.hoverrobot.ui.composeUtils.CustomTextStyles.textStyle16Bold
 import com.app.hoverrobot.ui.theme.MyAppTheme
 
@@ -46,7 +60,7 @@ fun BatteryIndicator(
     else stringResource(R.string.variable_not_available)
 
     val batteryPercentText = if (isConnected && !isMcbOff)
-        stringResource(R.string.placeholder_battery_percent, batteryState.level)
+        stringResource(R.string.placeholder_percent, batteryState.level)
     else stringResource(R.string.variable_not_available)
 
     var iconTint by remember { mutableStateOf(Color.White) }
@@ -54,37 +68,37 @@ fun BatteryIndicator(
     val icon = when {
         !isConnected || isMcbOff -> {
             iconTint = MaterialTheme.colorScheme.onBackground
-            R.drawable.ic_battery_unknown
+            Icons.AutoMirrored.Outlined.BatteryUnknown
         }
 
         batteryState.isCharging -> {
             iconTint = MaterialTheme.colorScheme.onBackground
-            R.drawable.ic_battery_charging
+            Icons.Outlined.BatteryChargingFull
         }
 
         batteryState.level > BATTERY_LEVEL_HIGH -> {
             iconTint = MaterialTheme.colorScheme.onBackground
-            R.drawable.ic_battery_4
+            Icons.Outlined.BatteryFull
         }
 
         batteryState.level > BATTERY_LEVEL_MEDIUM -> {
             iconTint = MaterialTheme.colorScheme.onBackground
-            R.drawable.ic_battery_3
+            Icons.Outlined.Battery6Bar
         }
 
         batteryState.level > BATTERY_LEVEL_LOW -> {
             iconTint = MaterialTheme.colorScheme.onBackground
-            R.drawable.ic_battery_2
+            Icons.Outlined.Battery4Bar
         }
 
         batteryState.level > BATTERY_LEVEL_EMPTY -> {
             iconTint = CustomColors.StatusOrange
-            R.drawable.ic_battery_1
+            Icons.Outlined.Battery2Bar
         }
 
         else -> {
             iconTint = CustomColors.StatusRed
-            R.drawable.ic_battery_0
+            Icons.Outlined.Battery0Bar
         }
     }
 
@@ -95,13 +109,13 @@ fun BatteryIndicator(
     ) {
         Text(
             text = batteryVoltageText,
-            style = textStyle16Bold
+            style = textStyle14Bold
         )
 
         Icon(
-            painter = painterResource(id = icon),
+            imageVector = icon,
             modifier = Modifier
-                .size(48.dp)
+                .fillMaxHeight()
                 .padding(horizontal = 8.dp),
             tint = iconTint,
             contentDescription = ""
@@ -109,7 +123,7 @@ fun BatteryIndicator(
 
         Text(
             text = batteryPercentText,
-            style = textStyle16Bold
+            style = textStyle14Bold
         )
     }
 }
@@ -119,41 +133,48 @@ fun BatteryIndicator(
 fun BatteryIndicatorPReview() {
     MyAppTheme {
         Column {
-            BatteryIndicator(
-                batteryState = Battery(false, 10, 40.3F),
-                isConnected = true,
-                isMcbOff = false
-            )
-
-            BatteryIndicator(
-                batteryState = Battery(false, 20, 40.3F),
-                isConnected = true,
-                isMcbOff = false
-            )
-
-            BatteryIndicator(
-                batteryState = Battery(false, 30, 40.3F),
-                isConnected = true,
-                isMcbOff = false
-            )
-
-            BatteryIndicator(
-                batteryState = Battery(false, 100, 40.3F),
-                isConnected = true,
-                isMcbOff = false
-            )
-
-            BatteryIndicator(
-                batteryState = Battery(false, 50, 40F),
-                isConnected = false,
-                isMcbOff = false
-            )
-
-            BatteryIndicator(
-                batteryState = Battery(true, 20, 40.3F),
-                isConnected = true,
-                isMcbOff = false
-            )
+            Box(Modifier.height(40.dp)) {
+                BatteryIndicator(
+                    batteryState = Battery(false, 10, 40.3F),
+                    isConnected = true,
+                    isMcbOff = false
+                )
+            }
+            Box(Modifier.height(40.dp)) {
+                BatteryIndicator(
+                    batteryState = Battery(false, 20, 40.3F),
+                    isConnected = true,
+                    isMcbOff = false
+                )
+            }
+            Box(Modifier.height(40.dp)) {
+                BatteryIndicator(
+                    batteryState = Battery(false, 30, 40.3F),
+                    isConnected = true,
+                    isMcbOff = false
+                )
+            }
+            Box(Modifier.height(40.dp)) {
+                BatteryIndicator(
+                    batteryState = Battery(false, 100, 40.3F),
+                    isConnected = true,
+                    isMcbOff = false
+                )
+            }
+            Box(Modifier.height(40.dp)) {
+                BatteryIndicator(
+                    batteryState = Battery(false, 50, 40F),
+                    isConnected = false,
+                    isMcbOff = false
+                )
+            }
+            Box(Modifier.height(40.dp)) {
+                BatteryIndicator(
+                    batteryState = Battery(true, 20, 40.3F),
+                    isConnected = true,
+                    isMcbOff = false
+                )
+            }
         }
     }
 }

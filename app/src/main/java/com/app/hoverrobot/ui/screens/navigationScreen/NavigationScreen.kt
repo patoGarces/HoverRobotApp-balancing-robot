@@ -1,7 +1,6 @@
 package com.app.hoverrobot.ui.screens.navigationScreen
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,20 +20,19 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.center
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.app.hoverrobot.R
-import com.app.hoverrobot.data.models.comms.PointCloudItem
+import com.app.hoverrobot.data.models.pointCloud.PointCloudItem
 import com.app.hoverrobot.data.models.comms.CollisionSensors
+import com.app.hoverrobot.data.models.pointCloud.PointCloudData
+import com.app.hoverrobot.data.models.pointCloud.PointCloudMetadata
 import com.app.hoverrobot.ui.composeUtils.CustomColors
 import com.app.hoverrobot.ui.composeUtils.CustomPreview
 import com.app.hoverrobot.ui.composeUtils.CustomTextStyles.textStyle14Bold
@@ -56,7 +54,7 @@ const val MAX_ANGULAR_VELOCITY_RPS  = 2.0F      // rad/s
 fun NavigationScreen(
     isRobotStabilized: State<Boolean>,
     isRobotConnected: State<Boolean>,
-    newPointCloudItem: State<PointCloudItem?>,
+    pointCloud: PointCloudItem,
     actualDegrees: State<Int>,
     disableCompass: Boolean = false,
     distanceSensors: CollisionSensors,
@@ -66,14 +64,6 @@ fun NavigationScreen(
     var joystickY by remember { mutableIntStateOf(0) }
     var showDialog by remember { mutableStateOf(false) }
     var isForwardMove by remember { mutableStateOf(true) }
-
-    val pointList = remember { mutableStateListOf<PointCloudItem>() }
-
-    LaunchedEffect(newPointCloudItem.value) {
-        newPointCloudItem.value?.let { newPoint ->
-            pointList.add(newPoint)
-        }
-    }
 
     LaunchedEffect(joystickX, joystickY) {
         onActionScreen(NavigationScreenAction.OnNewJoystickInteraction(joystickX, joystickY))
@@ -93,42 +83,14 @@ fun NavigationScreen(
     }
 
     Box {
-//        ScatterChartCompose(newPointCloudItem)
-
-
-        val points = remember {
-            // Tu PointCloud de prueba
-            buildList {
-                for (angle in -110..110 step 5) {
-                    val rad = Math.toRadians(angle.toDouble())
-
-                    for (height in 0..7) {
-                        val radius = 2f
-
-                        add(
-                            Position(
-                                x = (radius * cos(rad)).toFloat(),
-                                y = 0.15f + height * 0.17f,
-                                z = (radius * sin(rad)).toFloat()
-                            )
-                        )
-                    }
-                }
-            }
-        }
         HoverRobot3DViewer(
-            pointCloud = points,
+            pointCloud = pointCloud,
             robotYawDegrees = -actualDegrees.value.toFloat(),
             robotPosition = Position(-0.9f, -0.05f, 0.45f),
             robotModelPath = "models/HoverRobot.glb",
             modifier = Modifier.fillMaxSize()
         )
-//        }
 
-//        TrajectoryMap(
-//            points = pointList.map { Offset(it.x, it.y) },
-//            modifier = Modifier.fillMaxSize()
-//        )
         if (isRobotConnected.value) {
 
             Column(Modifier.align(Alignment.BottomCenter)) {
@@ -254,88 +216,6 @@ private fun YawControlButtons(
     }
 }
 
-/*
-@Composable
-fun TrajectoryMap(
-    points: List<Offset>,
-    modifier: Modifier = Modifier
-) {
-    var scale by remember { mutableStateOf(200f) } // Aumentamos la escala
-    var offset by remember { mutableStateOf(Offset.Zero) }
-
-    Box(
-        modifier = modifier
-            .pointerInput(Unit) {
-                detectTransformGestures { _, pan, zoom, _ ->
-                    offset += pan
-                    scale *= zoom
-                }
-            }
-            .background(Color.Blue)
-    ) {
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val canvasCenter = size.center // 📍 Centro del canvas (x: mitad ancho, y: mitad alto)
-
-            withTransform({
-                translate(canvasCenter.x + offset.x, canvasCenter.y + offset.y)
-                scale(scale, -scale) // 🔁 Negativo para invertir eje Y (hacia arriba)
-            }) {
-                for (point in points) {
-                    drawCircle(
-                        color = Color.Green,
-                        radius = 10f, // Aumentamos el tamaño del punto
-                        center = point
-                    )
-                }
-            }
-        }
-    }
-}
-
- */
-@Composable
-fun TrajectoryMap(
-    points: List<Offset>,
-    modifier: Modifier = Modifier
-) {
-    val zoomFactor = 100f // 1 metro = 50 pixeles
-    val dotColor = MaterialTheme.colorScheme.primary
-
-    Box(
-        modifier = modifier
-            .background(MaterialTheme.colorScheme.background)
-    ) {
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val canvasCenter = size.center // El centro del canvas
-
-            // Dibujar líneas de trayectoria
-            if (points.size > 1) {
-                for (i in 0 until points.size - 1) {
-                    val start = canvasCenter + points[i] * zoomFactor
-                    val end = canvasCenter + points[i + 1] * zoomFactor
-
-                    drawLine(
-                        color = Color.Cyan,
-                        start = start,
-                        end = end,
-                        strokeWidth = 2f
-                    )
-                }
-            }
-
-            // Dibujar puntos
-            for (point in points) {
-                val pointPos = canvasCenter + point * zoomFactor // Aplica el zoom a las coordenadas
-                drawCircle(
-                    color = dotColor,
-                    radius = 5f, // Ajuste el tamaño del punto
-                    center = pointPos
-                )
-            }
-        }
-    }
-}
-
 private val Float?.toFormatStringDistance: String
     @Composable
     get() = this?.let {
@@ -393,14 +273,13 @@ private fun DistanceSensors(
 @CustomPreview
 fun NavigationButtonPreview() {
     val dummySetDegress = remember { mutableIntStateOf(0) }
-    val dummyPointCloudItem = remember { mutableStateOf(PointCloudItem()) }
     val dummyRobotConnected = remember { mutableStateOf(true) }
     val dummyRobotStabilized = remember { mutableStateOf(true) }
 
     MyAppTheme {
         NavigationScreen(
             actualDegrees = dummySetDegress,
-            newPointCloudItem = dummyPointCloudItem,
+            pointCloud = PointCloudItem(),
             isRobotConnected = dummyRobotConnected,
             isRobotStabilized = dummyRobotStabilized,
             distanceSensors = CollisionSensors(),

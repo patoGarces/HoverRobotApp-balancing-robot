@@ -25,11 +25,12 @@
     <string name="variable_not_available">N/A</string>
 
     <!--    Placeholders-->
-    <string name="placeholder_battery_percent">%s %%</string>
+    <string name="placeholder_percent">%s %%</string>
     <string name="placeholder_battery_voltage">%.1fV</string>
     <string name="placeholder_rssi">%d dbm</string>
     <string name="placeholder_packets_rate">rx: %d pps</string>
     <string name="placeholder_temp">%.1f ºC</string>
+    <string name="placeholder_cpu_usage">%.1f %%</string>">
 
     <!--    tabsLayout-->
     <string name="tab_status">Status</string>

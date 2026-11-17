@@ -2,9 +2,9 @@ package com.app.hoverrobot.data.repositories
 
 import android.util.Log
 import com.app.hoverrobot.data.models.comms.RobotSocketInterface
+import com.app.hoverrobot.data.models.comms.SocketMessage
 import com.app.hoverrobot.data.utils.StatusConnection
 import com.app.hoverrobot.data.utils.ToolBox.ioScope
-import com.app.hoverrobot.data.utils.toByteBuffer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -21,16 +21,15 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.net.InetSocketAddress
 import java.net.Socket
-import java.nio.ByteBuffer
 import java.util.Timer
 import java.util.TimerTask
 
-class ClientImplRobot() : RobotSocketInterface {
+class ClientImplRobot : RobotSocketInterface {
 
     var tcpSocket: Socket? = null
 
-    private val _receivedDataFlow = MutableSharedFlow<ByteBuffer>()
-    override val receivedDataFlow: SharedFlow<ByteBuffer> = _receivedDataFlow
+    private val _receivedDataFlow = MutableSharedFlow<SocketMessage>()
+    override val receivedDataFlow: SharedFlow<SocketMessage> = _receivedDataFlow
 
     private val _connectionsStatus = MutableStateFlow(StatusConnection.DISCONNECTED)
     override val connectionsStatus: StateFlow<StatusConnection> = _connectionsStatus
@@ -39,8 +38,7 @@ class ClientImplRobot() : RobotSocketInterface {
 
     private val TAG = "ClientTcp"
 
-    var serverAddress: String? = null
-        internal set
+    override var serverAddress: String? = null
 
     var paquetsPerSecond: Int = 0
         internal set
@@ -103,7 +101,7 @@ class ClientImplRobot() : RobotSocketInterface {
                 if (bytesRead > 0) {
                     contPackets++
                     val receivedData = buffer.copyOf(bytesRead)
-                    _receivedDataFlow.emit(receivedData.toByteBuffer())
+                    _receivedDataFlow.emit(SocketMessage.Binary(receivedData))
                 } else if (bytesRead < 0) {
                     break
                 }

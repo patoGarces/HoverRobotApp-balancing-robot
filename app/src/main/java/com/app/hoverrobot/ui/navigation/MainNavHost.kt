@@ -4,7 +4,9 @@ import android.content.Context
 import android.content.Intent
 import android.provider.Settings
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -12,6 +14,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.app.hoverrobot.data.models.comms.Temperatures
 import com.app.hoverrobot.data.models.comms.CollisionSensors
+import com.app.hoverrobot.data.models.pointCloud.PointCloudItem
+import com.app.hoverrobot.data.models.pointCloud.toPointCloudItem
 import com.app.hoverrobot.ui.RobotStateViewModel
 import com.app.hoverrobot.ui.screens.analisisScreen.AnalisisScreenWrapper
 import com.app.hoverrobot.ui.screens.analisisScreen.AnalisisViewModel
@@ -52,10 +56,18 @@ fun MainNavHost(
                 derivedStateOf { robotStateViewModel.robotDynamicData?.yawAngle?.toInt() ?: 0 }
             }
 
+            val pointCloudData by robotStateViewModel.pointCloudFlow.collectAsState(
+                initial = null
+            )
+
+            val pointCloudItem = remember(pointCloudData) {
+                pointCloudData?.toPointCloudItem() ?: PointCloudItem()
+            }
+
             NavigationScreen(
                 isRobotStabilized = robotStateViewModel.isRobotStabilized,
                 isRobotConnected = robotStateViewModel.isRobotConnected,
-                newPointCloudItem = robotStateViewModel.pointCloud,
+                pointCloud = pointCloudItem,
                 actualDegrees = actualDegrees,
                 distanceSensors = robotStateViewModel.robotDynamicData?.collisionSensors ?:
                     CollisionSensors()

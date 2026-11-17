@@ -2,6 +2,7 @@ package com.app.hoverrobot.data.repositories
 
 import android.util.Log
 import com.app.hoverrobot.data.models.comms.RobotSocketInterface
+import com.app.hoverrobot.data.models.comms.SocketMessage
 import com.app.hoverrobot.data.utils.StatusConnection
 import com.app.hoverrobot.data.utils.ToolBox.ioScope
 import com.app.hoverrobot.data.utils.toByteBuffer
@@ -27,8 +28,8 @@ class ServerImplRobot(): RobotSocketInterface {
 
     var tcpSocket: ServerSocket? = null
 
-    private val _receivedDataFlow = MutableSharedFlow<ByteBuffer>()
-    override val receivedDataFlow: SharedFlow<ByteBuffer> = _receivedDataFlow
+    private val _receivedDataFlow = MutableSharedFlow<SocketMessage>()
+    override val receivedDataFlow: SharedFlow<SocketMessage> = _receivedDataFlow
 
     private val _connectionsStatus = MutableStateFlow(StatusConnection.DISCONNECTED)
     override val connectionsStatus: StateFlow<StatusConnection> = _connectionsStatus
@@ -38,6 +39,8 @@ class ServerImplRobot(): RobotSocketInterface {
     private val TAG = "ServerTcp"
 
     private var socket: Socket? = null
+
+    override var serverAddress: String? = null
 
     var clientsIp: String? = null
         internal set
@@ -104,7 +107,7 @@ class ServerImplRobot(): RobotSocketInterface {
                 if (bytesRead > 0) {
                     contPackets++
                     val receivedData = buffer.copyOf(bytesRead)
-                    _receivedDataFlow.emit(receivedData.toByteBuffer())
+                    _receivedDataFlow.emit(SocketMessage.Binary(receivedData))
                 } else if (bytesRead < 0) {
                     break
                 }

@@ -61,7 +61,8 @@ fun MainScreen(navController: NavHostController) {
             StatusBarScreen(
                 statusRobot = robotStateViewModel.statusRobot,
                 networkState = robotStateViewModel.connectionNetworkState,
-                tempImu = robotStateViewModel.robotDynamicData?.temperatures?.tempImu ?: 0F,
+                cpuUsage = robotStateViewModel.telemetryData.value?.cpu?.usage ?: 0F,
+                temperature = robotStateViewModel.telemetryData.value?.cpu?.temp ?: 0F,
                 batteryState = robotStateViewModel.batteryState
             ) { navController.goToScreen(NavigationScreens.STATUS_DATA) }
         }

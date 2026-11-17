@@ -7,6 +7,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Memory
+import androidx.compose.material.icons.outlined.Thermostat
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -37,7 +40,8 @@ fun StatusBarScreen(
     statusRobot: StatusRobot,
     networkState: NetworkState,
     batteryState: Battery,
-    tempImu: Float,
+    cpuUsage: Float,
+    temperature: Float,
     onClickBtnStatus: () -> Unit
 ) {
     Row(
@@ -66,15 +70,25 @@ fun StatusBarScreen(
 
         Row(Modifier.weight(1F), horizontalArrangement = Arrangement.End) {
 
+            CpuUsagePercent(Modifier, cpuUsage)
+
+            VerticalDivider(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .padding(horizontal = 2.dp, vertical = 8.dp),
+                thickness = 1.dp,
+                color = MaterialTheme.colorScheme.primary
+            )
+
             TempIndicator(
                 modifier = Modifier,
-                tempImu = tempImu
+                temperature = temperature
             )
 
             VerticalDivider(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .padding(vertical = 8.dp),
+                    .padding(horizontal = 2.dp, vertical = 8.dp),
                 thickness = 1.dp,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -91,16 +105,16 @@ fun StatusBarScreen(
 @Composable
 private fun TempIndicator(
     modifier: Modifier,
-    tempImu: Float
+    temperature: Float
 ) {
     Row(
-        modifier = modifier.padding(horizontal = 16.dp),
+        modifier = modifier.padding(horizontal = 8.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
 
         Icon(
-            painter = painterResource(id = R.drawable.ic_temp),
+            imageVector = Icons.Outlined.Thermostat,
             modifier = Modifier.fillMaxHeight(),
             tint = MaterialTheme.colorScheme.onBackground,
             contentDescription = ""
@@ -108,8 +122,33 @@ private fun TempIndicator(
 
         Text(
             modifier = Modifier,
-            text = stringResource(R.string.placeholder_temp, tempImu),
-            style = CustomTextStyles.textStyle16Bold,
+            text = stringResource(R.string.placeholder_temp, temperature),
+            style = CustomTextStyles.textStyle14Bold,
+        )
+    }
+}
+
+@Composable
+private fun CpuUsagePercent(
+    modifier: Modifier,
+    usage: Float
+) {
+    Row(
+        modifier = modifier.padding(horizontal = 8.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Memory,
+            modifier = Modifier.fillMaxHeight(),
+            tint = MaterialTheme.colorScheme.onBackground,
+            contentDescription = "CPU usage"
+        )
+
+        Text(
+            modifier = Modifier,
+            text = stringResource(R.string.placeholder_cpu_usage, usage),
+            style = CustomTextStyles.textStyle14Bold,
         )
     }
 }
@@ -133,7 +172,8 @@ fun StatusBarScreenPreview() {
         StatusBarScreen(
             statusRobot = StatusRobot.INIT,
             networkState = networkStateMock,
-            tempImu = 23F,
+            cpuUsage = 12.2F,
+            temperature = 23F,
             batteryState = Battery()
         ) { }
     }

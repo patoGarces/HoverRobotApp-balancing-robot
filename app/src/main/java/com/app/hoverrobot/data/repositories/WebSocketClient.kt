@@ -1,6 +1,8 @@
 package com.app.hoverrobot.data.repositories
 
+import android.util.Log
 import com.app.hoverrobot.data.models.comms.RobotSocketInterface
+import com.app.hoverrobot.data.models.comms.SocketMessage
 import com.app.hoverrobot.data.utils.StatusConnection
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
@@ -36,17 +38,19 @@ class RobotWebSocketClient(private val httpClient: HttpClient, ): RobotSocketInt
     private val scope =
         CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+    override var serverAddress: String? = null
+
     private val sessionMutex = Mutex()
     private var session: DefaultClientWebSocketSession? = null
     private var connectionJob: Job? = null
 
-    private val _receivedDataFlow = MutableSharedFlow<ByteBuffer>()
-    override val receivedDataFlow: SharedFlow<ByteBuffer> = _receivedDataFlow
+    private val _receivedDataFlow = MutableSharedFlow<SocketMessage>()
+    override val receivedDataFlow: SharedFlow<SocketMessage> = _receivedDataFlow
 
     private val _connectionsStatus = MutableStateFlow(StatusConnection.DISCONNECTED)
     override val connectionsStatus: StateFlow<StatusConnection> = _connectionsStatus
 
-    private val _messages = MutableSharedFlow<String>(          // TODO: ver que hacer para recibir los json
+    private val _messages = MutableSharedFlow<String>(
         extraBufferCapacity = 64,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
@@ -60,8 +64,10 @@ class RobotWebSocketClient(private val httpClient: HttpClient, ): RobotSocketInt
 //        require(host.startsWith("ws://") || host.startsWith("wss://")) {
 //            "URL must start with ws:// or wss://"
 //        }
+        serverAddress = host
         val url = "ws://$host:$port"
 
+        Log.i("RaspiWS", "websocket url: $url")
         disconnect()
 
         connectionJob = scope.launch {
@@ -86,18 +92,18 @@ class RobotWebSocketClient(private val httpClient: HttpClient, ): RobotSocketInt
                     }
 
                     _connectionsStatus.value = StatusConnection.CONNECTED
+                    Log.i("RaspiWS", "CONNECTED")
 
                     attempt = 0
 
                     for (frame in activeSession.incoming) {
                         when (frame) {
                             is Frame.Text -> {
-                                _messages.emit(frame.readText())
+                                _receivedDataFlow.emit(SocketMessage.Text(frame.readText()))
                             }
 
                             is Frame.Binary -> {
-                                val bytes = frame.readBytes()
-                                _receivedDataFlow.emit(ByteBuffer.wrap(bytes))
+                                _receivedDataFlow.emit(SocketMessage.Binary(frame.readBytes()))
                             }
 
                             else -> Unit

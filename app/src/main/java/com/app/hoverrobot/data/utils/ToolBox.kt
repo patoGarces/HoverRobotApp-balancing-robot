@@ -26,12 +26,4 @@ object ToolBox {
         )
         return bytes.joinToString(".")
     }
-
-    fun Int.toIpStringWithSuffix(defaultIpFormat: String = "192.168.0.%d"): String {
-        return String.format(Locale.getDefault(), defaultIpFormat, this)
-    }
-
-    fun String.getIpLastSuffix(): Int {
-        return this.removePrefix("192.168.0.").toInt()
-    }
 }

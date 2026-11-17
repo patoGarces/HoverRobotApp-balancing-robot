@@ -8,6 +8,6 @@ fun createRobotHttpClient(): HttpClient =
     HttpClient(CIO) {
         install(WebSockets) {
             pingIntervalMillis = 20_000
-            maxFrameSize = 1024L * 1024L
+            maxFrameSize = Long.MAX_VALUE
         }
     }

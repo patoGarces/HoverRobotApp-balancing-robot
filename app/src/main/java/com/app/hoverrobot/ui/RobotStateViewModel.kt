@@ -6,7 +6,6 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.hoverrobot.data.models.Aggressiveness
@@ -15,7 +14,6 @@ import com.app.hoverrobot.data.models.comms.CommandsRobot
 import com.app.hoverrobot.data.models.comms.DirectionControl
 import com.app.hoverrobot.data.models.comms.NetworkState
 import com.app.hoverrobot.data.models.comms.PidSettings
-import com.app.hoverrobot.data.models.comms.PointCloudItem
 import com.app.hoverrobot.data.models.comms.RobotDynamicData
 import com.app.hoverrobot.data.models.comms.RobotLocalConfig
 import com.app.hoverrobot.data.models.comms.Wheel
@@ -23,15 +21,13 @@ import com.app.hoverrobot.data.models.toPercentLevel
 import com.app.hoverrobot.data.repositories.APP_DEFAULT_PORT
 import com.app.hoverrobot.data.repositories.CommsRepository
 import com.app.hoverrobot.data.repositories.IP_ADDRESS_CLIENT_NULL
-import com.app.hoverrobot.data.repositories.IP_ADDRESS_CLIENT_ROBOT_DEFAULT
 import com.app.hoverrobot.data.repositories.IP_ADDRESS_CLIENT_RASPI_DEFAULT
-import com.app.hoverrobot.data.repositories.RobotWebSocketClient
+import com.app.hoverrobot.data.repositories.IP_ADDRESS_CLIENT_ROBOT_DEFAULT
 import com.app.hoverrobot.data.repositories.StoreSettings
-import com.app.hoverrobot.data.repositories.createRobotHttpClient
+import com.app.hoverrobot.data.repositories.WEBSOCKET_DEFAULT_PORT
 import com.app.hoverrobot.data.utils.StatusConnection
 import com.app.hoverrobot.data.utils.StatusRobot
 import com.app.hoverrobot.data.utils.ToolBox.round
-import com.app.hoverrobot.data.utils.ToolBox.toIpStringWithSuffix
 import com.app.hoverrobot.ui.screens.navigationScreen.NavigationScreenAction
 import com.app.hoverrobot.ui.screens.navigationScreen.NavigationScreenAction.OnDearmedAction
 import com.app.hoverrobot.ui.screens.navigationScreen.NavigationScreenAction.OnNewDragCompassInteraction
@@ -48,14 +44,10 @@ import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnReco
 import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnReconnectToRobot
 import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnRefreshLocalConfig
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.ktor.client.HttpClient
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.time.Duration.Companion.seconds
 
 @HiltViewModel
 class RobotStateViewModel @Inject constructor(
@@ -65,10 +57,10 @@ class RobotStateViewModel @Inject constructor(
     var localConfigFromRobot by mutableStateOf(RobotLocalConfig())
         internal set
 
-    var statusRobot by mutableStateOf<StatusRobot>(StatusRobot.INIT)
+    var statusRobot by mutableStateOf(StatusRobot.INIT)
         internal set
 
-    var batteryState by mutableStateOf<Battery>(Battery())
+    var batteryState by mutableStateOf(Battery())
         internal set
 
     var robotDynamicData by mutableStateOf<RobotDynamicData?>(null)
@@ -77,8 +69,9 @@ class RobotStateViewModel @Inject constructor(
     var connectionNetworkState by mutableStateOf(NetworkState())
         internal set
 
-    private val _pointCloud = mutableStateOf<PointCloudItem?>(null)
-    val pointCloud: State<PointCloudItem?> = _pointCloud
+    val pointCloudFlow = commsRepository.pointCloudFlow
+
+    val telemetryData = commsRepository.raspiTelemetryData
 
     val isRobotStabilized: State<Boolean> = derivedStateOf {
         statusRobot == StatusRobot.STABILIZED
@@ -95,21 +88,18 @@ class RobotStateViewModel @Inject constructor(
     private val DirectionControl.isNotZero: Boolean
         get() = this.joyAxisX.toInt() != 0 || this.joyAxisY.toInt() != 0
 
-    private var currentPosition = Offset(0f, 0f)
-    private var lastDistance = 0f // La última distancia recibida
 
     init {
         viewModelScope.launch {
-            val ipRobot = storeSettings.getIpRobot()?.toIpStringWithSuffix()
-                    ?: IP_ADDRESS_CLIENT_ROBOT_DEFAULT
+            val ipRobot = storeSettings.getIpRobot() ?: IP_ADDRESS_CLIENT_ROBOT_DEFAULT
             if (ipRobot != IP_ADDRESS_CLIENT_NULL) {
                 commsRepository.reconnectRobotSocket(ipRobot, APP_DEFAULT_PORT)
             }
 
-            val ipRaspi = storeSettings.getIpRaspi()?.toIpStringWithSuffix()
-                    ?: IP_ADDRESS_CLIENT_RASPI_DEFAULT
+            val ipRaspi = storeSettings.getIpRaspi() ?: IP_ADDRESS_CLIENT_RASPI_DEFAULT
             if (ipRaspi != IP_ADDRESS_CLIENT_NULL) {
-                commsRepository.reconnectRaspiSocket(ipRaspi, APP_DEFAULT_PORT)
+                Log.i("raspiWS", "conectando a $ipRaspi con puerto: $WEBSOCKET_DEFAULT_PORT")
+                commsRepository.reconnectRaspiSocket(ipRaspi, WEBSOCKET_DEFAULT_PORT)
             }
         }
 
@@ -154,61 +144,7 @@ class RobotStateViewModel @Inject constructor(
                         it.batVoltage
                     )
                 }
-
-                val displacement = it.posInMeters - lastDistance
-                val nextPoint = generateNextPoint(currentPosition, -it.yawAngle, displacement)
-                currentPosition = nextPoint
-                lastDistance = it.posInMeters
-                _pointCloud.value = PointCloudItem(
-                    x = nextPoint.x,
-                    y = nextPoint.y
-                )
             }
-        }
-//        viewModelScope.launch {
-//            for (i in 0..5000) {
-//                pointCloud.value = PointCloudItem(
-//                        x = ((Math.random()-0.5) * 10).toFloat(),
-//                        y = ((Math.random()-0.5) * 10).toFloat(),
-//                        ""
-//                    )
-//                delay(100)
-//            }
-//        }
-
-        viewModelScope.launch {
-
-            val httpClient = createRobotHttpClient()
-            robotSocket = RobotWebSocketClient(httpClient)
-
-            robotSocket?.reconnect("192.168.2.108", 8765)
-
-            delay(5.seconds)
-
-            Log.i("websocket", "iniciando comandos")
-//            while(true) {
-//                sendTestCommand()
-//                Log.i("websocket", "comando enviado")
-//                delay(1.seconds)
-//            }
-        }
-    }
-
-    private var robotSocket: RobotWebSocketClient? = null
-
-    fun sendTestCommand() {
-        viewModelScope.launch {
-            runCatching {
-//                robotSocket?.send("""{"type":"command","action":"ping"}""")
-            }.onFailure {
-                // Mostrar el error en el estado de UI o registrarlo.
-            }
-        }
-    }
-
-    fun disconnect() {
-        viewModelScope.launch {
-            robotSocket?.disconnect()
         }
     }
 
@@ -242,23 +178,21 @@ class RobotStateViewModel @Inject constructor(
 
                 is OnPidAngleTest -> sendCommand(CommandsRobot.PID_ANGLE_TEST)
                 is OnReconnectToRobot -> {
-                    storeSettings.setIpRobot(action.lastIntIp)
-                    val ipRobot = action.lastIntIp.toIpStringWithSuffix()
-                    if (ipRobot != IP_ADDRESS_CLIENT_NULL) {
+                    storeSettings.setIpRobot(action.ip)
+                    if (action.ip != IP_ADDRESS_CLIENT_NULL) {
                         commsRepository.reconnectRobotSocket(
-                            ipRobot,
+                            action.ip,
                             APP_DEFAULT_PORT
                         )
                     }
                 }
 
                 is OnReconnectToRaspi -> {
-                    storeSettings.setIpRaspi(action.lastIntIp)
-                    val ipRaspi = action.lastIntIp.toIpStringWithSuffix()
-                    if (ipRaspi != IP_ADDRESS_CLIENT_NULL) {
+                    storeSettings.setIpRaspi(action.ip)
+                    if (action.ip != IP_ADDRESS_CLIENT_NULL) {
                         commsRepository.reconnectRaspiSocket(
-                            ipRaspi,
-                            APP_DEFAULT_PORT
+                            action.ip,
+                            WEBSOCKET_DEFAULT_PORT
                         )
                     }
                 }
@@ -276,20 +210,6 @@ class RobotStateViewModel @Inject constructor(
 
     fun setLevelAggressiveness(level: Aggressiveness) {
         viewModelScope.launch { storeSettings.saveAggressiveness(level) }
-    }
-
-    private fun generateNextPoint(
-        previousPosition: Offset,
-        yawDegrees: Float,
-        deltaDistance: Float // Distancia recorrida desde el punto anterior
-    ): Offset {
-        val yawRadians = Math.toRadians(yawDegrees.toDouble())
-
-        // Calcular el desplazamiento en los ejes X y Y
-        val dx = (deltaDistance * sin(yawRadians)).toFloat()
-        val dy = (deltaDistance * cos(yawRadians)).toFloat()
-
-        return previousPosition + Offset(dx, dy)
     }
 
     private fun sendNewPidSettings(newSetting: PidSettings): Boolean {

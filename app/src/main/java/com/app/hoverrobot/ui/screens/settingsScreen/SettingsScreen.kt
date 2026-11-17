@@ -61,6 +61,7 @@ import com.app.hoverrobot.data.models.comms.RobotLocalConfig
 import com.app.hoverrobot.data.models.comms.asPidSettings
 import com.app.hoverrobot.data.models.comms.isDiffWithOriginalLocalConfig
 import com.app.hoverrobot.data.repositories.IP_ADDRESS_CLIENT_NULL
+import com.app.hoverrobot.data.repositories.IP_ADDRESS_CLIENT_START_DEFAULT
 import com.app.hoverrobot.data.utils.StatusConnection
 import com.app.hoverrobot.data.utils.StatusRobot
 import com.app.hoverrobot.ui.composeUtils.CustomButton
@@ -208,7 +209,6 @@ private fun PidSettingsCard(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 private fun PidSettingsCardHeader(
     onPidReset: () -> Unit,
@@ -303,8 +303,8 @@ private fun GeneralSettingsCard(
 @Composable
 private fun ConnectionSettingsCard(
     networkState: NetworkState,
-    onReconnectRobot: (Int) -> Unit,
-    onReconnectRaspi: (Int) -> Unit,
+    onReconnectRobot: (String) -> Unit,
+    onReconnectRaspi: (String) -> Unit,
 ) {
     TitleSectionText(R.string.settings_group_connection_title)
 
@@ -320,12 +320,14 @@ private fun ConnectionSettingsCard(
     ) {
         IpAddressItem(
             titleItem = R.string.settings_connection_robot_title,
+            ipPrefix = IP_ADDRESS_CLIENT_START_DEFAULT,
             ipAddress = networkState.statusRobotClient.addressIp ?: IP_ADDRESS_CLIENT_NULL,
             onConfirmClick = onReconnectRobot
         )
 
         IpAddressItem(
             titleItem = R.string.settings_connection_raspi_title,
+            ipPrefix = IP_ADDRESS_CLIENT_START_DEFAULT,
             ipAddress = networkState.statusRaspiClient.addressIp ?: IP_ADDRESS_CLIENT_NULL,
             onConfirmClick = onReconnectRaspi
         )
@@ -383,6 +385,110 @@ private fun GeneralSettingsItem(
 
 @Composable
 private fun IpAddressItem(
+    @StringRes titleItem: Int,
+    ipAddress: String,
+    ipPrefix: String,
+    onConfirmClick: (String) -> Unit
+) {
+    var textFieldValue by remember {
+        mutableStateOf(TextFieldValue(ipAddress.removePrefix(ipPrefix)))
+    }
+    var isError by remember { mutableStateOf(false) }
+
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            modifier = Modifier.padding(vertical = 8.dp),
+            text = stringResource(titleItem),
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
+
+        Spacer(Modifier.weight(1F))
+
+        Text(
+            text = ipPrefix,
+            style = CustomTextStyles.textStyle14Bold,
+        )
+
+        Box(
+            modifier = Modifier
+                .heightIn(min = 35.dp)
+                .width(100.dp)
+                .border(
+                    border = BorderStroke(1.dp, color = MaterialTheme.colorScheme.primary),
+                    shape = RoundedCornerShape(8.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            BasicTextField(
+                value = textFieldValue,
+                onValueChange = { newValue ->
+                    val digitsOnly = newValue.text
+                        .filter { it.isDigit() || it == '.' }
+                        .take(7)
+
+                    val parts = digitsOnly.split(".")
+                    val validFormat = parts.size <= 2 &&
+                            parts.all { it.length <= 3 }
+
+                    if (validFormat) {
+                        textFieldValue = TextFieldValue(
+                            text = digitsOnly,
+                            selection = TextRange(digitsOnly.length)
+                        )
+
+                        isError = parts.size != 2 ||
+                                parts.any {
+                                    it.isEmpty() || (it.toIntOrNull() ?: 256) > 255
+                                }
+                    }
+                },
+                singleLine = true,
+                cursorBrush = SolidColor(Color.Transparent),
+                textStyle = CustomTextStyles.textStyle14Bold,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Decimal,
+                    imeAction = ImeAction.Done
+                ),
+            )
+        }
+
+        Spacer(Modifier.width(16.dp))
+
+        val colorButton = if (isError) Color.Gray else MaterialTheme.colorScheme.onBackground
+
+        Box(
+            modifier = Modifier
+                .size(35.dp)
+                .border(
+                    BorderStroke(1.dp, colorButton),
+                    shape = RoundedCornerShape(8.dp)
+                )
+                .clickable {
+                    if (!isError) {
+                        onConfirmClick(ipPrefix + textFieldValue.text)
+                    }
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Refresh,
+                tint = colorButton,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun IpAddressItem2(
     @StringRes titleItem: Int,
     ipAddress: String,
     onConfirmClick: (Int) -> Unit
@@ -575,11 +681,11 @@ private fun SettingsScreenPreview() {
     val networkStateMock = NetworkState(
         statusRobotClient = ConnectionState(
             status = StatusConnection.CONNECTED,
-            addressIp = "255.255.255.254"
+            addressIp = "255.254"
         ),
         statusRaspiClient = ConnectionState(
             status = StatusConnection.CONNECTING,
-            addressIp = "255.255.255.255"
+            addressIp = "255.255"
         ),
         localIp = "192.168.0.0"
     )
