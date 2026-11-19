@@ -27,7 +27,7 @@ import io.github.sceneview.rememberModelLoader
 fun HoverRobot3DViewer(
     modifier: Modifier = Modifier,
     pointCloud: PointCloudItem,
-    robotPosition: Position,
+    offsetRobot: Position,
     robotYawDegrees: Float = 0f,
     robotModelPath: String = "models/hoverrobot.glb"
 ) {
@@ -121,8 +121,8 @@ fun HoverRobot3DViewer(
                     Geometry.Vertex(
                         position = Position(
                             pointCloud.positions[offset],
-                            pointCloud.positions[offset + 1],
-                            pointCloud.positions[offset + 2]
+                            -pointCloud.positions[offset + 1],
+                            -pointCloud.positions[offset + 2]
                         ),
                         color = Float4(
                             pointCloud.colors[colorOffset],
@@ -166,6 +166,17 @@ fun HoverRobot3DViewer(
         )
     }
 
+//    val yawRad = Math.toRadians(robotYawDegrees.toDouble())
+//    val cosYaw = cos(yawRad).toFloat()
+//    val sinYaw = sin(yawRad).toFloat()
+//
+//    val worldPosition = Position(
+//        x = -cosYaw * offsetRobot.x + sinYaw * offsetRobot.z,
+//        y = -offsetRobot.y,
+//        z = -sinYaw * offsetRobot.x - cosYaw * offsetRobot.z
+//    )
+    val worldPosition = Position(x = 0f, y = 0f, z = 0f)
+
     SideEffect {
         val (vertices, indices) = pointCloudGeometryData
 
@@ -198,7 +209,7 @@ fun HoverRobot3DViewer(
         robotModel?.let { model ->
             ModelNode(
                 modelInstance = model,
-                position = robotPosition,
+                position = offsetRobot,
                 rotation = Rotation(
                     x = 90f,
                     y = 0f,
@@ -208,9 +219,18 @@ fun HoverRobot3DViewer(
             )
         }
 
-        // Mundo: único elemento que rota con el yaw.
+        // PointCloud fijo respecto al robot.
         Node(
             position = Position(0f, 0f, 0f),
+            rotation = Rotation(0f, -90f, 0f),
+            apply = {
+                addChildNode(pointCloudNode)
+            }
+        )
+
+        // Mundo: se mueve y rota en sentido inverso al robot.
+        Node(
+            position = worldPosition,
             rotation = Rotation(
                 x = 0f,
                 y = -robotYawDegrees,
@@ -243,13 +263,6 @@ fun HoverRobot3DViewer(
                 Position(0f, 0.01f, -5f),
                 Position(0f, 0.01f, 5f),
                 zAxisMaterial
-            )
-
-            // PointCloud en coordenadas del mundo, con origen en el robot.
-            Node(
-                apply = {
-                    addChildNode(pointCloudNode)
-                }
             )
         }
 

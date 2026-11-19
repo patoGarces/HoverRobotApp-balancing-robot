@@ -31,8 +31,6 @@ import androidx.compose.ui.unit.dp
 import com.app.hoverrobot.R
 import com.app.hoverrobot.data.models.pointCloud.PointCloudItem
 import com.app.hoverrobot.data.models.comms.CollisionSensors
-import com.app.hoverrobot.data.models.pointCloud.PointCloudData
-import com.app.hoverrobot.data.models.pointCloud.PointCloudMetadata
 import com.app.hoverrobot.ui.composeUtils.CustomColors
 import com.app.hoverrobot.ui.composeUtils.CustomPreview
 import com.app.hoverrobot.ui.composeUtils.CustomTextStyles.textStyle14Bold
@@ -44,8 +42,6 @@ import com.app.hoverrobot.ui.screens.navigationScreen.compose.FixedDirection
 import com.app.hoverrobot.ui.screens.navigationScreen.compose.JoystickAnalogCompose
 import com.app.hoverrobot.ui.theme.MyAppTheme
 import io.github.sceneview.math.Position
-import kotlin.math.cos
-import kotlin.math.sin
 
 const val MAX_LINEAR_VELOCITY_MPS   = 2.0F      // m/s
 const val MAX_ANGULAR_VELOCITY_RPS  = 2.0F      // rad/s
@@ -86,7 +82,7 @@ fun NavigationScreen(
         HoverRobot3DViewer(
             pointCloud = pointCloud,
             robotYawDegrees = -actualDegrees.value.toFloat(),
-            robotPosition = Position(-0.9f, -0.05f, 0.45f),
+            offsetRobot = Position(-0.9f, -0.05f, 0.45f),
             robotModelPath = "models/HoverRobot.glb",
             modifier = Modifier.fillMaxSize()
         )
