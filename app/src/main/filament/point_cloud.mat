@@ -1,0 +1,13 @@
+material {
+    name : PointCloudVertexColor,
+    shadingModel : unlit,
+    requires : [ color ],
+    culling : none
+}
+
+fragment {
+    void material(inout MaterialInputs material) {
+        prepareMaterial(material);
+        material.baseColor = getColor();
+    }
+}

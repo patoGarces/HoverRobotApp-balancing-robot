@@ -71,8 +71,28 @@ fun HoverRobot3DViewer(
         materialLoader.createColorInstance(Color.Blue)
     }
 
-    val pointMaterial = remember(materialLoader) {
-        materialLoader.createColorInstance(Color(0xFF19E6FF))
+//    val pointMaterial = remember(materialLoader) {
+//        materialLoader.createColorInstance(Color(0xFF19E6FF))
+//    }
+
+    val context = LocalContext.current
+
+    val pointMaterial = remember(engine, context) {
+        val bytes = context.assets
+            .open("materials/point_cloud.filamat")
+            .use { it.readBytes() }
+
+        val buffer = ByteBuffer.allocateDirect(bytes.size)
+            .order(ByteOrder.nativeOrder())
+            .apply {
+                put(bytes)
+                flip()
+            }
+
+        Material.Builder()
+            .payload(buffer, bytes.size)
+            .build(engine)
+            .createInstance()
     }
 
     // Cuadrícula 10 x 10 m, líneas cada 25 cm.
