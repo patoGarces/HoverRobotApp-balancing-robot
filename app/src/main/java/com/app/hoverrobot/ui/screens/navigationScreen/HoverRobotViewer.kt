@@ -6,8 +6,10 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import com.app.hoverrobot.data.models.pointCloud.PointCloudItem
 import com.google.android.filament.LightManager
+import com.google.android.filament.Material
 import com.google.android.filament.RenderableManager
 import dev.romainguy.kotlin.math.Float4
 import io.github.sceneview.SceneView
@@ -21,6 +23,8 @@ import io.github.sceneview.rememberEngine
 import io.github.sceneview.rememberMaterialLoader
 import io.github.sceneview.rememberModelInstance
 import io.github.sceneview.rememberModelLoader
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 
 @Composable
@@ -34,6 +38,7 @@ fun HoverRobot3DViewer(
     val engine = rememberEngine()
     val modelLoader = rememberModelLoader(engine)
     val materialLoader = rememberMaterialLoader(engine)
+    val context = LocalContext.current
 
     val robotModel = rememberModelInstance(
         modelLoader,
@@ -75,9 +80,7 @@ fun HoverRobot3DViewer(
 //        materialLoader.createColorInstance(Color(0xFF19E6FF))
 //    }
 
-    val context = LocalContext.current
-
-    val pointMaterial = remember(engine, context) {
+    val pointMaterialResources = remember(engine, context) {
         val bytes = context.assets
             .open("materials/point_cloud.filamat")
             .use { it.readBytes() }
@@ -89,11 +92,17 @@ fun HoverRobot3DViewer(
                 flip()
             }
 
-        Material.Builder()
+        val material = Material.Builder()
             .payload(buffer, bytes.size)
             .build(engine)
-            .createInstance()
+
+        val materialInstance = material.createInstance()
+
+        material to materialInstance
     }
+
+    val pointMaterial = pointMaterialResources.first
+    val pointMaterialInstance = pointMaterialResources.second
 
     // Cuadrícula 10 x 10 m, líneas cada 25 cm.
     val gridLines = remember {
@@ -141,7 +150,7 @@ fun HoverRobot3DViewer(
                     Geometry.Vertex(
                         position = Position(
                             pointCloud.positions[offset],
-                            -pointCloud.positions[offset + 1],
+                            -pointCloud.positions[offset + 1] + 0.5f,   // Desplazo la camara 0.5mts del suelo
                             -pointCloud.positions[offset + 2]
                         ),
                         color = Float4(
@@ -160,7 +169,7 @@ fun HoverRobot3DViewer(
         }
     }
 
-    val pointCloudNode = remember(engine, pointMaterial) {
+    val pointCloudNode = remember(engine, pointMaterialInstance) {
         val initialGeometry = Geometry.Builder(
             RenderableManager.PrimitiveType.POINTS
         )
@@ -177,7 +186,7 @@ fun HoverRobot3DViewer(
         GeometryNode(
             engine = engine,
             geometry = initialGeometry,
-            materialInstance = pointMaterial,
+            materialInstance = pointMaterialInstance,
             builderApply = {
                 culling(false)
                 castShadows(false)
@@ -210,9 +219,12 @@ fun HoverRobot3DViewer(
         }
     }
 
-    DisposableEffect(pointCloudNode) {
+    DisposableEffect(pointCloudNode, pointMaterialResources) {
         onDispose {
             pointCloudNode.destroy()
+
+            engine.destroyMaterialInstance(pointMaterialInstance)
+            engine.destroyMaterial(pointMaterial)
         }
     }
 
