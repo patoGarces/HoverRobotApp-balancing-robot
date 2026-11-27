@@ -7,7 +7,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.app.hoverrobot.data.models.Aggressiveness
+import com.app.hoverrobot.data.models.ControlSensitivityMode
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -23,14 +23,15 @@ class StoreSettings @Inject constructor(@ApplicationContext private val context:
     private val KEY_IP_RASPI = stringPreferencesKey("raspi_ip_key")
 
     suspend fun getAggressiveness() =
-        Aggressiveness.entries[
+        ControlSensitivityMode.entries[
             context.dataStore.data.map { preferences ->
                 preferences[KEY_AGGRESSIVENESS]
-            }.first() ?: 0]
+            }.first() ?: 0
+        ]
 
-    suspend fun saveAggressiveness(aggressiveness: Aggressiveness) {
+    suspend fun saveAggressiveness(controlSensitivityMode: ControlSensitivityMode) {
         context.dataStore.edit { preferences ->
-            preferences[KEY_AGGRESSIVENESS] = aggressiveness.ordinal
+            preferences[KEY_AGGRESSIVENESS] = controlSensitivityMode.ordinal
         }
     }
 

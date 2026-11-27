@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.app.hoverrobot.data.models.comms.Temperatures
 import com.app.hoverrobot.data.models.comms.CollisionSensors
 import com.app.hoverrobot.data.models.pointCloud.PointCloudItem
 import com.app.hoverrobot.data.models.pointCloud.toPointCloudItem
@@ -38,15 +37,14 @@ fun MainNavHost(
     ) {
         composable(NavigationScreens.STATUS_DATA.route) {
             StatusDataScreen(
-                statusRobot = robotStateViewModel.statusRobot,
+                telemetryState = robotStateViewModel.telemetryData.collectAsState().value,
                 networkState = robotStateViewModel.connectionNetworkState,
-                defaultAggressiveness = robotStateViewModel.getAggressivenessLevel().ordinal,
-                temperatures = robotStateViewModel.robotDynamicData?.temperatures ?: Temperatures(),
+                robotDynamicData = robotStateViewModel.robotDynamicData,
                 onOpenNetworkSettings = {
                     context.startActivity(Intent(Settings.ACTION_WIFI_SETTINGS))
                 },
-                onAggressivenessChange = {
-                    robotStateViewModel.setLevelAggressiveness(it)
+                onShutdownAPS = {
+                    robotStateViewModel.sendShutdownAPSCommand()
                 }
             )
         }
@@ -79,6 +77,7 @@ fun MainNavHost(
                 localRobotConfig = robotStateViewModel.localConfigFromRobot,
                 statusRobot = robotStateViewModel.statusRobot,
                 networkState = robotStateViewModel.connectionNetworkState,
+                defaultSensitivityMode = robotStateViewModel.getAggressivenessLevel(),      // TODO: obtener flow del datastore directamente
                 onPidSave = { robotStateViewModel.saveLocalSettings(it) },
                 onActionScreen = { robotStateViewModel.onSettingsScreenActions(it) }
             )

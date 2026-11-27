@@ -36,4 +36,40 @@ object CustomTextStyles {
             fontWeight = FontWeight.Normal,
             textAlign = TextAlign.Center
         )
+
+    val textStyle20Normal: TextStyle
+        @Composable
+        get() = TextStyle(
+            fontSize = 20.sp,
+            color = MaterialTheme.colorScheme.onBackground,
+            fontWeight = FontWeight.Normal,
+            textAlign = TextAlign.Center
+        )
+
+    val textStyle20Bold: TextStyle
+        @Composable
+        get() = TextStyle(
+            fontSize = 20.sp,
+            color = MaterialTheme.colorScheme.onBackground,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
+        )
+
+    val textStyle24Normal: TextStyle
+        @Composable
+        get() = TextStyle(
+            fontSize = 24.sp,
+            color = MaterialTheme.colorScheme.onBackground,
+            fontWeight = FontWeight.Normal,
+            textAlign = TextAlign.Center
+        )
+
+    val textStyle24Bold: TextStyle
+        @Composable
+        get() = TextStyle(
+            fontSize = 24.sp,
+            color = MaterialTheme.colorScheme.onBackground,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
+        )
 }

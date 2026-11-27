@@ -153,6 +153,19 @@ class RobotWebSocketClient(private val httpClient: HttpClient, ): RobotSocketInt
         }
     }
 
+    suspend fun send(data: String) {
+        sessionMutex.withLock {
+            val current = session
+                ?: throw IllegalStateException("WebSocket is not connected")
+
+            current.send(Frame.Text(data))
+        }
+    }
+
+    suspend fun shutdownSystemRemotely() {
+        send("""{"type":"command","action":"shutdown"}""")
+    }
+
     suspend fun disconnect() {
         val job = connectionJob
         connectionJob = null

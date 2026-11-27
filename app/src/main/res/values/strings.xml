@@ -9,18 +9,22 @@
 
     <!--    Status Data screen-->
     <string name="title_status_screen">Estado general</string>
-    <string name="title_aggressiveness">Agresividad</string>
-    <string name="title_status_robot">Estado robot</string>
-    <string name="title_connection_status">Estado conexion</string>
-    <string name="title_connection_local_ip">Dirección IP local:</string>
-    <string name="title_robot_connection_status">Estado conexion robot:</string>
-    <string name="title_raspi_connection_status">Estado conexion Raspi:</string>
+    <string name="title_status_robot">Vehicle Control System</string>
+    <string name="title_status_raspi">Autonomy &amp; Perception System</string>
     <string name="title_temperature_status">Temperatura</string>
     <string name="placeholder_local_ip">Local IP: %s</string>
-    <string name="title_battery_temp">Bateria</string>
-    <string name="title_motorboard_temp">Motor controller</string>
-    <string name="title_mainboard_temp">Mainboard</string>
-    <string name="title_imu_temp">IMU</string>
+
+    <string name="aps_raspi_model_title">Raspberry Pi 5</string>
+    <string name="aps_robot_model_title">Mainboard ESP32</string>
+    <string name="status_screen_aps_cpu_title">CPU</string>
+    <string name="status_screen_aps_fans_title">Fans</string>
+    <string name="status_screen_aps_ram_title">Memory</string>
+    <string name="status_screen_aps_uptime_title">Uptime</string>
+    <string name="status_screen_vcs_battery_title">Battery</string>
+
+    <string name="status_screen_vcs_mainboard_title">Mainboard</string>
+    <string name="status_screen_vcs_motorboard_title">Motorboard</string>
+    <string name="status_screen_vcs_imu_title">IMU</string>
 
     <string name="variable_not_available">N/A</string>
 
@@ -39,9 +43,13 @@
     <string name="tab_settings">Configuracion</string>
 
     <!--    Settings screen-->
+    <string name="settings_group_control_sensitivity_title">Modo de respuesta dinámica</string>
+    <string name="title_control_sensitivity">Control de sensibilidad</string>
+
     <string name="settings_group_pid_title">Ajustes PID</string>
     <string name="settings_group_general_title">Ajustes generales</string>
     <string name="settings_group_connection_title">Ajustes conexion</string>
+
 
     <string name="pid_parameter_p_title">Parametro P:</string>
     <string name="pid_parameter_i_title">Parametro I:</string>

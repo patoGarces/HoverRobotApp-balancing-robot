@@ -73,6 +73,8 @@ interface CommsRepository {
     fun sendDirectionControl(directionControl: DirectionControl)
 
     fun sendCommand(commandCode: CommandsRobot, value: Float = 0f)
+
+    fun sendShutdownAPS()
 }
 
 class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val context: Context) :
@@ -311,7 +313,6 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
     }
 
     override fun sendCommand(commandCode: CommandsRobot, value: Float) {
-
         val valueCommand = value * PRECISION_DECIMALS_COMMS
         val paramList =
             listOf(
@@ -324,6 +325,10 @@ class CommsRepositoryImpl @Inject constructor(@ApplicationContext private val co
         paramList.forEach { buffer.putShort(it) }
 
         ioScope.launch { socketClientRobot.send(buffer.array()) }
+    }
+
+    override fun sendShutdownAPS() {
+        ioScope.launch { socketClientRaspi.shutdownSystemRemotely() }
     }
 
     private fun getWifiInfo(context: Context): WifiInfo? {

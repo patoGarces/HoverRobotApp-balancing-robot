@@ -53,8 +53,8 @@ object StatusMapper {
     fun StatusConnection.toColor(): Color =
         when (this) {
             StatusConnection.DISCONNECTED -> CustomColors.StatusOrange
-            StatusConnection.CONNECTING -> CustomColors.StatusTurquesa
-            StatusConnection.SEARCHING -> CustomColors.StatusTurquesa
+            StatusConnection.CONNECTING -> CustomColors.StatusOrange
+            StatusConnection.SEARCHING -> CustomColors.StatusOrange
             StatusConnection.CONNECTED -> CustomColors.StatusBlue
             StatusConnection.ERROR -> CustomColors.StatusRed
         }

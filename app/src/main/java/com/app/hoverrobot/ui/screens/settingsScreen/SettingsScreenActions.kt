@@ -1,5 +1,6 @@
 package com.app.hoverrobot.ui.screens.settingsScreen
 
+import com.app.hoverrobot.data.models.ControlSensitivityMode
 import com.app.hoverrobot.data.models.comms.PidSettings
 
 sealed class SettingsScreenActions {
@@ -11,4 +12,5 @@ sealed class SettingsScreenActions {
     data class OnNewSettings(val pidSettings: PidSettings): SettingsScreenActions()
     data class OnReconnectToRobot(val ip: String): SettingsScreenActions()
     data class OnReconnectToRaspi(val ip: String): SettingsScreenActions()
+    data class ControlSensitivityChange(val sensitivityLevel: ControlSensitivityMode): SettingsScreenActions()
 }

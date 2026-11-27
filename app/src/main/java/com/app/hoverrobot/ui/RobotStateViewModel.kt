@@ -8,7 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.app.hoverrobot.data.models.Aggressiveness
+import com.app.hoverrobot.data.models.ControlSensitivityMode
 import com.app.hoverrobot.data.models.Battery
 import com.app.hoverrobot.data.models.comms.CommandsRobot
 import com.app.hoverrobot.data.models.comms.DirectionControl
@@ -79,6 +79,10 @@ class RobotStateViewModel @Inject constructor(
 
     val isRobotConnected: State<Boolean> = derivedStateOf {
         connectionNetworkState.statusRobotClient.status == StatusConnection.CONNECTED
+    }
+
+    val isApsConnected: State<Boolean> = derivedStateOf {
+        connectionNetworkState.statusRaspiClient.status == StatusConnection.CONNECTED
     }
 
     private var actualJoyPosition = DirectionControl()
@@ -196,8 +200,16 @@ class RobotStateViewModel @Inject constructor(
                         )
                     }
                 }
+
+                is SettingsScreenActions.ControlSensitivityChange -> {
+                    viewModelScope.launch { storeSettings.saveAggressiveness(action.sensitivityLevel) }
+                }
             }
         }
+    }
+
+    fun sendShutdownAPSCommand() {
+        if (isApsConnected.value) commsRepository.sendShutdownAPS()
     }
 
     fun saveLocalSettings(newSetting: PidSettings): Boolean {
@@ -206,11 +218,7 @@ class RobotStateViewModel @Inject constructor(
         else false
     }
 
-    fun getAggressivenessLevel(): Aggressiveness = runBlocking { storeSettings.getAggressiveness() }
-
-    fun setLevelAggressiveness(level: Aggressiveness) {
-        viewModelScope.launch { storeSettings.saveAggressiveness(level) }
-    }
+    fun getAggressivenessLevel(): ControlSensitivityMode = runBlocking { storeSettings.getAggressiveness() }
 
     private fun sendNewPidSettings(newSetting: PidSettings): Boolean {
         return if (isRobotConnected.value) {

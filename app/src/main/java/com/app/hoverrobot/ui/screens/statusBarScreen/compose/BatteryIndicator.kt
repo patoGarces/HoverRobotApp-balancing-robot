@@ -54,11 +54,6 @@ fun BatteryIndicator(
     isConnected: Boolean,
     isMcbOff: Boolean
 ) {
-
-    val batteryVoltageText = if (batteryState.voltage.inNormalRange && isConnected && !isMcbOff)
-        stringResource(R.string.placeholder_battery_voltage, batteryState.voltage)
-    else stringResource(R.string.variable_not_available)
-
     val batteryPercentText = if (isConnected && !isMcbOff)
         stringResource(R.string.placeholder_percent, batteryState.level)
     else stringResource(R.string.variable_not_available)
@@ -108,7 +103,7 @@ fun BatteryIndicator(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = batteryVoltageText,
+            text = batteryPercentText,
             style = textStyle14Bold
         )
 
@@ -119,11 +114,6 @@ fun BatteryIndicator(
                 .padding(horizontal = 8.dp),
             tint = iconTint,
             contentDescription = ""
-        )
-
-        Text(
-            text = batteryPercentText,
-            style = textStyle14Bold
         )
     }
 }

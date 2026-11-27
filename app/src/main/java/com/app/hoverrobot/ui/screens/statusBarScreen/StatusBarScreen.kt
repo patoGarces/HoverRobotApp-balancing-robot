@@ -17,7 +17,6 @@ import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.app.hoverrobot.R
@@ -70,25 +69,30 @@ fun StatusBarScreen(
 
         Row(Modifier.weight(1F), horizontalArrangement = Arrangement.End) {
 
-            CpuUsagePercent(Modifier, cpuUsage)
+            CpuUsagePercent(
+                modifier = Modifier,
+                usage = cpuUsage.takeIf { networkState.statusRaspiClient.status == StatusConnection.CONNECTED }
+            )
 
             VerticalDivider(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .padding(horizontal = 2.dp, vertical = 8.dp),
+                    .padding(vertical = 8.dp)
+                    .padding(start = 4.dp),
                 thickness = 1.dp,
                 color = MaterialTheme.colorScheme.primary
             )
 
             TempIndicator(
                 modifier = Modifier,
-                temperature = temperature
+                temperature = temperature.takeIf { networkState.statusRaspiClient.status == StatusConnection.CONNECTED }
             )
 
             VerticalDivider(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .padding(horizontal = 2.dp, vertical = 8.dp),
+                    .padding(vertical = 8.dp)
+                    .padding(start = 4.dp),
                 thickness = 1.dp,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -105,7 +109,7 @@ fun StatusBarScreen(
 @Composable
 private fun TempIndicator(
     modifier: Modifier,
-    temperature: Float
+    temperature: Float?
 ) {
     Row(
         modifier = modifier.padding(horizontal = 8.dp),
@@ -120,9 +124,11 @@ private fun TempIndicator(
             contentDescription = ""
         )
 
+        val tempText = temperature?.let { stringResource(R.string.placeholder_temp, temperature) } ?:
+            stringResource(R.string.variable_not_available)
         Text(
             modifier = Modifier,
-            text = stringResource(R.string.placeholder_temp, temperature),
+            text = tempText,
             style = CustomTextStyles.textStyle14Bold,
         )
     }
@@ -131,7 +137,7 @@ private fun TempIndicator(
 @Composable
 private fun CpuUsagePercent(
     modifier: Modifier,
-    usage: Float
+    usage: Float?
 ) {
     Row(
         modifier = modifier.padding(horizontal = 8.dp),
@@ -145,9 +151,10 @@ private fun CpuUsagePercent(
             contentDescription = "CPU usage"
         )
 
+        val textUsage = usage?.let { stringResource(R.string.placeholder_cpu_usage, usage) } ?:
+                stringResource(R.string.variable_not_available)
         Text(
-            modifier = Modifier,
-            text = stringResource(R.string.placeholder_cpu_usage, usage),
+            text = textUsage,
             style = CustomTextStyles.textStyle14Bold,
         )
     }

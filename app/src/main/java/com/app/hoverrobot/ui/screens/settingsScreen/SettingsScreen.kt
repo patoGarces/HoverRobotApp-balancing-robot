@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -20,11 +21,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material3.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -52,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.app.hoverrobot.BuildConfig
 import com.app.hoverrobot.R
+import com.app.hoverrobot.data.models.ControlSensitivityMode
 import com.app.hoverrobot.data.models.comms.ConnectionState
 import com.app.hoverrobot.data.models.comms.NetworkState
 import com.app.hoverrobot.data.models.comms.PidIndexSetting
@@ -67,8 +67,10 @@ import com.app.hoverrobot.data.utils.StatusRobot
 import com.app.hoverrobot.ui.composeUtils.CustomButton
 import com.app.hoverrobot.ui.composeUtils.CustomDropdownMenu
 import com.app.hoverrobot.ui.composeUtils.CustomPreview
+import com.app.hoverrobot.ui.composeUtils.CustomSelectorComponent
 import com.app.hoverrobot.ui.composeUtils.CustomSlider
 import com.app.hoverrobot.ui.composeUtils.CustomTextStyles
+import com.app.hoverrobot.ui.composeUtils.CustomTextStyles.textStyle14Bold
 import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnCalibrateImu
 import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnCleanLeftMotor
 import com.app.hoverrobot.ui.screens.settingsScreen.SettingsScreenActions.OnCleanRightMotor
@@ -80,6 +82,7 @@ fun SettingsScreen(
     localRobotConfig: RobotLocalConfig,
     statusRobot: StatusRobot,
     networkState: NetworkState,
+    defaultSensitivityMode: ControlSensitivityMode,
     onPidSave: (PidSettings) -> Boolean,
     onActionScreen: (SettingsScreenActions) -> Unit,
 ) {
@@ -94,6 +97,14 @@ fun SettingsScreen(
             .padding(16.dp)
             .verticalScroll(rememberScrollState())
     ) {
+        val options = listOf("Suave", "Moderado", "Agresivo")
+        ControlSensitivitySection(
+            defaultOption = defaultSensitivityMode.ordinal,
+            options = options
+        ) { optionSelected ->
+            onActionScreen(SettingsScreenActions.ControlSensitivityChange(ControlSensitivityMode.entries[optionSelected]))
+        }
+
         PidSettingsCard(
             originalLocalConfig = localRobotConfig,
             onSendPidSettings = { onActionScreen(SettingsScreenActions.OnNewSettings(it)) },
@@ -110,6 +121,46 @@ fun SettingsScreen(
             onReconnectRobot = { onActionScreen(SettingsScreenActions.OnReconnectToRobot(it)) },
             onReconnectRaspi = { onActionScreen(SettingsScreenActions.OnReconnectToRaspi(it)) }
         )
+    }
+}
+
+@Composable
+fun ControlSensitivitySection(
+    defaultOption: Int,
+    options: List<String>,
+    optionSelected: (Int) -> Unit
+) {
+    TitleSectionText(R.string.settings_group_control_sensitivity_title)
+
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.onBackground,
+                shape = RoundedCornerShape(8.dp)
+            )
+    ) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .height(44.dp)
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(R.string.title_control_sensitivity),
+                style = textStyle14Bold
+            )
+
+            CustomSelectorComponent(
+                defaultOption = defaultOption,
+                options = options,
+                optionSelected = optionSelected,
+            )
+        }
     }
 }
 
@@ -695,6 +746,7 @@ private fun SettingsScreenPreview() {
             localRobotConfig = localConfig,
             statusRobot = StatusRobot.STABILIZED,
             networkState = networkStateMock,
+            defaultSensitivityMode = ControlSensitivityMode.MODERATE,
             onPidSave = { false }
         ) {}
     }
